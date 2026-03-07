@@ -1,6 +1,4 @@
-﻿# 17-competition
-
-STM32F429 Modbus-RTU 采集网关工程。
+﻿# STM32F429 Modbus-RTU 采集网关
 
 ## 项目目标
 
@@ -41,10 +39,9 @@ STM32F429 Modbus-RTU 采集网关工程。
 
 ## 文档
 
-- `docs/overview.md`
-- `docs/architecture.md`
-- `docs/modbus-register-map.md`
-- `docs/network-plan.md`
-- `docs/uplink-format.md`
-- `docs/build-and-flash.md`
-
+- [`docs/overview.md`](docs/overview.md)
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/modbus-register-map.md`](docs/modbus-register-map.md)
+- [`docs/network-plan.md`](docs/network-plan.md)
+- [`docs/uplink-format.md`](docs/uplink-format.md)
+- [`docs/build-and-flash.md`](docs/build-and-flash.md)
