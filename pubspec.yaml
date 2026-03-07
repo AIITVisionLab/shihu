@@ -1,0 +1,33 @@
+name: sickandflutter
+description: "石斛病虫害识别项目 Flutter 前端"
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  dio: ^5.9.2
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^3.2.1
+  go_router: ^17.1.0
+  image_picker:
+    path: third_party/openharmony/image_picker/image_picker
+  package_info_plus: ^9.0.0
+  shared_preferences:
+    path: third_party/openharmony/shared_preferences/shared_preferences
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+dependency_overrides:
+  image_picker_ohos:
+    path: third_party/openharmony/image_picker/image_picker_ohos
+  shared_preferences_ohos:
+    path: third_party/openharmony/shared_preferences/shared_preferences_ohos
+
+flutter:
+  uses-material-design: true

@@ -1,0 +1,104 @@
+import 'package:dio/dio.dart';
+import 'package:sickandflutter/core/config/env_config.dart';
+import 'package:sickandflutter/core/network/api_exception.dart';
+import 'package:sickandflutter/core/utils/platform_utils.dart';
+import 'package:sickandflutter/shared/models/app_enums.dart';
+import 'package:sickandflutter/shared/models/app_settings.dart';
+
+/// 统一的 HTTP 客户端封装。
+///
+/// 页面层只依赖上层 Repository，不直接依赖该类。
+class ApiClient {
+  /// 根据当前设置和环境配置创建 HTTP 客户端。
+  ApiClient({required AppSettings settings, required EnvConfig envConfig})
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: settings.baseUrl.isEmpty
+              ? envConfig.baseUrl
+              : settings.baseUrl,
+          connectTimeout: Duration(milliseconds: settings.connectTimeoutMs),
+          receiveTimeout: Duration(milliseconds: settings.receiveTimeoutMs),
+          headers: <String, Object>{
+            'Accept': 'application/json',
+            'X-Platform': currentPlatformType().value,
+          },
+          responseType: ResponseType.json,
+        ),
+      );
+
+  final Dio _dio;
+
+  /// 发送 GET 请求并返回 JSON 对象。
+  Future<Map<String, dynamic>> getJson(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        path,
+        queryParameters: queryParameters,
+      );
+      return _extractJson(response);
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    }
+  }
+
+  /// 发送 JSON POST 请求并返回 JSON 对象。
+  Future<Map<String, dynamic>> postJson(String path, {Object? data}) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(path, data: data);
+      return _extractJson(response);
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    }
+  }
+
+  /// 发送 multipart 请求并返回 JSON 对象。
+  Future<Map<String, dynamic>> postMultipart(
+    String path, {
+    required FormData data,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(path, data: data);
+      return _extractJson(response);
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    }
+  }
+
+  Map<String, dynamic> _extractJson(Response<Map<String, dynamic>> response) {
+    final data = response.data;
+    if (data == null) {
+      throw const ApiException(statusCode: 500, message: '接口返回为空，无法解析响应。');
+    }
+
+    return data;
+  }
+
+  ApiException _mapDioException(DioException error) {
+    final statusCode = error.response?.statusCode;
+
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return ApiException(
+          statusCode: statusCode,
+          message: '请求超时，请检查网络或服务地址。',
+        );
+      case DioExceptionType.badResponse:
+        return ApiException(
+          statusCode: statusCode,
+          message: '服务返回异常状态码：${statusCode ?? 'unknown'}。',
+        );
+      case DioExceptionType.cancel:
+        return ApiException(statusCode: statusCode, message: '请求已取消。');
+      default:
+        return ApiException(
+          statusCode: statusCode,
+          message: '网络请求失败：${error.message ?? 'unknown'}。',
+        );
+    }
+  }
+}
