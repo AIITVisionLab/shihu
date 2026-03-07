@@ -1,0 +1,58 @@
+﻿{
+    // C/C++ IntelliSense 配置文件
+    // 用于配置 VS Code 的代码提示、语法检查和跳转路径
+    "configurations": [
+        {
+            "name": "Win32",
+            // 头文件搜索路径
+            "includePath": [
+                "${workspaceFolder}/mcu/Libraries/CMSIS",
+                "${workspaceFolder}/mcu/Libraries/STM32F4xx_StdPeriph_Driver",
+                "${workspaceFolder}/crm/freeRTOS/include",
+                "${workspaceFolder}/crm/freeRTOS/portable/GCC/ARM_CM4F",
+                "${workspaceFolder}/mcu/user",
+
+                // BSP 头文件
+                "${workspaceFolder}/mcu/bsp/led/Inc",
+                "${workspaceFolder}/mcu/bsp/usart/Inc",
+                "${workspaceFolder}/mcu/bsp/systick/Inc",
+                "${workspaceFolder}/mcu/bsp/ETH/Inc",
+                "${workspaceFolder}/mcu/bsp/rs485/Inc",
+
+                // APP 头文件
+                "${workspaceFolder}/mcu/app/app_data/Inc",
+                "${workspaceFolder}/mcu/app/app_lwip/Inc",
+                "${workspaceFolder}/mcu/app/app_uplink/Inc",
+                "${workspaceFolder}/mcu/app/task_uplink/Inc",
+                "${workspaceFolder}/mcu/app/task_modbus_master/Inc",
+
+                // 工具库
+                "${workspaceFolder}/mcu/libx",
+
+                // middleware - LwIP
+                "${workspaceFolder}/mcu/middleware/LwIP/src/include",
+                "${workspaceFolder}/mcu/middleware/LwIP/src/netif",
+                "${workspaceFolder}/mcu/middleware/LwIP/port",
+
+                // middleware - Modbus-RTU
+                "${workspaceFolder}/mcu/middleware/Modbus-RTU/Inc",
+
+                // ARM GCC 自带头文件
+                "D:/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/lib/gcc/arm-none-eabi/13.3.1/include",
+                "D:/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/lib/gcc/arm-none-eabi/13.3.1/include-fixed",
+                "D:/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/arm-none-eabi/include"
+            ],
+            // 工程预定义宏
+            "defines": [
+                "USE_STDPERIPH_DRIVER",
+                "STM32F429_439xx",
+                "MODBUS_TRACE_ENABLE=1"
+            ],
+            "compilerPath": "D:/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc.exe",
+            "cStandard": "c23",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "gcc-arm"
+        }
+    ],
+    "version": 4
+}
