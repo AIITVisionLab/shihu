@@ -50,7 +50,7 @@ static void uplink_copy_str(char *dst, size_t dst_size, const char *src)
  * @param cfg 配置指针（输出）
  *
  * @note 默认值策略：
- * - endpoint：HTTP + 172.18.8.18:8080 + /api/uplink（你可按后端接口修改）
+ * - endpoint：HTTP + 192.168.50.1:8080 + /api/uplink（你可按后端接口修改）
  * - device_id："stm32f4"
  * - 超时：发送/接收 2000ms
  * - 重试：base=500ms，max=10s，最多 10 次（含首次）
@@ -68,7 +68,7 @@ void uplink_config_set_defaults(uplink_config_t *cfg)
 
     /* 默认端点：目前使用 HTTP:8080 测试链路，预留升级 HTTPS:443 接口 */
     cfg->endpoint.scheme = UPLINK_SCHEME_HTTP;
-    uplink_copy_str(cfg->endpoint.host, sizeof(cfg->endpoint.host), "172.18.8.18");
+    uplink_copy_str(cfg->endpoint.host, sizeof(cfg->endpoint.host), "192.168.50.1");
     cfg->endpoint.port = 8080;
     uplink_copy_str(cfg->endpoint.path, sizeof(cfg->endpoint.path), "/api/uplink");
     cfg->endpoint.use_dns = 0; /* 默认按 IP 字符串解析，避免 DNS 依赖 */

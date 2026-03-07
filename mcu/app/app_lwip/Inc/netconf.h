@@ -33,9 +33,9 @@ extern "C"
 #define MAC_ADDR4 0x34
 #define MAC_ADDR5 0x56
 
-#define IP_ADDR0 172
-#define IP_ADDR1 18
-#define IP_ADDR2 8
+#define IP_ADDR0 192
+#define IP_ADDR1 168
+#define IP_ADDR2 50
 #define IP_ADDR3 240
 
 #define NETMASK_ADDR0 255
@@ -43,10 +43,10 @@ extern "C"
 #define NETMASK_ADDR2 255
 #define NETMASK_ADDR3 0
 
-#define GW_ADDR0 172
-#define GW_ADDR1 18
-#define GW_ADDR2 8
-#define GW_ADDR3 18
+#define GW_ADDR0 192
+#define GW_ADDR1 168
+#define GW_ADDR2 50
+#define GW_ADDR3 1
 
 #ifndef LINK_TIMER_INTERVAL
 #define LINK_TIMER_INTERVAL 1000

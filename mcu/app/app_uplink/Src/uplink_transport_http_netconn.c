@@ -129,7 +129,7 @@ static uplink_err_t uplink_resolve_host(const uplink_endpoint_t *endpoint, ip_ad
     /* 优先支持“IP 字符串直转”（推荐先用 IP，避免 DNS 依赖） */
     if (endpoint->use_dns == 0U)
     {
-        /* ipaddr_aton 支持 "172.18.8.18" 这种格式 */
+        /* ipaddr_aton 支持 "192.168.50.1" 这种格式 */
         if (ipaddr_aton(endpoint->host, out_addr) == 0)
         {
             return UPLINK_ERR_INVALID_ARG;
