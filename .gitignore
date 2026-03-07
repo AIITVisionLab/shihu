@@ -1,56 +1,22 @@
+# 人机协作文件
 .codex/
 .kiro/
 
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter / Dart / Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# Flutter / Dart 构建文件
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .metadata
 .packages
-.pub-cache/
-.pub/
-/build/
-/coverage/
+build/
+coverage/
+.hvigor/
 
-# Symbolication related
-app.*.symbols
+# ide产生的构建文件
+.idea/
+*.iml
 
-# Obfuscation related
-app.*.map.json
-
-# Android Studio build artifacts
-/android/app/debug
-/android/app/profile
-/android/app/release
-
-# Generated platform artifacts
+# 平台构建文件
 android/.gradle/
 android/local.properties
 ios/Flutter/ephemeral/
@@ -60,18 +26,10 @@ macos/Flutter/ephemeral/
 windows/flutter/ephemeral/
 ohos/.signing/
 
-# HarmonyOS / OHOS generated artifacts
-.hvigor/
-node_modules/
-oh_modules/
-local.properties
-**/BuildProfile.ets
-**/oh-package-lock.json5
-**/src/main/ets/plugins/
-**/src/main/resources/rawfile/flutter_assets/
-**/build/
+# OS
+.DS_Store
 
-# Vendored plugin non-source content
+# 三方插件的非源码文件
 third_party/openharmony/**/example/
 third_party/openharmony/**/test/
 third_party/openharmony/**/README*
