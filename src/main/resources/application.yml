@@ -1,0 +1,20 @@
+server:
+  port: 8082
+
+app:
+  login:
+    username: admin
+    password: admin123
+
+onenet:
+  product-id: your-product-id
+  authorization: your-authorization-token
+  property-set-url: https://iot-api.heclouds.com/thingmodel/set-device-property
+  property-get-url: https://iot-api.heclouds.com/thingmodel/query-device-property
+  timeout-ms: 10000
+  pulsar:
+    broker-url: pulsar+ssl://iot-north-mq.heclouds.com:6651/
+    access-id: your-access-id
+    secret-key: your-secret-key
+    subscription-name: your-access-id-sub
+    auto-open-dashboard: true
