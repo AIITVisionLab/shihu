@@ -18,4 +18,4 @@ webrtc:
 
 streams:
   k230:
-    - "rtsp://K230_IP/STREAM_PATH"
+    - "rtsp://192.168.1.110:8554/test"
