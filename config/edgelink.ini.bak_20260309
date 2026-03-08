@@ -1,5 +1,5 @@
 [http]
-bind_host = 0.0.0.0
+bind_host = 192.168.50.1
 bind_port = 8080
 
 [onenet]
