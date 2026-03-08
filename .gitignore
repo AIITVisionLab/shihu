@@ -8,6 +8,7 @@
 .flutter-plugins-dependencies
 .metadata
 .packages
+devtools_options.yaml
 build/
 coverage/
 .hvigor/
