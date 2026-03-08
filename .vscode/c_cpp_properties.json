@@ -46,7 +46,7 @@
             "defines": [
                 "USE_STDPERIPH_DRIVER",
                 "STM32F429_439xx",
-                "MODBUS_TRACE_ENABLE=1"
+                "MODBUS_TRACE_ENABLE=0"
             ],
             "compilerPath": "D:/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc.exe",
             "cStandard": "c23",

@@ -13,7 +13,7 @@ enable_language(ASM)
 
 add_compile_definitions(STM32F429_439xx)
 add_compile_definitions(USE_STDPERIPH_DRIVER)
-add_compile_definitions(MODBUS_TRACE_ENABLE=1)
+add_compile_definitions(MODBUS_TRACE_ENABLE=0)
 
 set(MCU cortex-m4)
 set(FPU_FLAGS "-mfpu=fpv4-sp-d16 -mfloat-abi=hard")
