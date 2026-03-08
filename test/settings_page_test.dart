@@ -7,11 +7,13 @@ import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/features/history/history_repository.dart';
+import 'package:sickandflutter/features/settings/device_state_repository.dart';
 import 'package:sickandflutter/features/settings/service_health_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/features/settings/settings_page.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
+import 'package:sickandflutter/shared/models/device_state_info.dart';
 import 'package:sickandflutter/shared/models/history_record.dart';
 import 'package:sickandflutter/shared/models/service_health_info.dart';
 
@@ -76,6 +78,19 @@ void main() {
               serviceVersion: '1.0.0',
               modelStatus: 'ready',
               serverTime: '2026-03-08T10:00:00+08:00',
+            ),
+          ),
+          deviceStateProvider.overrideWith(
+            (ref) async => const DeviceStateInfo(
+              deviceId: 'dev_1',
+              deviceName: '石斛培育柜',
+              temperature: 24.5,
+              humidity: 82.0,
+              light: 1500,
+              mq2: 18,
+              errorCode: 0,
+              ledOn: true,
+              updatedAt: 1741399200000,
             ),
           ),
           authControllerProvider.overrideWith(() => authController),
@@ -143,6 +158,19 @@ void main() {
               serviceVersion: '1.0.0',
               modelStatus: 'ready',
               serverTime: '2026-03-08T10:00:00+08:00',
+            ),
+          ),
+          deviceStateProvider.overrideWith(
+            (ref) async => const DeviceStateInfo(
+              deviceId: 'dev_1',
+              deviceName: '石斛培育柜',
+              temperature: 24.5,
+              humidity: 82.0,
+              light: 1500,
+              mq2: 18,
+              errorCode: 0,
+              ledOn: true,
+              updatedAt: 1741399200000,
             ),
           ),
           authControllerProvider.overrideWith(

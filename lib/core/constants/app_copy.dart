@@ -29,19 +29,19 @@ class AppCopy {
 
   /// 首页主说明。
   static const String homeOverview =
-      '当前基线已接入主题、路由、设置持久化、真实单图识别、本地历史记录、服务健康检查和实时测试帧链路。下一轮继续补摄像头预览与真实取帧即可。';
+      '当前基线已接入 Spring Boot 登录、设备状态、LED 控制、服务健康检查和本地状态持久化；识别相关页面保留仓储扩展点，待独立识别服务并入后继续联调。';
 
   /// 首页入口“开始识别”标题。
   static const String homeDetectTitle = '开始识别';
 
   /// 首页入口“开始识别”副标题。
-  static const String homeDetectSubtitle = '选择石斛叶片图片，走通单图识别主链路。';
+  static const String homeDetectSubtitle = '识别主链路仍保留前端结构，待独立识别服务并入后继续对接。';
 
   /// 首页入口“实时监测”标题。
   static const String homeRealtimeTitle = '实时监测';
 
   /// 首页入口“实时监测”副标题。
-  static const String homeRealtimeSubtitle = '预留摄像头识别链路，下一轮接入实时帧处理。';
+  static const String homeRealtimeSubtitle = '当前后端已接入设备状态监测；摄像头识别链路待独立识别服务补齐。';
 
   /// 首页入口“历史记录”标题。
   static const String homeHistoryTitle = '历史记录';
@@ -68,7 +68,7 @@ class AppCopy {
   static String homeVersionPill(String version) => '版本 $version';
 
   /// 登录页主说明。
-  static const String authLoginOverview = '登录后可访问单图识别、实时监测、历史记录和运行配置。';
+  static const String authLoginOverview = '登录后可访问设备状态、服务健康检查和前端预留的识别功能入口。';
 
   /// 登录页能力标签：自动恢复。
   static const String authRestoreChip = '登录态自动恢复';
@@ -77,7 +77,7 @@ class AppCopy {
   static const String authUnauthorizedChip = '401 自动退回登录';
 
   /// 登录页能力标签：自动附带 Token。
-  static const String authTokenChip = '请求自动附带 Token';
+  static const String authTokenChip = '请求自动携带会话';
 
   /// 演示登录模式标题。
   static const String authMockModeTitle = '当前为演示登录模式';
@@ -266,7 +266,7 @@ class AppCopy {
 
   /// 关于页开发策略内容。
   static const String aboutStrategyDescription =
-      '单图识别默认走真实 Java 后端接口；开发和测试环境可按需切回受控 mock 仓储，页面契约保持不变。';
+      '当前已对接 Spring Boot 登录、设备状态、LED 控制与健康检查接口；识别接口仍按独立服务保留仓储扩展点。';
 
   /// 设置页标题。
   static const String settingsPageTitle = '设置';
@@ -344,7 +344,7 @@ class AppCopy {
   static const String settingsReceiveTimeout = '接收超时';
 
   /// 服务地址示例提示。
-  static const String settingsBaseUrlHint = '例如：http://127.0.0.1:8080';
+  static const String settingsBaseUrlHint = '例如：http://127.0.0.1:8082';
 
   /// 服务状态检查中提示。
   static const String settingsCheckingHealth = '正在检查服务状态...';

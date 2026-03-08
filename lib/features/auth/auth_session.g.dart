@@ -10,6 +10,7 @@ AuthSession _$AuthSessionFromJson(Map<String, dynamic> json) => AuthSession(
   accessToken: parseStringValue(json['accessToken']),
   user: _authUserFromJson(json['user']),
   refreshToken: parseNullableStringValue(json['refreshToken']),
+  sessionCookie: parseNullableStringValue(json['sessionCookie']),
   tokenType: json['tokenType'] == null
       ? 'Bearer'
       : _tokenTypeFromJson(json['tokenType']),
@@ -23,6 +24,7 @@ Map<String, dynamic> _$AuthSessionToJson(AuthSession instance) =>
     <String, dynamic>{
       'accessToken': instance.accessToken,
       'refreshToken': _nullableStringToJson(instance.refreshToken),
+      'sessionCookie': _nullableStringToJson(instance.sessionCookie),
       'tokenType': instance.tokenType,
       'expiresAt': _nullableStringToJson(instance.expiresAt),
       'loginMode': _authLoginModeToJson(instance.loginMode),

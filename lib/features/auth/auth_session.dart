@@ -14,6 +14,7 @@ class AuthSession {
     required this.accessToken,
     required this.user,
     this.refreshToken,
+    this.sessionCookie,
     this.tokenType = 'Bearer',
     this.expiresAt,
     this.loginMode = AuthLoginMode.real,
@@ -34,6 +35,10 @@ class AuthSession {
   @JsonKey(fromJson: parseNullableStringValue, toJson: _nullableStringToJson)
   final String? refreshToken;
 
+  /// 服务端会话 Cookie。
+  @JsonKey(fromJson: parseNullableStringValue, toJson: _nullableStringToJson)
+  final String? sessionCookie;
+
   /// 认证头类型。
   @JsonKey(fromJson: _tokenTypeFromJson)
   final String tokenType;
@@ -53,6 +58,10 @@ class AuthSession {
   /// 是否存在可用刷新令牌。
   bool get hasRefreshToken =>
       refreshToken != null && refreshToken!.trim().isNotEmpty;
+
+  /// 是否存在可用会话 Cookie。
+  bool get hasSessionCookie =>
+      sessionCookie != null && sessionCookie!.trim().isNotEmpty;
 
   /// 是否已经过期。
   bool get isExpired {
@@ -79,6 +88,7 @@ class AuthSession {
   AuthSession copyWith({
     String? accessToken,
     Object? refreshToken = _authSessionUnset,
+    Object? sessionCookie = _authSessionUnset,
     String? tokenType,
     Object? expiresAt = _authSessionUnset,
     AuthLoginMode? loginMode,
@@ -89,6 +99,9 @@ class AuthSession {
       refreshToken: identical(refreshToken, _authSessionUnset)
           ? this.refreshToken
           : refreshToken as String?,
+      sessionCookie: identical(sessionCookie, _authSessionUnset)
+          ? this.sessionCookie
+          : sessionCookie as String?,
       tokenType: tokenType ?? this.tokenType,
       expiresAt: identical(expiresAt, _authSessionUnset)
           ? this.expiresAt

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
-import 'package:sickandflutter/core/network/api_client.dart';
+import 'package:sickandflutter/core/network/api_client_factory.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/mock_auth_repository.dart';
 import 'package:sickandflutter/features/auth/real_auth_repository.dart';
@@ -13,15 +13,16 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final envConfig = ref.watch(envConfigProvider);
   final useMock =
       envConfig.flavor != BuildFlavor.production &&
-      const bool.fromEnvironment('USE_MOCK_AUTH', defaultValue: true);
+      const bool.fromEnvironment('USE_MOCK_AUTH', defaultValue: false);
 
   if (useMock) {
     return const MockAuthRepository();
   }
 
   final settings = _resolveSettings(ref, envConfig);
+  final apiClientFactory = ref.watch(apiClientFactoryProvider);
   return RealAuthRepository(
-    apiClient: ApiClient(settings: settings, envConfig: envConfig),
+    apiClient: apiClientFactory.create(settings: settings),
   );
 });
 

@@ -18,7 +18,6 @@ void main() {
     expect(response.isSuccess, isTrue);
     expect(response.data?['detectId'], 'det_1');
   });
-
   test('ApiResponse keeps null data when payload is absent', () {
     final response = ApiResponse<Map<String, dynamic>>.fromJson(
       <String, dynamic>{

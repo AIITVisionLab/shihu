@@ -6,6 +6,7 @@ import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/core/storage/auth_storage.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
+import 'package:sickandflutter/shared/models/app_enums.dart';
 
 /// 认证状态入口。
 final authControllerProvider = NotifierProvider<AuthController, AuthState>(
@@ -156,10 +157,22 @@ class AuthController extends Notifier<AuthState> {
         return;
       }
 
+      if (restoredSession.loginMode == AuthLoginMode.real) {
+        state = state.copyWith(session: restoredSession);
+        await _refreshSessionInternal(restoredSession);
+        if (state.isAuthenticated) {
+          state = state.copyWith(isBootstrapping: false);
+          return;
+        }
+
+        state = state.copyWith(isBootstrapping: false);
+        return;
+      }
+
       if (restoredSession.isExpired && restoredSession.hasRefreshToken) {
         state = state.copyWith(session: restoredSession);
-        final refreshed = await refreshSession();
-        if (refreshed) {
+        await _refreshSessionInternal(restoredSession);
+        if (state.isAuthenticated) {
           state = state.copyWith(isBootstrapping: false);
           return;
         }

@@ -31,7 +31,7 @@ class AppConstants {
   static const String authSessionStorageKey = 'auth_session';
 
   /// 默认基础服务地址。
-  static const String defaultBaseUrl = 'http://127.0.0.1:8080';
+  static const String defaultBaseUrl = 'http://127.0.0.1:8082';
 
   /// 默认连接超时时间。
   static const int defaultConnectTimeoutMs = 10000;

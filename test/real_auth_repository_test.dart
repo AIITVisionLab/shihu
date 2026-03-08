@@ -1,8 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
 import 'package:sickandflutter/core/network/api_client.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
-import 'package:sickandflutter/core/utils/platform_utils.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/features/auth/real_auth_repository.dart';
@@ -10,149 +10,101 @@ import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
 
 void main() {
-  test(
-    'RealAuthRepository login posts credentials and maps session payload',
-    () async {
-      final apiClient = _FakeApiClient(
-        responseJson: <String, dynamic>{
-          'code': 200,
-          'message': 'success',
-          'data': <String, dynamic>{
-            'accessToken': 'token_1',
-            'refreshToken': 'refresh_1',
-            'tokenType': 'Bearer',
-            'expiresAt': '2026-03-09T12:00:00+08:00',
-            'user': <String, dynamic>{
-              'userId': 'user_demo',
-              'account': 'demo',
-              'displayName': '演示账号',
-              'roles': const <String>['app_user'],
-            },
-          },
-        },
-      );
-      final repository = RealAuthRepository(apiClient: apiClient);
+  test('RealAuthRepository login posts credentials to /api/login', () async {
+    final apiClient = _FakeApiClient(
+      responseJson: <String, dynamic>{'success': true, 'message': '登录成功'},
+    );
+    final repository = RealAuthRepository(apiClient: apiClient);
 
-      final session = await repository.login(
-        account: ' demo ',
-        password: 'demo123456',
-      );
-
-      expect(apiClient.capturedPath, '/api/v1/auth/login');
-      expect(apiClient.capturedData?['account'], 'demo');
-      expect(apiClient.capturedData?['password'], 'demo123456');
-      expect(apiClient.capturedData?['platform'], currentPlatformType().value);
-      expect(session.accessToken, 'token_1');
-      expect(session.refreshToken, 'refresh_1');
-      expect(session.loginMode, AuthLoginMode.real);
-      expect(session.user.account, 'demo');
-    },
-  );
-
-  test('RealAuthRepository refreshSession requires refresh token', () async {
-    final repository = RealAuthRepository(
-      apiClient: _FakeApiClient(
-        responseJson: <String, dynamic>{
-          'code': 200,
-          'message': 'success',
-          'data': null,
-        },
-      ),
+    final session = await repository.login(
+      account: ' demo ',
+      password: 'demo123456',
     );
 
-    await expectLater(
-      repository.refreshSession(
-        session: const AuthSession(
-          accessToken: 'token_1',
-          user: AuthUser(
-            userId: 'user_demo',
-            account: 'demo',
-            displayName: '演示账号',
-          ),
-        ),
-      ),
-      throwsA(
-        isA<ApiException>().having(
-          (error) => error.message,
-          'message',
-          '当前会话缺少 refreshToken，无法自动续期。',
-        ),
-      ),
-    );
+    expect(apiClient.capturedPath, '/api/login');
+    expect(apiClient.capturedData?['username'], 'demo');
+    expect(apiClient.capturedData?['password'], 'demo123456');
+    expect(session.accessToken, isNotEmpty);
+    expect(session.refreshToken, isNull);
+    expect(session.sessionCookie, 'JSESSIONID=test-session');
+    expect(session.loginMode, AuthLoginMode.real);
+    expect(session.user.account, 'demo');
   });
 
   test(
-    'RealAuthRepository refreshSession posts refresh token and maps response',
+    'RealAuthRepository refreshSession throws when backend session is lost',
     () async {
-      final apiClient = _FakeApiClient(
-        responseJson: <String, dynamic>{
-          'code': 200,
-          'message': 'success',
-          'data': <String, dynamic>{
-            'accessToken': 'token_2',
-            'refreshToken': 'refresh_2',
-            'tokenType': 'Bearer',
-            'expiresAt': '2026-03-10T12:00:00+08:00',
-            'user': <String, dynamic>{
-              'userId': 'user_demo',
-              'account': 'demo',
-              'displayName': '演示账号',
-              'roles': const <String>['app_user'],
-            },
-          },
-        },
-      );
-      final repository = RealAuthRepository(apiClient: apiClient);
-
-      final session = await repository.refreshSession(
-        session: const AuthSession(
-          accessToken: 'token_1',
-          refreshToken: 'refresh_1',
-          user: AuthUser(
-            userId: 'user_demo',
-            account: 'demo',
-            displayName: '演示账号',
-          ),
+      final repository = RealAuthRepository(
+        apiClient: _FakeApiClient(
+          responseJson: <String, dynamic>{'loggedIn': false},
         ),
       );
 
-      expect(apiClient.capturedPath, '/api/v1/auth/refresh');
-      expect(apiClient.capturedData?['refreshToken'], 'refresh_1');
-      expect(apiClient.capturedData?['platform'], currentPlatformType().value);
-      expect(session.accessToken, 'token_2');
-      expect(session.refreshToken, 'refresh_2');
-    },
-  );
-
-  test(
-    'RealAuthRepository logout posts refresh token to logout endpoint',
-    () async {
-      final apiClient = _FakeApiClient(
-        responseJson: <String, dynamic>{
-          'code': 200,
-          'message': 'success',
-          'data': null,
-        },
-      );
-      final repository = RealAuthRepository(apiClient: apiClient);
-
-      await repository.logout(
-        session: const AuthSession(
-          accessToken: 'token_1',
-          refreshToken: 'refresh_1',
-          user: AuthUser(
-            userId: 'user_demo',
-            account: 'demo',
-            displayName: '演示账号',
+      await expectLater(
+        repository.refreshSession(
+          session: const AuthSession(
+            accessToken: 'token_1',
+            user: AuthUser(
+              userId: 'user_demo',
+              account: 'demo',
+              displayName: '演示账号',
+            ),
+          ),
+        ),
+        throwsA(
+          isA<ApiException>().having(
+            (error) => error.message,
+            'message',
+            '本地登录态已过期，请重新登录。',
           ),
         ),
       );
-
-      expect(apiClient.capturedPath, '/api/v1/auth/logout');
-      expect(apiClient.capturedData?['refreshToken'], 'refresh_1');
-      expect(apiClient.capturedData?['platform'], currentPlatformType().value);
     },
   );
+
+  test('RealAuthRepository refreshSession checks /api/check-login', () async {
+    final apiClient = _FakeApiClient(
+      responseJson: <String, dynamic>{'loggedIn': true, 'username': 'demo'},
+    );
+    final repository = RealAuthRepository(apiClient: apiClient);
+
+    final session = await repository.refreshSession(
+      session: const AuthSession(
+        accessToken: 'token_1',
+        sessionCookie: 'JSESSIONID=test-session',
+        user: AuthUser(
+          userId: 'user_demo',
+          account: 'demo',
+          displayName: '演示账号',
+        ),
+      ),
+    );
+
+    expect(apiClient.capturedPath, '/api/check-login');
+    expect(session.accessToken, 'token_1');
+    expect(session.user.account, 'demo');
+  });
+
+  test('RealAuthRepository logout posts to /api/logout', () async {
+    final apiClient = _FakeApiClient(
+      responseJson: <String, dynamic>{'success': true, 'message': '已登出'},
+    );
+    final repository = RealAuthRepository(apiClient: apiClient);
+
+    await repository.logout(
+      session: const AuthSession(
+        accessToken: 'token_1',
+        refreshToken: 'refresh_1',
+        user: AuthUser(
+          userId: 'user_demo',
+          account: 'demo',
+          displayName: '演示账号',
+        ),
+      ),
+    );
+
+    expect(apiClient.capturedPath, '/api/logout');
+  });
 }
 
 class _FakeApiClient extends ApiClient {
@@ -177,9 +129,36 @@ class _FakeApiClient extends ApiClient {
   Map<String, dynamic>? capturedData;
 
   @override
+  Future<Map<String, dynamic>> getJson(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    capturedPath = path;
+    return responseJson;
+  }
+
+  @override
   Future<Map<String, dynamic>> postJson(String path, {Object? data}) async {
     capturedPath = path;
     capturedData = data as Map<String, dynamic>?;
     return responseJson;
+  }
+
+  @override
+  Future<Response<Map<String, dynamic>>> postJsonDetailed(
+    String path, {
+    Object? data,
+  }) async {
+    capturedPath = path;
+    capturedData = data as Map<String, dynamic>?;
+    return Response<Map<String, dynamic>>(
+      requestOptions: RequestOptions(path: path),
+      data: responseJson,
+      headers: Headers.fromMap(<String, List<String>>{
+        'set-cookie': const <String>[
+          'JSESSIONID=test-session; Path=/; HttpOnly',
+        ],
+      }),
+    );
   }
 }

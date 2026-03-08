@@ -5,16 +5,16 @@ import 'package:sickandflutter/core/network/api_client_factory.dart';
 import 'package:sickandflutter/features/detect/mock_detect_repository.dart';
 import 'package:sickandflutter/features/detect/real_detect_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
-import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
 import 'package:sickandflutter/shared/models/detect_response.dart';
 
 /// 单图识别仓储入口。
 final detectRepositoryProvider = Provider<DetectRepository>((ref) {
   final envConfig = ref.watch(envConfigProvider);
-  final useMock =
-      envConfig.flavor != BuildFlavor.production &&
-      const bool.fromEnvironment('USE_MOCK_DETECT', defaultValue: false);
+  final useMock = const bool.fromEnvironment(
+    'USE_MOCK_DETECT',
+    defaultValue: true,
+  );
 
   if (useMock) {
     return const MockDetectRepository();

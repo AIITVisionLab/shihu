@@ -17,29 +17,33 @@ class ServiceHealthRepository {
 
   /// 拉取当前服务健康状态。
   Future<ServiceHealthInfo> fetchHealth() async {
-    final response = await _apiClient.getResponse<Map<String, dynamic>>(
-      '/api/v1/health',
-      dataParser: asStringMap,
-    );
+    final raw = await _apiClient.getRaw('/api/health');
 
-    if (!response.isSuccess) {
-      throw ApiException(
-        message: response.message.trim().isEmpty
-            ? '服务健康检查失败。'
-            : response.message,
-        businessCode: response.code,
-      );
+    if (raw is String) {
+      final normalized = raw.trim().toLowerCase();
+      if (normalized == 'ok') {
+        return ServiceHealthInfo(
+          status: 'up',
+          serviceName: 'iot-onenet',
+          serviceVersion: 'web',
+          modelStatus: 'ready',
+          serverTime: DateTime.now().toIso8601String(),
+        );
+      }
+      throw ApiException(message: '健康检查返回非预期字符串：$raw');
     }
 
-    final payload = response.data;
-    if (payload == null) {
-      throw ApiException(
-        message: '健康检查返回成功，但缺少 data 数据体。',
-        businessCode: response.code,
-      );
+    if (raw is Map<String, dynamic>) {
+      if (raw.containsKey('data') && raw['data'] is Map<String, dynamic>) {
+        final payload = asStringMap(raw['data']);
+        if (payload != null) {
+          return ServiceHealthInfo.fromJson(payload);
+        }
+      }
+      return ServiceHealthInfo.fromJson(raw);
     }
 
-    return ServiceHealthInfo.fromJson(payload);
+    throw ApiException(message: '健康检查返回了无法识别的数据格式。');
   }
 }
 

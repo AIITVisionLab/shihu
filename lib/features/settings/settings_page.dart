@@ -7,10 +7,12 @@ import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/core/utils/platform_utils.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/history/history_repository.dart';
+import 'package:sickandflutter/features/settings/device_state_repository.dart';
 import 'package:sickandflutter/features/settings/service_health_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/features/settings/widgets/settings_about_project_card.dart';
 import 'package:sickandflutter/features/settings/widgets/settings_auth_session_card.dart';
+import 'package:sickandflutter/features/settings/widgets/settings_device_state_card.dart';
 import 'package:sickandflutter/features/settings/widgets/settings_local_data_card.dart';
 import 'package:sickandflutter/features/settings/widgets/settings_overview_card.dart';
 import 'package:sickandflutter/features/settings/widgets/settings_service_config_card.dart';
@@ -29,6 +31,7 @@ class SettingsPage extends ConsumerWidget {
     final packageInfo = ref.watch(packageInfoProvider).asData?.value;
     final envConfig = ref.watch(envConfigProvider);
     final serviceHealthAsync = ref.watch(serviceHealthProvider);
+    final deviceStateAsync = ref.watch(deviceStateProvider);
     final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
@@ -77,6 +80,33 @@ class SettingsPage extends ConsumerWidget {
                     SettingsServiceHealthCard(
                       healthAsync: serviceHealthAsync,
                       onRefresh: () => ref.invalidate(serviceHealthProvider),
+                    ),
+                    const SizedBox(height: 20),
+                    SettingsDeviceStateCard(
+                      deviceStateAsync: deviceStateAsync,
+                      onRefresh: () => ref.invalidate(deviceStateProvider),
+                      onToggleLed: (state, ledOn) async {
+                        try {
+                          final repository = await ref.read(
+                            deviceStateRepositoryProvider.future,
+                          );
+                          await repository.setLed(
+                            deviceId: state.deviceId,
+                            deviceName: state.deviceName,
+                            ledOn: ledOn,
+                          );
+                          ref.invalidate(deviceStateProvider);
+                        } catch (error) {
+                          if (!context.mounted) {
+                            return;
+                          }
+                          ScaffoldMessenger.of(context)
+                            ..hideCurrentSnackBar()
+                            ..showSnackBar(
+                              SnackBar(content: Text('LED 控制失败：$error')),
+                            );
+                        }
+                      },
                     ),
                     const SizedBox(height: 20),
                     SettingsAuthSessionCard(

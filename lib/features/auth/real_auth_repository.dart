@@ -1,9 +1,11 @@
+import 'package:dio/dio.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/core/network/api_client.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/core/utils/platform_utils.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
+import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/model_utils.dart';
 
@@ -26,95 +28,98 @@ class RealAuthRepository implements AuthRepository {
     required String account,
     required String password,
   }) async {
-    final response = await _apiClient.postResponse<Map<String, dynamic>>(
-      '/api/v1/auth/login',
+    final normalizedAccount = account.trim();
+    final response = await _apiClient.postJsonDetailed(
+      '/api/login',
       data: <String, dynamic>{
-        'account': account.trim(),
+        'username': normalizedAccount,
         'password': password,
-        'platform': currentPlatformType().value,
       },
-      dataParser: asStringMap,
     );
-
-    if (!response.isSuccess) {
-      throw ApiException(
-        message: response.message.trim().isEmpty
-            ? AppCopy.authLoginFailedRetry
-            : response.message,
-        businessCode: response.code,
-      );
-    }
-
     final payload = response.data;
     if (payload == null) {
+      throw const ApiException(message: AppCopy.authLoginFailedRetry);
+    }
+
+    final success = payload['success'] == true;
+    final message = asString(payload['message']);
+    if (!success) {
       throw ApiException(
-        message: AppCopy.authLoginMissingData,
-        businessCode: response.code,
+        message: message.trim().isEmpty
+            ? AppCopy.authCredentialInvalid
+            : message,
       );
     }
 
-    return AuthSession.fromJson(<String, dynamic>{
-      ...payload,
-      'loginMode': loginMode.value,
-    });
+    return AuthSession(
+      accessToken: 'session:${DateTime.now().millisecondsSinceEpoch}',
+      sessionCookie: _extractSessionCookie(response.headers),
+      tokenType: 'Session',
+      loginMode: loginMode,
+      user: AuthUser(
+        userId: normalizedAccount,
+        account: normalizedAccount,
+        displayName: normalizedAccount,
+      ),
+    );
   }
 
   @override
   Future<AuthSession> refreshSession({required AuthSession session}) async {
-    if (!session.hasRefreshToken) {
-      throw const ApiException(message: AppCopy.authRefreshTokenMissing);
-    }
+    final response = await _apiClient.getJson('/api/check-login');
+    if (response['loggedIn'] == true) {
+      final refreshedAccount = asString(
+        response['username'],
+        fallback: session.user.account,
+      ).trim();
+      final effectiveAccount = refreshedAccount.isEmpty
+          ? session.user.account
+          : refreshedAccount;
 
-    final response = await _apiClient.postResponse<Map<String, dynamic>>(
-      '/api/v1/auth/refresh',
-      data: <String, dynamic>{
-        'refreshToken': session.refreshToken,
-        'platform': currentPlatformType().value,
-      },
-      dataParser: asStringMap,
-    );
-
-    if (!response.isSuccess) {
-      throw ApiException(
-        message: response.message.trim().isEmpty
-            ? AppCopy.authRefreshRetry
-            : response.message,
-        businessCode: response.code,
+      return session.copyWith(
+        user: AuthUser(
+          userId: effectiveAccount,
+          account: effectiveAccount,
+          displayName: effectiveAccount,
+          roles: session.user.roles,
+        ),
       );
     }
-
-    final payload = response.data;
-    if (payload == null) {
-      throw ApiException(
-        message: AppCopy.authRefreshMissingData,
-        businessCode: response.code,
-      );
-    }
-
-    return AuthSession.fromJson(<String, dynamic>{
-      ...payload,
-      'loginMode': loginMode.value,
-    });
+    throw const ApiException(message: AppCopy.authSessionExpired);
   }
 
   @override
   Future<void> logout({required AuthSession session}) async {
-    final response = await _apiClient.postResponse<Map<String, dynamic>>(
-      '/api/v1/auth/logout',
-      data: <String, dynamic>{
-        'refreshToken': session.refreshToken,
-        'platform': currentPlatformType().value,
-      },
-      dataParser: asStringMap,
+    final raw = await _apiClient.postJson(
+      '/api/logout',
+      data: <String, dynamic>{},
     );
-
-    if (!response.isSuccess) {
+    final success = raw['success'] == true;
+    if (!success) {
+      final message = asString(raw['message']);
       throw ApiException(
-        message: response.message.trim().isEmpty
-            ? AppCopy.authLogoutFailed
-            : response.message,
-        businessCode: response.code,
+        message: message.trim().isEmpty ? AppCopy.authLogoutFailed : message,
       );
     }
+  }
+
+  String? _extractSessionCookie(Headers headers) {
+    if (currentPlatformType() == PlatformType.web) {
+      return null;
+    }
+
+    final rawCookies = headers['set-cookie'];
+    if (rawCookies == null || rawCookies.isEmpty) {
+      return null;
+    }
+
+    for (final rawCookie in rawCookies) {
+      final cookiePair = rawCookie.split(';').first.trim();
+      if (cookiePair.startsWith('JSESSIONID=')) {
+        return cookiePair;
+      }
+    }
+
+    return null;
   }
 }

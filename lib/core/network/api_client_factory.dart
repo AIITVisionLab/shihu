@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
 import 'package:sickandflutter/core/network/api_client.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
+import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
 
 /// 统一创建带认证能力的 API 客户端。
@@ -9,10 +10,17 @@ final apiClientFactoryProvider = Provider<ApiClientFactory>((ref) {
   final envConfig = ref.watch(envConfigProvider);
   final authState = ref.watch(authControllerProvider);
   final authController = ref.read(authControllerProvider.notifier);
+  final session = authState.session;
 
   return ApiClientFactory(
     envConfig: envConfig,
-    authorizationValue: authState.session?.authorizationValue,
+    authorizationValue:
+        session != null &&
+            session.loginMode != AuthLoginMode.real &&
+            !session.hasSessionCookie
+        ? session.authorizationValue
+        : null,
+    cookieHeader: session?.sessionCookie,
     onUnauthorized: authController.handleUnauthorized,
   );
 });
@@ -23,6 +31,7 @@ class ApiClientFactory {
   const ApiClientFactory({
     required EnvConfig envConfig,
     required this.authorizationValue,
+    required this.cookieHeader,
     required this.onUnauthorized,
   }) : _envConfig = envConfig;
 
@@ -30,6 +39,9 @@ class ApiClientFactory {
 
   /// 当前登录态对应的认证头值。
   final String? authorizationValue;
+
+  /// 当前登录态对应的会话 Cookie。
+  final String? cookieHeader;
 
   /// 网络层发现未授权后的统一处理回调。
   final void Function({String? message}) onUnauthorized;
@@ -40,6 +52,7 @@ class ApiClientFactory {
       settings: settings,
       envConfig: _envConfig,
       authorizationValue: authorizationValue,
+      cookieHeader: cookieHeader,
       onUnauthorized: onUnauthorized,
     );
   }

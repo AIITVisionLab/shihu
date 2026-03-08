@@ -5,7 +5,6 @@ import 'package:sickandflutter/core/network/api_client_factory.dart';
 import 'package:sickandflutter/features/realtime/mock_realtime_detect_repository.dart';
 import 'package:sickandflutter/features/realtime/real_realtime_detect_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
-import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
 import 'package:sickandflutter/shared/models/detect_response.dart';
 
@@ -14,12 +13,10 @@ final realtimeDetectRepositoryProvider = Provider<RealtimeDetectRepository>((
   ref,
 ) {
   final envConfig = ref.watch(envConfigProvider);
-  final useMock =
-      envConfig.flavor != BuildFlavor.production ||
-      const bool.fromEnvironment(
-        'USE_MOCK_REALTIME_CHAIN',
-        defaultValue: false,
-      );
+  final useMock = const bool.fromEnvironment(
+    'USE_MOCK_REALTIME_CHAIN',
+    defaultValue: true,
+  );
 
   if (useMock) {
     return const MockRealtimeDetectRepository();

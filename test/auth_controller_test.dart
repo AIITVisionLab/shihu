@@ -5,7 +5,10 @@ import 'package:sickandflutter/core/storage/auth_storage.dart';
 import 'package:sickandflutter/core/storage/sensitive_storage.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
+import 'package:sickandflutter/features/auth/auth_session.dart';
+import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/features/auth/mock_auth_repository.dart';
+import 'package:sickandflutter/shared/models/app_enums.dart';
 
 void main() {
   test('AuthController restores persisted session on bootstrap', () async {
@@ -98,4 +101,64 @@ void main() {
     expect(authState.isAuthenticated, isFalse);
     expect(authState.unauthorizedMessage, '登录状态已失效，请重新登录。');
   });
+
+  test('AuthController validates persisted real session on bootstrap', () async {
+    final authStorage = AuthStorage(
+      VolatileSensitiveStorage(
+        values: <String, String>{
+          AppConstants.authSessionStorageKey:
+              '{"accessToken":"session:1","sessionCookie":"JSESSIONID=test-session","tokenType":"Session","loginMode":"real","user":{"userId":"demo","account":"demo","displayName":"demo","roles":[]}}',
+        },
+      ),
+    );
+    final authRepository = _RefreshingAuthRepository();
+
+    final container = ProviderContainer(
+      overrides: [
+        authStorageProvider.overrideWith((ref) => authStorage),
+        authRepositoryProvider.overrideWith((ref) => authRepository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(authControllerProvider.notifier).ensureInitialized();
+
+    final authState = container.read(authControllerProvider);
+    expect(authRepository.refreshCount, 1);
+    expect(authState.isAuthenticated, isTrue);
+    expect(authState.session?.user.displayName, 'demo');
+  });
+}
+
+class _RefreshingAuthRepository implements AuthRepository {
+  int refreshCount = 0;
+
+  @override
+  bool get isMockMode => false;
+
+  @override
+  AuthLoginMode get loginMode => AuthLoginMode.real;
+
+  @override
+  Future<AuthSession> login({
+    required String account,
+    required String password,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> logout({required AuthSession session}) async {}
+
+  @override
+  Future<AuthSession> refreshSession({required AuthSession session}) async {
+    refreshCount += 1;
+    return session.copyWith(
+      user: const AuthUser(
+        userId: 'demo',
+        account: 'demo',
+        displayName: 'demo',
+      ),
+    );
+  }
 }

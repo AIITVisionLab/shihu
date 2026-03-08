@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
+import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/core/network/api_response.dart';
+import 'package:sickandflutter/core/network/browser_http_client_adapter.dart';
 import 'package:sickandflutter/core/utils/platform_utils.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
@@ -15,6 +17,7 @@ class ApiClient {
     required AppSettings settings,
     required EnvConfig envConfig,
     this.authorizationValue,
+    this.cookieHeader,
     this.onUnauthorized,
   }) : _dio = Dio(
          BaseOptions(
@@ -25,20 +28,37 @@ class ApiClient {
            receiveTimeout: Duration(milliseconds: settings.receiveTimeoutMs),
            headers: <String, Object>{
              'Accept': 'application/json',
+             'X-App-Version':
+                 '${AppConstants.appVersion}+${AppConstants.appBuildNumber}',
              'X-Platform': currentPlatformType().value,
              if (_resolvedAuthorizationValue(authorizationValue) != null)
                'Authorization': _resolvedAuthorizationValue(
                  authorizationValue,
                )!,
+             if (_resolvedCookieHeader(cookieHeader) != null)
+               'Cookie': _resolvedCookieHeader(cookieHeader)!,
            },
            responseType: ResponseType.json,
          ),
-       );
+       ) {
+    configureBrowserHttpClientAdapter(_dio);
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          options.headers['X-Request-Id'] = _buildRequestId();
+          handler.next(options);
+        },
+      ),
+    );
+  }
 
   final Dio _dio;
 
   /// 当前客户端附带的认证头值。
   final String? authorizationValue;
+
+  /// 当前客户端附带的会话 Cookie。
+  final String? cookieHeader;
 
   /// 检测到未授权状态时的统一回调。
   final void Function({String? message})? onUnauthorized;
@@ -62,6 +82,22 @@ class ApiClient {
     }
   }
 
+  /// 发送 GET 请求并返回原始响应体。
+  Future<Object?> getRaw(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.get<Object?>(
+        path,
+        queryParameters: queryParameters,
+      );
+      return _extractRaw(response);
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    }
+  }
+
   /// 发送 GET 请求并按统一包裹结构解析响应。
   Future<ApiResponse<T>> getResponse<T>(
     String path, {
@@ -76,9 +112,27 @@ class ApiClient {
 
   /// 发送 JSON POST 请求并返回 JSON 对象。
   Future<Map<String, dynamic>> postJson(String path, {Object? data}) async {
+    final response = await postJsonDetailed(path, data: data);
+    return _extractJson(response);
+  }
+
+  /// 发送 JSON POST 请求并返回完整响应对象。
+  Future<Response<Map<String, dynamic>>> postJsonDetailed(
+    String path, {
+    Object? data,
+  }) async {
     try {
-      final response = await _dio.post<Map<String, dynamic>>(path, data: data);
-      return _extractJson(response);
+      return await _dio.post<Map<String, dynamic>>(path, data: data);
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    }
+  }
+
+  /// 发送 JSON POST 请求并返回原始响应体。
+  Future<Object?> postRaw(String path, {Object? data}) async {
+    try {
+      final response = await _dio.post<Object?>(path, data: data);
+      return _extractRaw(response);
     } on DioException catch (error) {
       throw _mapDioException(error);
     }
@@ -127,6 +181,14 @@ class ApiClient {
       throw const ApiException(statusCode: 500, message: '接口返回为空，无法解析响应。');
     }
 
+    return data;
+  }
+
+  Object _extractRaw(Response<Object?> response) {
+    final data = response.data;
+    if (data == null) {
+      throw const ApiException(statusCode: 500, message: '接口返回为空，无法解析响应。');
+    }
     return data;
   }
 
@@ -188,5 +250,26 @@ class ApiClient {
     }
 
     return normalizedValue;
+  }
+
+  static String? _resolvedCookieHeader(String? rawValue) {
+    if (currentPlatformType() == PlatformType.web) {
+      return null;
+    }
+
+    final normalizedValue = rawValue?.trim();
+    if (normalizedValue == null || normalizedValue.isEmpty) {
+      return null;
+    }
+
+    return normalizedValue;
+  }
+
+  static int _requestSequence = 0;
+
+  static String _buildRequestId() {
+    _requestSequence += 1;
+    final timestamp = DateTime.now().microsecondsSinceEpoch;
+    return 'req_${currentPlatformType().value}_${timestamp}_$_requestSequence';
   }
 }
