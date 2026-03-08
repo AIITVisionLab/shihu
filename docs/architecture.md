@@ -1,39 +1,32 @@
-# EdgeLink_RK3568 一期架构
+# EdgeLink_RK3568 架构说明
 
 ## 目标
 
-- 接收 STM32F429 的 `MODBUS_SNAPSHOT`。
-- 映射到 `09-1` 已验证的 OneNET 物模型字段：`Temp/Hum/Light/MQ2/Error`。
-- 订阅 `property/post/reply` 与 `property/set`。
-- 为未来的 `RK3568 -> F429 -> PLC` 控制链路预留空执行器。
-- K230/视频链路仅保留 TODO。
+- 阶段 1：接收 STM32F429 的 `MODBUS_SNAPSHOT` 并上报到 OneNET
+- 阶段 2：拉取 K230 的 RTSP(H264) 主码流，并由 RK3568 提供 WebRTC/MSE/HLS
+- 数据链路和视频链路保持解耦，互不影响
 
-## 数据流
+## 双链路结构
 
 ```text
 STM32F429 --HTTP POST /api/uplink--> RK3568 EdgeLink --MQTT--> OneNET
-                                                     \
-                                                      --TODO--> K230/云视频链路
+
+K230 --RTSP(H264)--> RK3568 go2rtc --WebRTC/MSE/HLS--> 浏览器
+                                  \
+                                   +--frpc--> 腾讯云 frps --> 公网
 ```
 
-## 上报映射
+## 阶段 1 字段映射
 
 - `Temp` <- `payload.slave2.temperature`
 - `Hum` <- `payload.slave2.humidity`
 - `Light` <- `payload.slave1.lightAdc`
 - `MQ2` <- `payload.slave3.mq2Ppm`
-- `Error` <- 只要任一从站 `online!=1`、`valid!=1` 或 `lastError!=NONE` 就置 `1`
+- `Error` <- 任一从站离线、无效或 `lastError != NONE` 时置为 `1`
 
-## 下行预留
+## 阶段 2 原则
 
-- 订阅 `property/set`
-- 解析 `id` 与 `params`
-- 兼容 `Brightness` 与 `Led`
-- 当前统一回复 `{"id":"...","code":-2,"msg":"not implemented"}`
-- 将来只需要替换 `SouthboundDispatcher`，不改 MQTT 层
-
-## 视频 TODO
-
-- `config/edgelink.ini` 已预留 `[video]` 段
-- 本期不安装 `nginx-rtmp`
-- 本期不实现 K230 接流和云端转推
+- RK3568 只负责拉流和协议转换，不负责云端转码
+- 腾讯云只运行 `frps`，不做媒体处理
+- 阶段 2 v1 不做录像、不做音频转码、不做多路摄像头调度
+- 如果需求继续增长，再从 `go2rtc` 升级到 `ZLMediaKit`

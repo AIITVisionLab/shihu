@@ -1,0 +1,32 @@
+# RK3568 侧 frpc 配置，用于把 go2rtc 暴露到腾讯云 frps。
+# 启用前请先替换 CLOUD_HOST_OR_IP 和 CHANGE_ME。
+
+serverAddr = "CLOUD_HOST_OR_IP"
+serverPort = 7000
+
+transport.protocol = "tcp"
+
+[auth]
+method = "token"
+token = "CHANGE_ME"
+
+[[proxies]]
+name = "rk3568-go2rtc-web"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 1984
+remotePort = 1984
+
+[[proxies]]
+name = "rk3568-go2rtc-webrtc-tcp"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 8555
+remotePort = 8555
+
+[[proxies]]
+name = "rk3568-go2rtc-webrtc-udp"
+type = "udp"
+localIP = "127.0.0.1"
+localPort = 8555
+remotePort = 8555

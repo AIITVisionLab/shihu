@@ -1,0 +1,18 @@
+# 腾讯云 frps 配置示例。
+# 请在云服务器安全组/防火墙中开放：
+# - TCP 7000
+# - TCP 1984
+# - TCP 8555
+# - UDP 8555
+
+bindPort = 7000
+
+[auth]
+method = "token"
+token = "CHANGE_ME"
+
+[webServer]
+addr = "0.0.0.0"
+port = 7500
+user = "admin"
+password = "CHANGE_ME"

@@ -1,0 +1,16 @@
+[Unit]
+Description=frpc for EdgeLink K230 Video Gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=linaro
+Group=linaro
+WorkingDirectory=/home/linaro/project/EdgeLink_RK3568
+ExecStart=/usr/local/bin/frpc -c /home/linaro/project/EdgeLink_RK3568/config/frpc.toml
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
