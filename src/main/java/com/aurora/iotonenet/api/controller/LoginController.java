@@ -2,6 +2,7 @@ package com.aurora.iotonenet.api.controller;
 
 import com.aurora.iotonenet.api.dto.LoginRequest;
 import com.aurora.iotonenet.api.dto.LoginResponse;
+import com.aurora.iotonenet.api.dto.RegisterRequest;
 import com.aurora.iotonenet.application.service.LoginApplicationService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -29,6 +30,11 @@ public class LoginController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request, HttpSession session) {
         return ResponseEntity.ok(loginApplicationService.login(request, session));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<LoginResponse> register(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(loginApplicationService.register(request));
     }
 
     @GetMapping("/check-login")
