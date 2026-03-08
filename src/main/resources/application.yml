@@ -1,20 +1,56 @@
+spring:
+  application:
+    name: iot-onenet
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
+
 server:
   port: 8082
 
-app:
-  login:
-    username: admin
-    password: admin123
-
 onenet:
-  product-id: your-product-id
-  authorization: your-authorization-token
+  product-id: uCq21dfshX
+  authorization: "version=2018-10-31&res=products%2FuCq21dfshX%2Fdevices%2FTest1&et=1856188586&method=md5&sign=4OVLB4PaNhWs8uOeXo9v%2BQ%3D%3D"
   property-set-url: https://iot-api.heclouds.com/thingmodel/set-device-property
   property-get-url: https://iot-api.heclouds.com/thingmodel/query-device-property
   timeout-ms: 10000
+
   pulsar:
-    broker-url: pulsar+ssl://iot-north-mq.heclouds.com:6651/
-    access-id: your-access-id
-    secret-key: your-secret-key
-    subscription-name: your-access-id-sub
-    auto-open-dashboard: true
+    access-id: 20HkZmOFURiMlWCP9614
+    secret-key: ab2f30137f424f82b5049927f25ee090
+    subscription-name: 20HkZmOFURiMlWCP9614-sub
+
+app:
+  login:
+    username: root
+    password: 12345
+
+logging:
+  level:
+    com.aurora.iotonenet: INFO
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+pulsar:
+  service:
+    url: pulsar+ssl://iot-north-mq.heclouds.com:6651
+
+  client:
+    connectionTimeoutMs: 30000
+    operationTimeoutMs: 60000
+    requestTimeoutMs: 120000
+    initialBackoffIntervalNanos: 1000000000
+    maxBackoffIntervalNanos: 30000000000
+    enableBusyWait: false
+    keepAliveIntervalSeconds: 30
+    connectionMaxIdleSeconds: 180
+    tlsAllowInsecureConnection: true
+    tlsHostnameVerificationEnable: false
+
+  consumer:
+    receiverQueueSize: 2000
+    ackTimeoutMillis: 60000
+    autoAckOldestChunkedMessageOnQueueFull: true
