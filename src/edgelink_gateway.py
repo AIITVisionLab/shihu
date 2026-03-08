@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """EdgeLink RK3568 gateway service.
 
-Stage 1 responsibilities:
+Responsibilities:
 - Accept STM32F429 MODBUS_SNAPSHOT over HTTP.
+- Accept K230 AI_DETECTIONS over HTTP.
 - Bridge telemetry to OneNET MQTT using the 09-1 field names.
 - Subscribe to property/set and property/post/reply.
 - Reply set_reply with "not implemented" until a southbound executor exists.
-- Keep the video pipeline as a documented TODO only.
 """
 
 from __future__ import annotations
@@ -32,6 +32,12 @@ def now_ms() -> int:
 
 @dataclass
 class LatestSnapshot:
+    raw: Dict[str, Any] = field(default_factory=dict)
+    received_at_ms: int = 0
+
+
+@dataclass
+class LatestAiResult:
     raw: Dict[str, Any] = field(default_factory=dict)
     received_at_ms: int = 0
 
@@ -68,6 +74,7 @@ class GatewayState:
     def __init__(self) -> None:
         self.lock = threading.Lock()
         self.latest_snapshot = LatestSnapshot()
+        self.latest_ai_result = LatestAiResult()
         self.telemetry = TelemetryState()
         self.last_command: Optional[CloudCommand] = None
         self.pending_publish = False
@@ -215,7 +222,11 @@ class GatewayApp:
             protocol_version = "HTTP/1.1"
 
             def do_POST(self) -> None:
-                if self.path != "/api/uplink":
+                if self.path == "/api/uplink":
+                    handler = self.server.app.handle_snapshot
+                elif self.path == "/api/ai":
+                    handler = self.server.app.handle_ai_result
+                else:
                     self._write_json(404, {"code": 404, "msg": "not found"})
                     return
 
@@ -236,7 +247,7 @@ class GatewayApp:
                     self._write_json(400, {"code": 400, "msg": "invalid json"})
                     return
 
-                ok, message = self.server.app.handle_snapshot(body)
+                ok, message = handler(body)
                 if ok:
                     self._write_json(200, {"code": 0, "msg": message})
                 else:
@@ -252,6 +263,7 @@ class GatewayApp:
                         "code": 0,
                         "mqttConnected": self.server.app.state.mqtt_connected,
                         "hasSnapshot": bool(self.server.app.state.latest_snapshot.raw),
+                        "hasAiResult": bool(self.server.app.state.latest_ai_result.raw),
                         "videoTodo": True,
                     }
                 self._write_json(200, response)
@@ -287,6 +299,28 @@ class GatewayApp:
         self._publish_pending_if_needed()
         message_id = body.get("messageId", "-")
         logging.info("snapshot accepted: deviceId=%s messageId=%s", body.get("deviceId", "-"), message_id)
+        return True, "accepted"
+
+    def handle_ai_result(self, body: Dict[str, Any]) -> Tuple[bool, str]:
+        if body.get("type") != "AI_DETECTIONS":
+            return False, "unsupported type"
+        detections = body.get("detections")
+        if not isinstance(detections, list):
+            return False, "detections must be an array"
+        image = body.get("image")
+        if image is not None and not isinstance(image, dict):
+            return False, "image must be an object"
+
+        with self.state.lock:
+            self.state.latest_ai_result = LatestAiResult(raw=body, received_at_ms=now_ms())
+
+        logging.info(
+            "ai result accepted: deviceId=%s stream=%s frameId=%s detections=%s",
+            body.get("deviceId", "-"),
+            body.get("stream", "-"),
+            body.get("frameId", "-"),
+            len(detections),
+        )
         return True, "accepted"
 
     def _apply_snapshot_locked(self, payload: Dict[str, Any]) -> None:
@@ -397,7 +431,7 @@ def setup_logging(level_name: str) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="EdgeLink RK3568 stage-1 gateway")
+    parser = argparse.ArgumentParser(description="EdgeLink RK3568 gateway")
     parser.add_argument("--config", default="config/edgelink.ini", help="INI config path")
     parser.add_argument("--check-config", action="store_true", help="load the configuration and exit")
     return parser.parse_args()
