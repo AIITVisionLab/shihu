@@ -15,21 +15,18 @@ class DetectPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen<DetectState>(detectControllerProvider, (previous, next) {
-      final previousError = previous?.errorMessage;
-      final nextError = next.errorMessage;
-      if (nextError != null &&
-          nextError.isNotEmpty &&
-          nextError != previousError) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(nextError)));
-      }
-    });
-
     final state = ref.watch(detectControllerProvider);
     final controller = ref.read(detectControllerProvider.notifier);
     final isRunning = state.status == DetectTaskStatus.running;
+
+    Future<void> handleStartDetect() async {
+      final payload = await controller.startDetect();
+      if (payload == null || !context.mounted) {
+        return;
+      }
+
+      await context.pushNamed(AppRoutes.result, extra: payload);
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('单图识别')),
@@ -124,29 +121,117 @@ class DetectPage extends ConsumerWidget {
                               isLoading: isRunning,
                               icon: const Icon(Icons.play_arrow_rounded),
                               onPressed: state.hasImage && !isRunning
-                                  ? () async {
-                                      final payload = await controller
-                                          .startDetect();
-                                      if (payload == null || !context.mounted) {
-                                        return;
-                                      }
-
-                                      await context.pushNamed(
-                                        AppRoutes.result,
-                                        extra: payload,
-                                      );
-                                    }
+                                  ? handleStartDetect
                                   : null,
                             ),
                           ),
                         ],
                       ),
+                      if (state.errorMessage case final message?
+                          when message.isNotEmpty) ...<Widget>[
+                        const SizedBox(height: 16),
+                        _DetectErrorPanel(
+                          message: message,
+                          hasImage: state.hasImage,
+                          isRunning: isRunning,
+                          onRetry: handleStartDetect,
+                          onRepick: controller.pickFromGallery,
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DetectErrorPanel extends StatelessWidget {
+  const _DetectErrorPanel({
+    required this.message,
+    required this.hasImage,
+    required this.isRunning,
+    required this.onRetry,
+    required this.onRepick,
+  });
+
+  final String message;
+  final bool hasImage;
+  final bool isRunning;
+  final VoidCallback onRetry;
+  final VoidCallback onRepick;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorScheme.error),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Icon(
+                  Icons.error_outline_rounded,
+                  color: colorScheme.onErrorContainer,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '本次识别未完成',
+                    style: textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onErrorContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onErrorContainer,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: <Widget>[
+                CommonButton(
+                  label: hasImage ? '重新识别' : '去选图片',
+                  tone: CommonButtonTone.secondary,
+                  icon: Icon(
+                    hasImage
+                        ? Icons.replay_rounded
+                        : Icons.photo_library_outlined,
+                  ),
+                  onPressed: isRunning ? null : (hasImage ? onRetry : onRepick),
+                ),
+                if (hasImage)
+                  CommonButton(
+                    label: '重新选图',
+                    tone: CommonButtonTone.secondary,
+                    icon: const Icon(Icons.collections_outlined),
+                    onPressed: isRunning ? null : onRepick,
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );
