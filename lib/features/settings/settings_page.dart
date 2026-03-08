@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
+import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/core/utils/platform_utils.dart';
 import 'package:sickandflutter/features/history/history_repository.dart';
+import 'package:sickandflutter/features/settings/service_health_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
+import 'package:sickandflutter/shared/models/service_health_info.dart';
 import 'package:sickandflutter/shared/widgets/common_button.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
 import 'package:sickandflutter/shared/widgets/loading_view.dart';
@@ -21,6 +24,7 @@ class SettingsPage extends ConsumerWidget {
     final settingsAsync = ref.watch(settingsControllerProvider);
     final packageInfo = ref.watch(packageInfoProvider).asData?.value;
     final envConfig = ref.watch(envConfigProvider);
+    final serviceHealthAsync = ref.watch(serviceHealthProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('设置')),
@@ -104,6 +108,15 @@ class SettingsPage extends ConsumerWidget {
                             value: '${settings.receiveTimeoutMs} ms',
                           ),
                         ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    CommonCard(
+                      title: '服务健康检查',
+                      subtitle: '用于联调和排障，可手动刷新当前服务状态。',
+                      child: _ServiceHealthSection(
+                        healthAsync: serviceHealthAsync,
+                        onRefresh: () => ref.invalidate(serviceHealthProvider),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -221,6 +234,158 @@ class SettingsPage extends ConsumerWidget {
   }
 }
 
+class _ServiceHealthSection extends StatelessWidget {
+  const _ServiceHealthSection({
+    required this.healthAsync,
+    required this.onRefresh,
+  });
+
+  final AsyncValue<ServiceHealthInfo> healthAsync;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return healthAsync.when(
+      loading: () => Row(
+        children: <Widget>[
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2.2),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              '正在检查服务状态...',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ),
+        ],
+      ),
+      error: (error, stackTrace) {
+        final message = error is ApiException
+            ? error.message
+            : '服务健康检查失败：$error';
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+            const SizedBox(height: 16),
+            CommonButton(
+              label: '重新检查',
+              tone: CommonButtonTone.secondary,
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: onRefresh,
+            ),
+          ],
+        );
+      },
+      data: (healthInfo) {
+        return Column(
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                _StatusBadge(
+                  label: _serviceStatusLabel(healthInfo.status),
+                  color: _serviceStatusColor(healthInfo.status),
+                ),
+                const SizedBox(width: 10),
+                _StatusBadge(
+                  label: _modelStatusLabel(healthInfo.modelStatus),
+                  color: _modelStatusColor(healthInfo.modelStatus),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: onRefresh,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('刷新'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _SettingRow(title: '服务名称', value: healthInfo.serviceName),
+            const SizedBox(height: 12),
+            _SettingRow(title: '服务版本', value: healthInfo.serviceVersion),
+            const SizedBox(height: 12),
+            _SettingRow(
+              title: '服务时间',
+              value: _formatServerTime(healthInfo.serverTime),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _serviceStatusLabel(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'up':
+        return '服务正常';
+      case 'down':
+        return '服务不可用';
+      default:
+        return '服务未知';
+    }
+  }
+
+  String _modelStatusLabel(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'ready':
+        return '模型就绪';
+      case 'loading':
+        return '模型加载中';
+      case 'error':
+        return '模型异常';
+      default:
+        return '模型未知';
+    }
+  }
+
+  Color _serviceStatusColor(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'up':
+        return const Color(0xFF2E7D32);
+      case 'down':
+        return const Color(0xFFC62828);
+      default:
+        return const Color(0xFF6B7280);
+    }
+  }
+
+  Color _modelStatusColor(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'ready':
+        return const Color(0xFF2E7D32);
+      case 'loading':
+        return const Color(0xFFEF6C00);
+      case 'error':
+        return const Color(0xFFC62828);
+      default:
+        return const Color(0xFF6B7280);
+    }
+  }
+
+  String _formatServerTime(String rawValue) {
+    final dateTime = DateTime.tryParse(rawValue);
+    if (dateTime == null) {
+      return rawValue.isEmpty ? '--' : rawValue;
+    }
+
+    final localDateTime = dateTime.toLocal();
+    final month = localDateTime.month.toString().padLeft(2, '0');
+    final day = localDateTime.day.toString().padLeft(2, '0');
+    final hour = localDateTime.hour.toString().padLeft(2, '0');
+    final minute = localDateTime.minute.toString().padLeft(2, '0');
+    final second = localDateTime.second.toString().padLeft(2, '0');
+    return '${localDateTime.year}-$month-$day $hour:$minute:$second';
+  }
+}
+
 class _SettingRow extends StatelessWidget {
   const _SettingRow({required this.title, required this.value, this.trailing});
 
@@ -250,6 +415,33 @@ class _SettingRow extends StatelessWidget {
         ),
         if (trailing != null) ...<Widget>[const SizedBox(width: 12), trailing!],
       ],
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
     );
   }
 }
