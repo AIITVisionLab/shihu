@@ -115,12 +115,6 @@ class AppCopy {
   /// 登录进行中文案。
   static const String authLoggingIn = '登录中...';
 
-  /// 真实接口登录模式说明。
-  static const String authLoginModeReal = '真实接口登录';
-
-  /// 演示登录模式说明。
-  static const String authLoginModeMock = '受控演示登录';
-
   /// 本地登录态已失效提示。
   static const String authSessionExpired = '本地登录态已过期，请重新登录。';
 

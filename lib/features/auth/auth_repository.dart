@@ -40,8 +40,8 @@ abstract class AuthRepository {
   /// 当前仓储是否为 mock 模式。
   bool get isMockMode;
 
-  /// 当前登录模式说明。
-  String get loginModeLabel;
+  /// 当前登录模式。
+  AuthLoginMode get loginMode;
 
   /// 使用账号密码执行登录。
   Future<AuthSession> login({
@@ -54,4 +54,10 @@ abstract class AuthRepository {
 
   /// 通知后端当前会话已退出。
   Future<void> logout({required AuthSession session});
+}
+
+/// 提供认证仓储的派生展示属性。
+extension AuthRepositoryX on AuthRepository {
+  /// 当前登录模式说明。
+  String get loginModeLabel => loginMode.label;
 }

@@ -44,7 +44,7 @@ void main() {
       expect(apiClient.capturedData?['platform'], currentPlatformType().value);
       expect(session.accessToken, 'token_1');
       expect(session.refreshToken, 'refresh_1');
-      expect(session.loginModeLabel, '真实接口登录');
+      expect(session.loginMode, AuthLoginMode.real);
       expect(session.user.account, 'demo');
     },
   );

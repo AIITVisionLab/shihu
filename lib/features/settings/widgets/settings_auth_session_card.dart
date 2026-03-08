@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/settings/widgets/settings_setting_row.dart';
+import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/widgets/common_button.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
 
@@ -45,7 +46,7 @@ class SettingsAuthSessionCard extends StatelessWidget {
                 const SizedBox(height: 14),
                 SettingsSettingRow(
                   title: AppCopy.settingsLoginMode,
-                  value: session.loginModeLabel,
+                  value: session.loginMode.label,
                 ),
                 const SizedBox(height: 14),
                 SettingsSettingRow(

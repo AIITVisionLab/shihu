@@ -3,6 +3,7 @@ import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
+import 'package:sickandflutter/shared/models/app_enums.dart';
 
 /// 开发和测试环境使用的受控登录替身实现。
 class MockAuthRepository implements AuthRepository {
@@ -24,7 +25,7 @@ class MockAuthRepository implements AuthRepository {
   bool get isMockMode => true;
 
   @override
-  String get loginModeLabel => AppCopy.authLoginModeMock;
+  AuthLoginMode get loginMode => AuthLoginMode.mock;
 
   @override
   Future<AuthSession> login({
@@ -58,7 +59,7 @@ class MockAuthRepository implements AuthRepository {
       refreshToken: 'mock_refresh_${now.microsecondsSinceEpoch}',
       tokenType: 'Bearer',
       expiresAt: expiresAt,
-      loginModeLabel: loginModeLabel,
+      loginMode: loginMode,
       user: AuthUser(
         userId: 'user_$normalizedAccount',
         account: normalizedAccount,
@@ -75,7 +76,7 @@ class MockAuthRepository implements AuthRepository {
     return session.copyWith(
       accessToken: 'mock_access_${DateTime.now().microsecondsSinceEpoch}',
       expiresAt: DateTime.now().add(const Duration(hours: 8)).toIso8601String(),
-      loginModeLabel: loginModeLabel,
+      loginMode: loginMode,
     );
   }
 

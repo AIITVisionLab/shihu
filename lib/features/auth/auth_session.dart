@@ -1,8 +1,13 @@
-import 'package:sickandflutter/core/constants/app_copy.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
+import 'package:sickandflutter/shared/models/app_enums.dart';
+import 'package:sickandflutter/shared/models/json_value_parsers.dart';
 import 'package:sickandflutter/shared/models/model_utils.dart';
 
+part 'auth_session.g.dart';
+
 /// 当前登录会话模型。
+@JsonSerializable(explicitToJson: true)
 class AuthSession {
   /// 创建登录会话对象。
   const AuthSession({
@@ -11,42 +16,38 @@ class AuthSession {
     this.refreshToken,
     this.tokenType = 'Bearer',
     this.expiresAt,
-    this.loginModeLabel = AppCopy.authLoginModeReal,
+    this.loginMode = AuthLoginMode.real,
   });
 
   /// 从 JSON 构建登录会话对象。
   factory AuthSession.fromJson(Map<String, dynamic> json) {
-    return AuthSession(
-      accessToken: asString(json['accessToken']),
-      refreshToken: asNullableString(json['refreshToken']),
-      tokenType: asString(json['tokenType'], fallback: 'Bearer'),
-      expiresAt: asNullableString(json['expiresAt']),
-      loginModeLabel: asString(
-        json['loginModeLabel'],
-        fallback: AppCopy.authLoginModeReal,
-      ),
-      user: AuthUser.fromJson(
-        asStringMap(json['user']) ?? const <String, dynamic>{},
-      ),
-    );
+    final normalizedJson = <String, dynamic>{...json};
+    normalizedJson['loginMode'] ??= normalizedJson['loginModeLabel'];
+    return _$AuthSessionFromJson(normalizedJson);
   }
 
   /// 当前访问令牌。
+  @JsonKey(fromJson: parseStringValue)
   final String accessToken;
 
   /// 刷新令牌。
+  @JsonKey(fromJson: parseNullableStringValue, toJson: _nullableStringToJson)
   final String? refreshToken;
 
   /// 认证头类型。
+  @JsonKey(fromJson: _tokenTypeFromJson)
   final String tokenType;
 
   /// 会话到期时间。
+  @JsonKey(fromJson: parseNullableStringValue, toJson: _nullableStringToJson)
   final String? expiresAt;
 
-  /// 当前登录模式说明。
-  final String loginModeLabel;
+  /// 当前登录模式。
+  @JsonKey(fromJson: _authLoginModeFromJson, toJson: _authLoginModeToJson)
+  final AuthLoginMode loginMode;
 
   /// 当前登录用户。
+  @JsonKey(fromJson: _authUserFromJson, toJson: _authUserToJson)
   final AuthUser user;
 
   /// 是否存在可用刷新令牌。
@@ -80,7 +81,7 @@ class AuthSession {
     Object? refreshToken = _authSessionUnset,
     String? tokenType,
     Object? expiresAt = _authSessionUnset,
-    String? loginModeLabel,
+    AuthLoginMode? loginMode,
     AuthUser? user,
   }) {
     return AuthSession(
@@ -92,22 +93,31 @@ class AuthSession {
       expiresAt: identical(expiresAt, _authSessionUnset)
           ? this.expiresAt
           : expiresAt as String?,
-      loginModeLabel: loginModeLabel ?? this.loginModeLabel,
+      loginMode: loginMode ?? this.loginMode,
       user: user ?? this.user,
     );
   }
 
   /// 序列化为 JSON。
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
-      'accessToken': accessToken,
-      'refreshToken': refreshToken,
-      'tokenType': tokenType,
-      'expiresAt': expiresAt,
-      'loginModeLabel': loginModeLabel,
-      'user': user.toJson(),
-    };
-  }
+  Map<String, dynamic> toJson() => _$AuthSessionToJson(this);
 }
 
 const Object _authSessionUnset = Object();
+
+String _tokenTypeFromJson(Object? value) {
+  return asString(value, fallback: 'Bearer');
+}
+
+String? _nullableStringToJson(String? value) => value;
+
+AuthLoginMode _authLoginModeFromJson(Object? value) {
+  return authLoginModeFromValue(asNullableString(value));
+}
+
+String _authLoginModeToJson(AuthLoginMode value) => value.value;
+
+AuthUser _authUserFromJson(Object? value) {
+  return AuthUser.fromJson(parseStringMapValue(value));
+}
+
+Map<String, dynamic> _authUserToJson(AuthUser value) => value.toJson();

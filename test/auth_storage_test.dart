@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/core/storage/auth_storage.dart';
 import 'package:sickandflutter/core/storage/sensitive_storage.dart';
+import 'package:sickandflutter/shared/models/app_enums.dart';
 
 void main() {
   test('AuthStorage reads persisted session', () async {
@@ -18,6 +19,7 @@ void main() {
 
     expect(session, isNotNull);
     expect(session?.accessToken, 'token_1');
+    expect(session?.loginMode, AuthLoginMode.mock);
     expect(session?.user.account, 'demo');
     expect(session?.user.roles, contains('app_user'));
   });

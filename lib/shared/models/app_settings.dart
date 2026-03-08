@@ -1,8 +1,13 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
+import 'package:sickandflutter/shared/models/json_value_parsers.dart';
 import 'package:sickandflutter/shared/models/model_utils.dart';
 
+part 'app_settings.g.dart';
+
 /// 本地应用设置模型。
+@JsonSerializable()
 class AppSettings {
   /// 创建应用设置对象。
   const AppSettings({
@@ -29,35 +34,27 @@ class AppSettings {
   }
 
   /// 从 JSON 构建应用设置对象。
-  factory AppSettings.fromJson(Map<String, dynamic> json) {
-    return AppSettings(
-      baseUrl: asString(json['baseUrl'], fallback: AppConstants.defaultBaseUrl),
-      connectTimeoutMs: asInt(
-        json['connectTimeoutMs'],
-        fallback: AppConstants.defaultConnectTimeoutMs,
-      ),
-      receiveTimeoutMs: asInt(
-        json['receiveTimeoutMs'],
-        fallback: AppConstants.defaultReceiveTimeoutMs,
-      ),
-      enableLog: asBool(json['enableLog'], fallback: true),
-      buildFlavor: buildFlavorFromValue(asString(json['buildFlavor'])),
-    );
-  }
+  factory AppSettings.fromJson(Map<String, dynamic> json) =>
+      _$AppSettingsFromJson(json);
 
   /// 服务基础地址。
+  @JsonKey(fromJson: _baseUrlFromJson)
   final String baseUrl;
 
   /// 连接超时时间，单位毫秒。
+  @JsonKey(fromJson: _connectTimeoutFromJson)
   final int connectTimeoutMs;
 
   /// 接收超时时间，单位毫秒。
+  @JsonKey(fromJson: _receiveTimeoutFromJson)
   final int receiveTimeoutMs;
 
   /// 是否开启日志。
+  @JsonKey(fromJson: _enableLogFromJson)
   final bool enableLog;
 
   /// 当前设置所属构建环境。
+  @JsonKey(fromJson: _buildFlavorFromJson, toJson: _buildFlavorToJson)
   final BuildFlavor buildFlavor;
 
   /// 返回带增量修改的新设置对象。
@@ -78,13 +75,25 @@ class AppSettings {
   }
 
   /// 序列化为 JSON。
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
-      'baseUrl': baseUrl,
-      'connectTimeoutMs': connectTimeoutMs,
-      'receiveTimeoutMs': receiveTimeoutMs,
-      'enableLog': enableLog,
-      'buildFlavor': buildFlavor.value,
-    };
-  }
+  Map<String, dynamic> toJson() => _$AppSettingsToJson(this);
 }
+
+String _baseUrlFromJson(Object? value) {
+  return asString(value, fallback: AppConstants.defaultBaseUrl);
+}
+
+int _connectTimeoutFromJson(Object? value) {
+  return asInt(value, fallback: AppConstants.defaultConnectTimeoutMs);
+}
+
+int _receiveTimeoutFromJson(Object? value) {
+  return asInt(value, fallback: AppConstants.defaultReceiveTimeoutMs);
+}
+
+bool _enableLogFromJson(Object? value) => asBool(value, fallback: true);
+
+BuildFlavor _buildFlavorFromJson(Object? value) {
+  return buildFlavorFromValue(parseNullableStringValue(value));
+}
+
+String _buildFlavorToJson(BuildFlavor value) => value.value;

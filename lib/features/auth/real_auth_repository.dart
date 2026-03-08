@@ -19,7 +19,7 @@ class RealAuthRepository implements AuthRepository {
   bool get isMockMode => false;
 
   @override
-  String get loginModeLabel => AppCopy.authLoginModeReal;
+  AuthLoginMode get loginMode => AuthLoginMode.real;
 
   @override
   Future<AuthSession> login({
@@ -55,7 +55,7 @@ class RealAuthRepository implements AuthRepository {
 
     return AuthSession.fromJson(<String, dynamic>{
       ...payload,
-      'loginModeLabel': loginModeLabel,
+      'loginMode': loginMode.value,
     });
   }
 
@@ -93,7 +93,7 @@ class RealAuthRepository implements AuthRepository {
 
     return AuthSession.fromJson(<String, dynamic>{
       ...payload,
-      'loginModeLabel': loginModeLabel,
+      'loginMode': loginMode.value,
     });
   }
 

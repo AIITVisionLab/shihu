@@ -39,7 +39,7 @@ void main() {
         session: AuthSession(
           accessToken: 'token_demo',
           expiresAt: '2026-03-08T18:00:00+08:00',
-          loginModeLabel: '受控演示登录',
+          loginMode: AuthLoginMode.mock,
           user: AuthUser(
             userId: 'user_demo',
             account: 'demo',

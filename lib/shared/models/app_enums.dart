@@ -52,6 +52,51 @@ extension BuildFlavorX on BuildFlavor {
   bool get isProduction => this == BuildFlavor.production;
 }
 
+/// 登录模式枚举。
+enum AuthLoginMode {
+  /// 真实接口登录。
+  real,
+
+  /// 受控演示登录。
+  mock,
+}
+
+/// 根据字符串解析登录模式。
+AuthLoginMode authLoginModeFromValue(String? value) {
+  switch (value) {
+    case 'mock':
+    case '受控演示登录':
+      return AuthLoginMode.mock;
+    case 'real':
+    case '真实接口登录':
+    default:
+      return AuthLoginMode.real;
+  }
+}
+
+/// 提供登录模式的标准值和展示文案。
+extension AuthLoginModeX on AuthLoginMode {
+  /// 接口和存储使用的原始值。
+  String get value {
+    switch (this) {
+      case AuthLoginMode.real:
+        return 'real';
+      case AuthLoginMode.mock:
+        return 'mock';
+    }
+  }
+
+  /// 面向界面的中文文案。
+  String get label {
+    switch (this) {
+      case AuthLoginMode.real:
+        return '真实接口登录';
+      case AuthLoginMode.mock:
+        return '受控演示登录';
+    }
+  }
+}
+
 /// 识别任务来源枚举。
 enum SourceType {
   /// 单图识别来源。
