@@ -1,6 +1,7 @@
 # RK3568 侧 frpc 配置，用于把 go2rtc 暴露到腾讯云 frps。
 # 当前固定公网 IP：101.35.79.76
 # 当前固定 token：shihu-k230-frp-20260309
+# 公网端口已恢复为 1984/8555。
 
 serverAddr = "101.35.79.76"
 serverPort = 7000
