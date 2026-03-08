@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/routes.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/detect/detect_controller.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/widgets/adaptive_image.dart';
@@ -29,7 +30,7 @@ class DetectPage extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('单图识别')),
+      appBar: AppBar(title: const Text(AppCopy.detectPageTitle)),
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
@@ -39,23 +40,22 @@ class DetectPage extends ConsumerWidget {
               padding: const EdgeInsets.all(20),
               children: <Widget>[
                 CommonCard(
-                  title: '识别说明',
-                  subtitle:
-                      '当前默认调用真实识别接口；开发或测试环境如需演示稳定结果，可通过 dart-define 切回 mock。',
+                  title: AppCopy.detectGuideTitle,
+                  subtitle: AppCopy.detectGuideSubtitle,
                   child: Wrap(
                     spacing: 12,
                     runSpacing: 12,
                     children: const <Widget>[
-                      Chip(label: Text('支持本地选图')),
-                      Chip(label: Text('支持相机入口')),
-                      Chip(label: Text('识别结果可保存为历史记录')),
+                      Chip(label: Text(AppCopy.detectGalleryChip)),
+                      Chip(label: Text(AppCopy.detectCameraChip)),
+                      Chip(label: Text(AppCopy.detectHistoryChip)),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
                 CommonCard(
-                  title: '图片预览',
-                  subtitle: '桌面端拖拽入口已预留，这一轮先保证各平台都能通过文件选择进入识别。',
+                  title: AppCopy.detectPreviewTitle,
+                  subtitle: AppCopy.detectPreviewSubtitle,
                   child: Column(
                     children: <Widget>[
                       _PreviewBox(imagePath: state.selectedImagePath),
@@ -64,7 +64,7 @@ class DetectPage extends ConsumerWidget {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            '当前文件：${state.selectedImageName}',
+                            AppCopy.detectCurrentFile(state.selectedImageName!),
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ),
@@ -73,14 +73,14 @@ class DetectPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 20),
                 CommonCard(
-                  title: '操作区',
+                  title: AppCopy.detectActionsTitle,
                   child: Column(
                     children: <Widget>[
                       Row(
                         children: <Widget>[
                           Expanded(
                             child: CommonButton(
-                              label: '从相册选择',
+                              label: AppCopy.detectPickFromGallery,
                               tone: CommonButtonTone.secondary,
                               icon: const Icon(Icons.photo_library_outlined),
                               onPressed: isRunning
@@ -91,7 +91,7 @@ class DetectPage extends ConsumerWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: CommonButton(
-                              label: '使用相机',
+                              label: AppCopy.detectPickFromCamera,
                               tone: CommonButtonTone.secondary,
                               icon: const Icon(Icons.camera_alt_outlined),
                               onPressed: isRunning
@@ -106,7 +106,7 @@ class DetectPage extends ConsumerWidget {
                         children: <Widget>[
                           Expanded(
                             child: CommonButton(
-                              label: '清空选择',
+                              label: AppCopy.detectClearSelection,
                               tone: CommonButtonTone.secondary,
                               icon: const Icon(Icons.refresh_rounded),
                               onPressed: isRunning
@@ -117,7 +117,9 @@ class DetectPage extends ConsumerWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: CommonButton(
-                              label: isRunning ? '识别中...' : '开始识别',
+                              label: isRunning
+                                  ? AppCopy.detectRunning
+                                  : AppCopy.detectStart,
                               isLoading: isRunning,
                               icon: const Icon(Icons.play_arrow_rounded),
                               onPressed: state.hasImage && !isRunning
@@ -190,7 +192,7 @@ class _DetectErrorPanel extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '本次识别未完成',
+                    AppCopy.detectFailedTitle,
                     style: textTheme.titleMedium?.copyWith(
                       color: colorScheme.onErrorContainer,
                       fontWeight: FontWeight.w700,
@@ -213,7 +215,7 @@ class _DetectErrorPanel extends StatelessWidget {
               runSpacing: 12,
               children: <Widget>[
                 CommonButton(
-                  label: hasImage ? '重新识别' : '去选图片',
+                  label: hasImage ? AppCopy.detectRetry : AppCopy.detectRepick,
                   tone: CommonButtonTone.secondary,
                   icon: Icon(
                     hasImage
@@ -224,7 +226,7 @@ class _DetectErrorPanel extends StatelessWidget {
                 ),
                 if (hasImage)
                   CommonButton(
-                    label: '重新选图',
+                    label: AppCopy.detectRechoose,
                     tone: CommonButtonTone.secondary,
                     icon: const Icon(Icons.collections_outlined),
                     onPressed: isRunning ? null : onRepick,
@@ -269,7 +271,7 @@ class _PreviewBox extends StatelessWidget {
                       ),
                       const SizedBox(height: 14),
                       Text(
-                        '请选择石斛图片后开始识别',
+                        AppCopy.detectEmptyPreview,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
@@ -279,7 +281,7 @@ class _PreviewBox extends StatelessWidget {
                   imagePath!,
                   errorBuilder: (context) => Center(
                     child: Text(
-                      '当前平台无法预览该图片，但识别链路已接通。',
+                      AppCopy.detectPreviewUnavailable,
                       style: Theme.of(context).textTheme.bodyLarge,
                       textAlign: TextAlign.center,
                     ),

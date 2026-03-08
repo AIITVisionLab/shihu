@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 
@@ -47,7 +48,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
       }
 
       setState(() {
-        _errorMessage = '初始化失败：$error';
+        _errorMessage = AppCopy.splashInitFailed(error);
       });
     }
   }
@@ -111,7 +112,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
                     const CircularProgressIndicator(),
                     const SizedBox(height: 16),
                     Text(
-                      '正在初始化环境配置、本地状态和演示信息...',
+                      AppCopy.splashBootstrapping,
                       style: textTheme.bodyLarge,
                       textAlign: TextAlign.center,
                     ),
@@ -131,7 +132,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
                         });
                         _bootstrap();
                       },
-                      child: const Text('重试初始化'),
+                      child: const Text(AppCopy.splashRetry),
                     ),
                   ],
                 ],

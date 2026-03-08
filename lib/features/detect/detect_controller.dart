@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/features/detect/detect_repository.dart';
 import 'package:sickandflutter/features/result/result_page.dart';
@@ -36,7 +37,7 @@ class DetectController extends Notifier<DetectState> {
     if (!state.hasImage) {
       state = state.copyWith(
         status: DetectTaskStatus.failed,
-        errorMessage: '请先选择一张石斛图片。',
+        errorMessage: AppCopy.detectSelectImageFirst,
       );
       return null;
     }
@@ -68,7 +69,7 @@ class DetectController extends Notifier<DetectState> {
     } catch (error) {
       state = state.copyWith(
         status: DetectTaskStatus.failed,
-        errorMessage: '识别失败：$error',
+        errorMessage: AppCopy.detectFailed(error),
       );
       return null;
     }
@@ -96,7 +97,7 @@ class DetectController extends Notifier<DetectState> {
     } catch (error) {
       state = state.copyWith(
         status: DetectTaskStatus.failed,
-        errorMessage: '读取图片失败：$error',
+        errorMessage: AppCopy.detectReadImageFailed(error),
       );
     }
   }

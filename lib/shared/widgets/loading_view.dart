@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 
 /// 通用加载视图，可用于全页或局部加载状态。
 class LoadingView extends StatelessWidget {
   /// 创建加载视图。
-  const LoadingView({this.message = '加载中...', super.key});
+  const LoadingView({this.message = AppCopy.loading, super.key});
 
   /// 加载提示文案。
   final String message;

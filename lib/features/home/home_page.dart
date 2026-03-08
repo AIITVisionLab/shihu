@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
 
@@ -34,26 +35,26 @@ class HomePage extends ConsumerWidget {
                   children: <Widget>[
                     _HomeEntryCard(
                       icon: Icons.image_search_rounded,
-                      title: '开始识别',
-                      subtitle: '选择石斛叶片图片，走通单图识别主链路。',
+                      title: AppCopy.homeDetectTitle,
+                      subtitle: AppCopy.homeDetectSubtitle,
                       onTap: () => context.pushNamed(AppRoutes.detect),
                     ),
                     _HomeEntryCard(
                       icon: Icons.videocam_rounded,
-                      title: '实时监测',
-                      subtitle: '预留摄像头识别链路，下一轮接入实时帧处理。',
+                      title: AppCopy.homeRealtimeTitle,
+                      subtitle: AppCopy.homeRealtimeSubtitle,
                       onTap: () => context.pushNamed(AppRoutes.realtimeDetect),
                     ),
                     _HomeEntryCard(
                       icon: Icons.history_rounded,
-                      title: '历史记录',
-                      subtitle: '查看本地保存的识别结果与详情。',
+                      title: AppCopy.homeHistoryTitle,
+                      subtitle: AppCopy.homeHistorySubtitle,
                       onTap: () => context.pushNamed(AppRoutes.history),
                     ),
                     _HomeEntryCard(
                       icon: Icons.settings_rounded,
-                      title: '设置',
-                      subtitle: '管理服务地址、环境信息和本地数据。',
+                      title: AppCopy.homeSettingsTitle,
+                      subtitle: AppCopy.homeSettingsSubtitle,
                       onTap: () => context.pushNamed(AppRoutes.settings),
                     ),
                   ],
@@ -97,7 +98,7 @@ class _HeroCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
-                '跨平台识别演示',
+                AppCopy.homeCrossPlatformDemo,
                 style: textTheme.labelLarge?.copyWith(color: Colors.white),
               ),
             ),
@@ -111,7 +112,7 @@ class _HeroCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              '当前基线已接入主题、路由、设置持久化、真实单图识别、本地历史记录、服务健康检查和实时测试帧链路。下一轮继续补摄像头预览与真实取帧即可。',
+              AppCopy.homeOverview,
               style: textTheme.titleMedium?.copyWith(
                 color: Colors.white.withValues(alpha: 0.94),
                 height: 1.5,
@@ -122,10 +123,10 @@ class _HeroCard extends StatelessWidget {
               spacing: 12,
               runSpacing: 12,
               children: <Widget>[
-                _Pill(label: '版本 $version'),
-                const _Pill(label: 'Material 3'),
-                const _Pill(label: 'Flutter Riverpod'),
-                const _Pill(label: '本地历史记录'),
+                _Pill(label: AppCopy.homeVersionPill(version)),
+                const _Pill(label: AppCopy.homeMaterialPill),
+                const _Pill(label: AppCopy.homeRiverpodPill),
+                const _Pill(label: AppCopy.homeHistoryPill),
               ],
             ),
           ],
