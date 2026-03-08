@@ -22,8 +22,13 @@ import time
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, Optional, Tuple
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 import paho.mqtt.client as mqtt
+
+AI_FORWARD_PLACEHOLDER_URL = "http://<java-host>:<port>/api/edge/ai-detections"
 
 
 def now_ms() -> int:
@@ -58,6 +63,16 @@ class CloudCommand:
     received_at_ms: int
 
 
+@dataclass
+class AiForwardConfig:
+    enabled: bool = False
+    target_url: str = AI_FORWARD_PLACEHOLDER_URL
+    auth_mode: str = "none"
+    timeout_s: float = 2.0
+    retry_interval_ms: int = 1000
+    only_non_empty: bool = True
+
+
 class SouthboundDispatcher:
     """Placeholder for future RK3568 -> F429 -> PLC control flow."""
 
@@ -78,7 +93,11 @@ class GatewayState:
         self.telemetry = TelemetryState()
         self.last_command: Optional[CloudCommand] = None
         self.pending_publish = False
+        self.pending_ai_forward: Optional[LatestAiResult] = None
         self.mqtt_connected = False
+        self.ai_forward_enabled = False
+        self.last_ai_forward_ok: Optional[bool] = None
+        self.last_ai_forward_ms = 0
 
 
 class GatewayApp:
@@ -89,6 +108,9 @@ class GatewayApp:
         self._http_server: Optional[ThreadingHTTPServer] = None
         self._http_thread: Optional[threading.Thread] = None
         self._mqtt_client = self._build_mqtt_client()
+        self._stop_event = threading.Event()
+        self._ai_forward_event = threading.Event()
+        self._ai_forward_thread: Optional[threading.Thread] = None
 
         self.http_host = config.get("http", "bind_host", fallback="0.0.0.0")
         self.http_port = config.getint("http", "bind_port", fallback=8080)
@@ -100,11 +122,25 @@ class GatewayApp:
         self.broker_port = config.getint("onenet", "port", fallback=1883)
         self.keepalive = config.getint("onenet", "keepalive", fallback=120)
         self.publish_qos = config.getint("onenet", "qos", fallback=0)
+        self.ai_forward = self._load_ai_forward_config(config)
 
         self.topic_post = f"$sys/{self.product_id}/{self.device_name}/thing/property/post"
         self.topic_post_reply = f"$sys/{self.product_id}/{self.device_name}/thing/property/post/reply"
         self.topic_set = f"$sys/{self.product_id}/{self.device_name}/thing/property/set"
         self.topic_set_reply = f"$sys/{self.product_id}/{self.device_name}/thing/property/set_reply"
+
+        self.state.ai_forward_enabled = self.ai_forward.enabled
+
+    @staticmethod
+    def _load_ai_forward_config(config: configparser.ConfigParser) -> AiForwardConfig:
+        return AiForwardConfig(
+            enabled=config.getboolean("ai_forward", "enabled", fallback=False),
+            target_url=config.get("ai_forward", "target_url", fallback=AI_FORWARD_PLACEHOLDER_URL).strip(),
+            auth_mode=config.get("ai_forward", "auth_mode", fallback="none").strip().lower(),
+            timeout_s=config.getfloat("ai_forward", "timeout_s", fallback=2.0),
+            retry_interval_ms=config.getint("ai_forward", "retry_interval_ms", fallback=1000),
+            only_non_empty=config.getboolean("ai_forward", "only_non_empty", fallback=True),
+        )
 
     def _build_mqtt_client(self) -> mqtt.Client:
         client = mqtt.Client(client_id=self.config.get("onenet", "device_name", fallback=""), protocol=mqtt.MQTTv311)
@@ -191,21 +227,109 @@ class GatewayApp:
         logging.info("set_reply published rc=%s payload=%s", result.rc, payload)
 
     def start(self) -> None:
+        self._stop_event.clear()
+        self._ai_forward_event.clear()
         self._mqtt_client.connect_async(self.broker, self.broker_port, keepalive=self.keepalive)
         self._mqtt_client.loop_start()
         self._start_http_server()
+        if self.ai_forward.enabled:
+            self._start_ai_forward_thread()
 
     def stop(self) -> None:
+        self._stop_event.set()
+        self._ai_forward_event.set()
         if self._http_server is not None:
             self._http_server.shutdown()
             self._http_server.server_close()
         if self._http_thread is not None:
             self._http_thread.join(timeout=5)
+        if self._ai_forward_thread is not None:
+            self._ai_forward_thread.join(timeout=5)
         self._mqtt_client.loop_stop()
         try:
             self._mqtt_client.disconnect()
         except Exception:
             logging.exception("mqtt disconnect failed")
+
+    def _start_ai_forward_thread(self) -> None:
+        if self._ai_forward_thread is not None and self._ai_forward_thread.is_alive():
+            return
+        self._ai_forward_thread = threading.Thread(target=self._ai_forward_loop, name="ai-forward", daemon=True)
+        self._ai_forward_thread.start()
+        logging.info(
+            "ai forward enabled: target=%s only_non_empty=%s retry_interval_ms=%s timeout_s=%s",
+            self.ai_forward.target_url,
+            self.ai_forward.only_non_empty,
+            self.ai_forward.retry_interval_ms,
+            self.ai_forward.timeout_s,
+        )
+
+    def _ai_forward_loop(self) -> None:
+        timeout_s = max(self.ai_forward.retry_interval_ms, 100) / 1000.0
+        while not self._stop_event.is_set():
+            self._ai_forward_event.wait(timeout=timeout_s)
+            self._ai_forward_event.clear()
+            if self._stop_event.is_set():
+                return
+            self._forward_pending_ai_once()
+
+    def _forward_pending_ai_once(self) -> None:
+        with self.state.lock:
+            pending = self.state.pending_ai_forward
+        if pending is None or not pending.raw:
+            return
+
+        payload_text = json.dumps(pending.raw, ensure_ascii=False, separators=(",", ":"))
+        detections = pending.raw.get("detections", [])
+        frame_id = pending.raw.get("frameId", "-")
+        request = Request(
+            self.ai_forward.target_url,
+            data=payload_text.encode("utf-8"),
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            method="POST",
+        )
+
+        try:
+            with urlopen(request, timeout=self.ai_forward.timeout_s) as response:
+                status_code = getattr(response, "status", response.getcode())
+                response.read(1024)
+            if not 200 <= status_code < 300:
+                raise RuntimeError(f"unexpected status code: {status_code}")
+        except HTTPError as exc:
+            self._mark_ai_forward_failed(frame_id, len(detections), f"HTTP {exc.code}")
+            return
+        except URLError as exc:
+            self._mark_ai_forward_failed(frame_id, len(detections), str(exc.reason))
+            return
+        except Exception as exc:
+            self._mark_ai_forward_failed(frame_id, len(detections), str(exc))
+            return
+
+        with self.state.lock:
+            current = self.state.pending_ai_forward
+            if current is not None and current.received_at_ms == pending.received_at_ms:
+                self.state.pending_ai_forward = None
+            self.state.last_ai_forward_ok = True
+            self.state.last_ai_forward_ms = now_ms()
+
+        logging.info(
+            "ai result forwarded: target=%s frameId=%s detections=%s status=%s",
+            self.ai_forward.target_url,
+            frame_id,
+            len(detections),
+            status_code,
+        )
+
+    def _mark_ai_forward_failed(self, frame_id: Any, detection_count: int, error_text: str) -> None:
+        with self.state.lock:
+            self.state.last_ai_forward_ok = False
+        logging.warning(
+            "ai result forward failed: target=%s frameId=%s detections=%s error=%s",
+            self.ai_forward.target_url,
+            frame_id,
+            detection_count,
+            error_text,
+        )
 
     def _start_http_server(self) -> None:
         app = self
@@ -265,6 +389,13 @@ class GatewayApp:
                         "hasSnapshot": bool(self.server.app.state.latest_snapshot.raw),
                         "hasAiResult": bool(self.server.app.state.latest_ai_result.raw),
                         "videoTodo": True,
+                        "aiForwardEnabled": self.server.app.state.ai_forward_enabled,
+                        "aiForwardPending": bool(
+                            self.server.app.state.pending_ai_forward
+                            and self.server.app.state.pending_ai_forward.raw
+                        ),
+                        "lastAiForwardOk": self.server.app.state.last_ai_forward_ok,
+                        "lastAiForwardMs": self.server.app.state.last_ai_forward_ms,
                     }
                 self._write_json(200, response)
 
@@ -311,8 +442,32 @@ class GatewayApp:
         if image is not None and not isinstance(image, dict):
             return False, "image must be an object"
 
+        received_at_ms = now_ms()
+        queue_for_backend = False
+        skip_empty = False
+
         with self.state.lock:
-            self.state.latest_ai_result = LatestAiResult(raw=body, received_at_ms=now_ms())
+            self.state.latest_ai_result = LatestAiResult(raw=body, received_at_ms=received_at_ms)
+            if self.ai_forward.enabled:
+                if self.ai_forward.only_non_empty and not detections:
+                    skip_empty = True
+                else:
+                    self.state.pending_ai_forward = LatestAiResult(raw=body, received_at_ms=received_at_ms)
+                    queue_for_backend = True
+
+        if queue_for_backend:
+            logging.info(
+                "ai result queued for backend: target=%s frameId=%s detections=%s",
+                self.ai_forward.target_url,
+                body.get("frameId", "-"),
+                len(detections),
+            )
+            self._ai_forward_event.set()
+        elif skip_empty:
+            logging.info(
+                "ai result skipped because detections is empty: frameId=%s",
+                body.get("frameId", "-"),
+            )
 
         logging.info(
             "ai result accepted: deviceId=%s stream=%s frameId=%s detections=%s",
@@ -398,15 +553,32 @@ class GatewayApp:
         params["Error"] = {"value": self.state.telemetry.error}
         return json.dumps({"id": str(message_id), "params": params}, ensure_ascii=False, separators=(",", ":"))
 
+    @staticmethod
+    def _is_placeholder_target_url(target_url: str) -> bool:
+        return "<java-host>" in target_url or "<port>" in target_url
+
     def check_config(self) -> None:
+        if self.ai_forward.auth_mode != "none":
+            raise ValueError(f"unsupported ai_forward auth_mode: {self.ai_forward.auth_mode}")
+        if self.ai_forward.timeout_s <= 0:
+            raise ValueError("ai_forward timeout_s must be > 0")
+        if self.ai_forward.retry_interval_ms <= 0:
+            raise ValueError("ai_forward retry_interval_ms must be > 0")
+        if self.ai_forward.enabled:
+            if not self.ai_forward.target_url or self._is_placeholder_target_url(self.ai_forward.target_url):
+                raise ValueError("ai_forward target_url must be set to a real Java backend URL when enabled")
+            parsed = urlparse(self.ai_forward.target_url)
+            if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+                raise ValueError(f"invalid ai_forward target_url: {self.ai_forward.target_url}")
         logging.info(
-            "config loaded: http=%s:%s broker=%s:%s device=%s video.enabled=%s",
+            "config loaded: http=%s:%s broker=%s:%s device=%s video.enabled=%s ai_forward.enabled=%s",
             self.http_host,
             self.http_port,
             self.broker,
             self.broker_port,
             self.device_name,
             self.config.getboolean("video", "enabled", fallback=False),
+            self.ai_forward.enabled,
         )
 
 
@@ -415,7 +587,7 @@ def load_config(config_path: str) -> configparser.ConfigParser:
     read_files = parser.read(config_path, encoding="utf-8")
     if not read_files:
         raise FileNotFoundError(f"config file not found: {config_path}")
-    for section in ("http", "onenet", "video"):
+    for section in ("http", "onenet", "video", "ai_forward"):
         if not parser.has_section(section):
             raise ValueError(f"missing config section: {section}")
     return parser
