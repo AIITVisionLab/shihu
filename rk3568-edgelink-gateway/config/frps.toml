@@ -1,0 +1,14 @@
+# 腾讯云 frps 配置，可直接部署到 101.35.79.76
+# 放行端口：7000/tcp 1984/tcp 8555/tcp 8555/udp 7500/tcp(可选)
+
+bindPort = 7000
+
+[auth]
+method = "token"
+token = "shihu-k230-frp-20260309"
+
+[webServer]
+addr = "0.0.0.0"
+port = 7500
+user = "admin"
+password = "shihu-k230-dashboard-20260309"
