@@ -35,14 +35,14 @@
 - Flutter 工程初始化、主题、路由、分析规则和基础目录结构
 - `Splash / Home / Detect / Result / History / Settings / About` 主流程页面
 - `flutter_riverpod` 状态管理接入
-- 单图识别主链路：选图 / 拍照 -> 受控 mock 识别 -> 结果页 -> 保存本地历史
+- 单图识别主链路：选图 / 拍照 -> 真实 `/api/v1/detect/image` 识别 -> 结果页 -> 保存本地历史
 - 本地设置持久化、本地历史记录持久化
 - `macOS` 与 `OpenHarmony / 鸿蒙` 平台枚举、运行时识别和基础工程预留
 - 一组基础 Widget 测试与仓储测试
 
 当前未完成：
 
-- 真实 `/api/v1/detect/image` 接口接入
+- `/api/v1/detect/image` 的正式联调、错误码细化与异常重试策略
 - 实时识别页的摄像头预览、权限处理和帧推理链路
 - 关键集成测试、日志采集和全平台构建回归
 
@@ -92,7 +92,7 @@
 - 正式环境不允许返回假结果、伪成功值或静默降级。
 - V1 首版必须保留 `本地历史记录` 能力。
 - 状态管理统一使用 `flutter_riverpod`。
-- 当前只有单图识别 Repository 使用受控 mock；历史记录和设置已经走本地真实持久化。
+- 单图识别默认走真实接口；开发 / 测试环境可通过 `USE_MOCK_DETECT=true` 切回受控 mock；历史记录和设置始终走本地真实持久化。
 - 实时识别页当前仅保留入口和占位说明，不伪造摄像头预览和假框效果。
 - 平台差异统一收敛到适配层，不在页面层分叉业务逻辑。
 
@@ -113,7 +113,7 @@
 
 建议按以下顺序继续推进：
 
-1. 接入真实 `/api/v1/detect/image`，把单图识别从 mock 切到真实接口。
+1. 完成 `/api/v1/detect/image` 的正式联调、错误码映射和重试策略收口。
 2. 实现 `RealtimeDetectPage` 的摄像头预览、权限处理和帧识别状态流。
 3. 补齐更多 Widget / 集成测试，并逐步完成 Android、Web、Windows、macOS、OpenHarmony 的构建验证。
 

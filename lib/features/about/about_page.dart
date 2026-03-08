@@ -37,7 +37,7 @@ class AboutPage extends StatelessWidget {
                 CommonCard(
                   title: '开发策略',
                   child: Text(
-                    '当前先通过受控 mock 数据打通单图识别主链路，后续在 Repository 层切换到真实 Java 后端接口，不改页面契约。',
+                    '单图识别默认走真实 Java 后端接口；开发和测试环境可按需切回受控 mock 仓储，页面契约保持不变。',
                   ),
                 ),
               ],

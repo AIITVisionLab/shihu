@@ -28,6 +28,9 @@ class ApiClient {
 
   final Dio _dio;
 
+  /// 当前客户端实际使用的基础地址。
+  String get baseUrl => _dio.options.baseUrl;
+
   /// 发送 GET 请求并返回 JSON 对象。
   Future<Map<String, dynamic>> getJson(
     String path, {

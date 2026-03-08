@@ -38,7 +38,6 @@ class HistoryRepository {
     if (decoded == null) {
       return const <HistoryRecord>[];
     }
-
     final records = <HistoryRecord>[];
     for (final item in decoded) {
       final itemJson = asStringMap(item);

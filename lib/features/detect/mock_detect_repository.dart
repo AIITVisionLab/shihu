@@ -1,3 +1,4 @@
+import 'package:image_picker/image_picker.dart';
 import 'package:sickandflutter/features/detect/detect_repository.dart';
 import 'package:sickandflutter/shared/models/advice_info.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
@@ -14,13 +15,10 @@ class MockDetectRepository implements DetectRepository {
   const MockDetectRepository();
 
   @override
-  Future<DetectResponse> detectImage({
-    required String imagePath,
-    required String fileName,
-  }) async {
+  Future<DetectResponse> detectImage({required XFile imageFile}) async {
     await Future<void>.delayed(const Duration(milliseconds: 900));
 
-    final normalizedName = fileName.toLowerCase();
+    final normalizedName = imageFile.name.toLowerCase();
     final isHealthy =
         normalizedName.contains('healthy') || normalizedName.contains('正常');
     final isInsect =

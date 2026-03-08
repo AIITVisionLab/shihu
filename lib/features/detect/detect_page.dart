@@ -43,7 +43,8 @@ class DetectPage extends ConsumerWidget {
               children: <Widget>[
                 CommonCard(
                   title: '识别说明',
-                  subtitle: '当前默认使用受控 mock 结果打通主链路，后续直接替换 Repository 即可接入真实接口。',
+                  subtitle:
+                      '当前默认调用真实识别接口；开发或测试环境如需演示稳定结果，可通过 dart-define 切回 mock。',
                   child: Wrap(
                     spacing: 12,
                     runSpacing: 12,

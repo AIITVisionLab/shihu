@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/features/detect/detect_repository.dart';
 import 'package:sickandflutter/features/result/result_page.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
@@ -40,8 +41,8 @@ class DetectController extends Notifier<DetectState> {
       return null;
     }
 
-    final imagePath = state.selectedImagePath!;
-    final fileName = state.selectedImageName ?? 'selected_image.jpg';
+    final imageFile = state.selectedImageFile!;
+    final imagePath = state.selectedImagePath;
     state = state.copyWith(
       status: DetectTaskStatus.running,
       errorMessage: null,
@@ -50,7 +51,7 @@ class DetectController extends Notifier<DetectState> {
     try {
       final response = await ref
           .read(detectRepositoryProvider)
-          .detectImage(imagePath: imagePath, fileName: fileName);
+          .detectImage(imageFile: imageFile);
 
       state = state.copyWith(status: DetectTaskStatus.success);
       return ResultPagePayload(
@@ -58,6 +59,12 @@ class DetectController extends Notifier<DetectState> {
         sourceImagePath: imagePath,
         canSave: true,
       );
+    } on ApiException catch (error) {
+      state = state.copyWith(
+        status: DetectTaskStatus.failed,
+        errorMessage: error.message,
+      );
+      return null;
     } catch (error) {
       state = state.copyWith(
         status: DetectTaskStatus.failed,
@@ -80,6 +87,7 @@ class DetectController extends Notifier<DetectState> {
       }
 
       state = state.copyWith(
+        selectedImageFile: file,
         selectedImagePath: file.path,
         selectedImageName: file.name,
         status: DetectTaskStatus.idle,
@@ -98,11 +106,15 @@ class DetectController extends Notifier<DetectState> {
 class DetectState {
   /// 创建单图识别页面状态对象。
   const DetectState({
+    this.selectedImageFile,
     this.selectedImagePath,
     this.selectedImageName,
     this.status = DetectTaskStatus.idle,
     this.errorMessage,
   });
+
+  /// 当前已选图片文件对象。
+  final XFile? selectedImageFile;
 
   /// 当前已选图片路径。
   final String? selectedImagePath;
@@ -117,16 +129,18 @@ class DetectState {
   final String? errorMessage;
 
   /// 当前是否已经选择可识别图片。
-  bool get hasImage => (selectedImagePath ?? '').isNotEmpty;
+  bool get hasImage => selectedImageFile != null;
 
   /// 返回带增量修改的新状态对象。
   DetectState copyWith({
+    XFile? selectedImageFile,
     String? selectedImagePath,
     String? selectedImageName,
     DetectTaskStatus? status,
     String? errorMessage,
   }) {
     return DetectState(
+      selectedImageFile: selectedImageFile ?? this.selectedImageFile,
       selectedImagePath: selectedImagePath ?? this.selectedImagePath,
       selectedImageName: selectedImageName ?? this.selectedImageName,
       status: status ?? this.status,
