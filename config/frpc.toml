@@ -1,14 +1,15 @@
 # RK3568 侧 frpc 配置，用于把 go2rtc 暴露到腾讯云 frps。
-# 启用前请先替换 CLOUD_HOST_OR_IP 和 CHANGE_ME。
+# 当前固定公网 IP：101.35.79.76
+# 当前固定 token：shihu-k230-frp-20260309
 
-serverAddr = "CLOUD_HOST_OR_IP"
+serverAddr = "101.35.79.76"
 serverPort = 7000
 
 transport.protocol = "tcp"
 
 [auth]
 method = "token"
-token = "CHANGE_ME"
+token = "shihu-k230-frp-20260309"
 
 [[proxies]]
 name = "rk3568-go2rtc-web"

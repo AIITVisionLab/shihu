@@ -2,7 +2,7 @@
 # 说明：
 # - 当前轻量级 v1 方案要求 K230 主码流为 H264。
 # - 如果浏览器无法兼容音频，优先在 K230 侧关闭音频。
-# - 把 CLOUD_HOST_OR_IP 替换为腾讯云 frps 对外暴露的公网 IP 或域名。
+# - 当前公网候选地址已经固定为腾讯云公网 IP 101.35.79.76。
 # - 把 K230_IP/STREAM_PATH 替换为实际 RTSP 地址。
 
 api:
@@ -14,7 +14,7 @@ rtsp:
 webrtc:
   listen: ":8555"
   candidates:
-    - "CLOUD_HOST_OR_IP:8555"
+    - "101.35.79.76:8555"
 
 streams:
   k230:
