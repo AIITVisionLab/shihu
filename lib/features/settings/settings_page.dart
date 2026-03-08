@@ -9,12 +9,13 @@ import 'package:sickandflutter/features/history/history_repository.dart';
 import 'package:sickandflutter/features/settings/service_health_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
+import 'package:sickandflutter/shared/models/app_settings.dart';
 import 'package:sickandflutter/shared/models/service_health_info.dart';
 import 'package:sickandflutter/shared/widgets/common_button.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
 import 'package:sickandflutter/shared/widgets/loading_view.dart';
 
-/// 设置页，负责展示环境信息和管理本地配置。
+/// 设置页，负责展示环境信息、服务状态和本地配置入口。
 class SettingsPage extends ConsumerWidget {
   /// 创建设置页。
   const SettingsPage({super.key});
@@ -36,160 +37,91 @@ class SettingsPage extends ConsumerWidget {
             return Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 900),
+                constraints: const BoxConstraints(maxWidth: 940),
                 child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: <Widget>[
-                    CommonCard(
-                      title: '运行环境',
-                      child: Column(
-                        children: <Widget>[
-                          _SettingRow(
-                            title: '环境类型',
-                            value: settings.buildFlavor.label,
-                          ),
-                          const SizedBox(height: 12),
-                          _SettingRow(
-                            title: '当前平台',
-                            value: currentPlatformLabel(),
-                          ),
-                          const SizedBox(height: 12),
-                          _SettingRow(
-                            title: '应用版本',
-                            value: packageInfo == null
-                                ? '--'
-                                : '${packageInfo.version}+${packageInfo.buildNumber}',
-                          ),
-                        ],
-                      ),
+                    _SettingsOverviewCard(
+                      buildFlavorLabel: settings.buildFlavor.label,
+                      platformLabel: currentPlatformLabel(),
+                      versionLabel: packageInfo == null
+                          ? '--'
+                          : '${packageInfo.version}+${packageInfo.buildNumber}',
                     ),
                     const SizedBox(height: 20),
-                    CommonCard(
-                      title: '服务配置',
-                      subtitle: envConfig.allowRiskySettings
-                          ? '开发和测试环境允许调整服务地址。'
-                          : '正式环境默认隐藏高风险配置项。',
-                      child: Column(
-                        children: <Widget>[
-                          _SettingRow(
-                            title: 'Base URL',
-                            value: settings.baseUrl,
-                            trailing: envConfig.allowRiskySettings
-                                ? TextButton(
-                                    onPressed: () async {
-                                      final nextValue =
-                                          await _showBaseUrlDialog(
-                                            context,
-                                            initialValue: settings.baseUrl,
-                                          );
-                                      if (nextValue == null ||
-                                          nextValue.isEmpty) {
-                                        return;
-                                      }
-
-                                      await ref
-                                          .read(
-                                            settingsControllerProvider.notifier,
-                                          )
-                                          .updateBaseUrl(nextValue);
-                                    },
-                                    child: const Text('修改'),
-                                  )
-                                : null,
-                          ),
-                          const SizedBox(height: 12),
-                          _SettingRow(
-                            title: '连接超时',
-                            value: '${settings.connectTimeoutMs} ms',
-                          ),
-                          const SizedBox(height: 12),
-                          _SettingRow(
-                            title: '接收超时',
-                            value: '${settings.receiveTimeoutMs} ms',
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    CommonCard(
-                      title: '服务健康检查',
-                      subtitle: '用于联调和排障，可手动刷新当前服务状态。',
-                      child: _ServiceHealthSection(
-                        healthAsync: serviceHealthAsync,
-                        onRefresh: () => ref.invalidate(serviceHealthProvider),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    CommonCard(
-                      title: '本地数据',
-                      child: Column(
-                        children: <Widget>[
-                          CommonButton(
-                            label: '清空历史记录',
-                            tone: CommonButtonTone.danger,
-                            icon: const Icon(Icons.delete_outline),
-                            onPressed: () async {
-                              final confirmed = await showDialog<bool>(
-                                context: context,
-                                builder: (dialogContext) => AlertDialog(
-                                  title: const Text('清空历史记录'),
-                                  content: const Text('该操作不可恢复，是否继续？'),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      onPressed: () => Navigator.of(
-                                        dialogContext,
-                                      ).pop(false),
-                                      child: const Text('取消'),
-                                    ),
-                                    FilledButton(
-                                      onPressed: () =>
-                                          Navigator.of(dialogContext).pop(true),
-                                      child: const Text('确认'),
-                                    ),
-                                  ],
-                                ),
+                    _ServiceConfigCard(
+                      envConfig: envConfig,
+                      settings: settings,
+                      onEditBaseUrl: envConfig.allowRiskySettings
+                          ? () async {
+                              final nextValue = await _showBaseUrlDialog(
+                                context,
+                                initialValue: settings.baseUrl,
                               );
-
-                              if (confirmed != true) {
+                              if (nextValue == null || nextValue.isEmpty) {
                                 return;
                               }
 
-                              await ref
-                                  .read(historyControllerProvider.notifier)
-                                  .clearAll();
-                              if (!context.mounted) {
-                                return;
-                              }
-                              ScaffoldMessenger.of(context)
-                                ..hideCurrentSnackBar()
-                                ..showSnackBar(
-                                  const SnackBar(content: Text('历史记录已清空。')),
-                                );
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          CommonButton(
-                            label: '恢复默认设置',
-                            tone: CommonButtonTone.secondary,
-                            icon: const Icon(Icons.restart_alt_rounded),
-                            onPressed: () async {
                               await ref
                                   .read(settingsControllerProvider.notifier)
-                                  .reset();
-                            },
-                          ),
-                        ],
-                      ),
+                                  .updateBaseUrl(nextValue);
+                            }
+                          : null,
                     ),
                     const SizedBox(height: 20),
-                    CommonCard(
-                      title: '项目说明',
-                      child: CommonButton(
-                        label: '查看关于项目',
-                        tone: CommonButtonTone.secondary,
-                        icon: const Icon(Icons.info_outline),
-                        onPressed: () => context.pushNamed(AppRoutes.about),
-                      ),
+                    _ServiceHealthCard(
+                      healthAsync: serviceHealthAsync,
+                      onRefresh: () => ref.invalidate(serviceHealthProvider),
+                    ),
+                    const SizedBox(height: 20),
+                    _LocalDataCard(
+                      onClearHistory: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (dialogContext) => AlertDialog(
+                            title: const Text('清空历史记录'),
+                            content: const Text('该操作不可恢复，是否继续？'),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(false),
+                                child: const Text('取消'),
+                              ),
+                              FilledButton(
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(true),
+                                child: const Text('确认'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirmed != true) {
+                          return;
+                        }
+
+                        await ref
+                            .read(historyControllerProvider.notifier)
+                            .clearAll();
+                        if (!context.mounted) {
+                          return;
+                        }
+
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(
+                            const SnackBar(content: Text('历史记录已清空。')),
+                          );
+                      },
+                      onResetSettings: () async {
+                        await ref
+                            .read(settingsControllerProvider.notifier)
+                            .reset();
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    _AboutProjectCard(
+                      onOpenAbout: () => context.pushNamed(AppRoutes.about),
                     ),
                   ],
                 ),
@@ -200,35 +132,253 @@ class SettingsPage extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Future<String?> _showBaseUrlDialog(
-    BuildContext context, {
-    required String initialValue,
-  }) async {
-    final controller = TextEditingController(text: initialValue);
+Future<String?> _showBaseUrlDialog(
+  BuildContext context, {
+  required String initialValue,
+}) async {
+  final controller = TextEditingController(text: initialValue);
 
-    return showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('修改 Base URL'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            hintText: '例如：http://127.0.0.1:8080',
-          ),
-          autofocus: true,
+  return showDialog<String>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('修改 Base URL'),
+      content: TextField(
+        controller: controller,
+        decoration: const InputDecoration(hintText: '例如：http://127.0.0.1:8080'),
+        autofocus: true,
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: const Text('取消'),
         ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('取消'),
+        FilledButton(
+          onPressed: () =>
+              Navigator.of(dialogContext).pop(controller.text.trim()),
+          child: const Text('保存'),
+        ),
+      ],
+    ),
+  );
+}
+
+class _SettingsOverviewCard extends StatelessWidget {
+  const _SettingsOverviewCard({
+    required this.buildFlavorLabel,
+    required this.platformLabel,
+    required this.versionLabel,
+  });
+
+  final String buildFlavorLabel;
+  final String platformLabel;
+  final String versionLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return CommonCard(
+      title: '运行环境',
+      subtitle: '优先确认当前环境、平台和版本，再进行接口联调与回归。',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final cardWidth = _responsiveCardWidth(
+            maxWidth: constraints.maxWidth,
+            minWidth: 220,
+          );
+
+          return Wrap(
+            spacing: 14,
+            runSpacing: 14,
+            children: <Widget>[
+              _OverviewMetricCard(
+                width: cardWidth,
+                title: '环境类型',
+                value: buildFlavorLabel,
+                icon: Icons.layers_rounded,
+              ),
+              _OverviewMetricCard(
+                width: cardWidth,
+                title: '当前平台',
+                value: platformLabel,
+                icon: Icons.devices_rounded,
+              ),
+              _OverviewMetricCard(
+                width: cardWidth,
+                title: '应用版本',
+                value: versionLabel,
+                icon: Icons.verified_outlined,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _OverviewMetricCard extends StatelessWidget {
+  const _OverviewMetricCard({
+    required this.width,
+    required this.title,
+    required this.value,
+    required this.icon,
+  });
+
+  final double width;
+  final String title;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Icon(icon, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(height: 14),
+              Text(
+                title,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(value, style: Theme.of(context).textTheme.bodyLarge),
+            ],
           ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.of(dialogContext).pop(controller.text.trim()),
-            child: const Text('保存'),
+        ),
+      ),
+    );
+  }
+}
+
+class _ServiceConfigCard extends StatelessWidget {
+  const _ServiceConfigCard({
+    required this.envConfig,
+    required this.settings,
+    required this.onEditBaseUrl,
+  });
+
+  final EnvConfig envConfig;
+  final AppSettings settings;
+  final Future<void> Function()? onEditBaseUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return CommonCard(
+      title: '服务配置',
+      subtitle: envConfig.allowRiskySettings
+          ? '开发和测试环境允许调整服务地址。'
+          : '正式环境默认隐藏高风险配置项。',
+      child: Column(
+        children: <Widget>[
+          _SettingRow(
+            title: 'Base URL',
+            value: settings.baseUrl,
+            trailing: onEditBaseUrl == null
+                ? null
+                : TextButton(
+                    onPressed: () async {
+                      await onEditBaseUrl?.call();
+                    },
+                    child: const Text('修改'),
+                  ),
+          ),
+          const SizedBox(height: 14),
+          _SettingRow(title: '连接超时', value: '${settings.connectTimeoutMs} ms'),
+          const SizedBox(height: 14),
+          _SettingRow(title: '接收超时', value: '${settings.receiveTimeoutMs} ms'),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceHealthCard extends StatelessWidget {
+  const _ServiceHealthCard({
+    required this.healthAsync,
+    required this.onRefresh,
+  });
+
+  final AsyncValue<ServiceHealthInfo> healthAsync;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return CommonCard(
+      title: '服务健康检查',
+      subtitle: '用于联调和排障，可手动刷新当前服务状态。',
+      child: _ServiceHealthSection(
+        healthAsync: healthAsync,
+        onRefresh: onRefresh,
+      ),
+    );
+  }
+}
+
+class _LocalDataCard extends StatelessWidget {
+  const _LocalDataCard({
+    required this.onClearHistory,
+    required this.onResetSettings,
+  });
+
+  final Future<void> Function() onClearHistory;
+  final Future<void> Function() onResetSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    return CommonCard(
+      title: '本地数据',
+      subtitle: '危险操作都必须显式确认，避免误删本地识别记录。',
+      child: Column(
+        children: <Widget>[
+          CommonButton(
+            label: '清空历史记录',
+            tone: CommonButtonTone.danger,
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () async {
+              await onClearHistory();
+            },
+          ),
+          const SizedBox(height: 12),
+          CommonButton(
+            label: '恢复默认设置',
+            tone: CommonButtonTone.secondary,
+            icon: const Icon(Icons.restart_alt_rounded),
+            onPressed: () async {
+              await onResetSettings();
+            },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AboutProjectCard extends StatelessWidget {
+  const _AboutProjectCard({required this.onOpenAbout});
+
+  final VoidCallback onOpenAbout;
+
+  @override
+  Widget build(BuildContext context) {
+    return CommonCard(
+      title: '项目说明',
+      child: CommonButton(
+        label: '查看关于项目',
+        tone: CommonButtonTone.secondary,
+        icon: const Icon(Icons.info_outline),
+        onPressed: onOpenAbout,
       ),
     );
   }
@@ -287,31 +437,68 @@ class _ServiceHealthSection extends StatelessWidget {
       },
       data: (healthInfo) {
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                _StatusBadge(
-                  label: _serviceStatusLabel(healthInfo.status),
-                  color: _serviceStatusColor(healthInfo.status),
-                ),
-                const SizedBox(width: 10),
-                _StatusBadge(
-                  label: _modelStatusLabel(healthInfo.modelStatus),
-                  color: _modelStatusColor(healthInfo.modelStatus),
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: onRefresh,
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('刷新'),
-                ),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isCompact = constraints.maxWidth < 560;
+
+                return isCompact
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: <Widget>[
+                              _StatusBadge(
+                                label: _serviceStatusLabel(healthInfo.status),
+                                color: _serviceStatusColor(healthInfo.status),
+                              ),
+                              _StatusBadge(
+                                label: _modelStatusLabel(
+                                  healthInfo.modelStatus,
+                                ),
+                                color: _modelStatusColor(
+                                  healthInfo.modelStatus,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          TextButton.icon(
+                            onPressed: onRefresh,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('刷新'),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: <Widget>[
+                          _StatusBadge(
+                            label: _serviceStatusLabel(healthInfo.status),
+                            color: _serviceStatusColor(healthInfo.status),
+                          ),
+                          const SizedBox(width: 10),
+                          _StatusBadge(
+                            label: _modelStatusLabel(healthInfo.modelStatus),
+                            color: _modelStatusColor(healthInfo.modelStatus),
+                          ),
+                          const Spacer(),
+                          TextButton.icon(
+                            onPressed: onRefresh,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('刷新'),
+                          ),
+                        ],
+                      );
+              },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             _SettingRow(title: '服务名称', value: healthInfo.serviceName),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             _SettingRow(title: '服务版本', value: healthInfo.serviceVersion),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             _SettingRow(
               title: '服务时间',
               value: _formatServerTime(healthInfo.serverTime),
@@ -395,26 +582,50 @@ class _SettingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Expanded(
-          child: Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 520 && trailing != null;
+        final titleWidget = Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        );
+        final valueWidget = SelectableText(value);
+
+        if (isCompact) {
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
+              titleWidget,
               const SizedBox(height: 6),
-              SelectableText(value),
+              valueWidget,
+              const SizedBox(height: 10),
+              trailing!,
             ],
-          ),
-        ),
-        if (trailing != null) ...<Widget>[const SizedBox(width: 12), trailing!],
-      ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  titleWidget,
+                  const SizedBox(height: 6),
+                  valueWidget,
+                ],
+              ),
+            ),
+            if (trailing != null) ...<Widget>[
+              const SizedBox(width: 12),
+              trailing!,
+            ],
+          ],
+        );
+      },
     );
   }
 }
@@ -444,4 +655,15 @@ class _StatusBadge extends StatelessWidget {
       ),
     );
   }
+}
+
+double _responsiveCardWidth({
+  required double maxWidth,
+  required double minWidth,
+}) {
+  if (maxWidth < minWidth * 2 + 14) {
+    return maxWidth;
+  }
+
+  return (maxWidth - 14) / 2;
 }

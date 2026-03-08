@@ -10,9 +10,11 @@ void main() {
     expect(find.text('预览区域'), findsOneWidget);
     expect(find.text('摄像头预览将在下一轮接入'), findsOneWidget);
 
-    await tester.drag(find.byType(ListView), const Offset(0, -800));
-    await tester.pumpAndSettle();
-
+    await tester.scrollUntilVisible(
+      find.text('下一步接入项'),
+      300,
+      scrollable: find.byType(Scrollable),
+    );
     expect(find.text('会话控制'), findsOneWidget);
     expect(find.text('下一步接入项'), findsOneWidget);
   });
