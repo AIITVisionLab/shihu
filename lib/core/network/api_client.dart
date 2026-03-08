@@ -140,6 +140,13 @@ class ApiClient {
         return ApiException(
           statusCode: statusCode,
           message: '请求超时，请检查网络或服务地址。',
+          isTimeout: true,
+        );
+      case DioExceptionType.connectionError:
+        return ApiException(
+          statusCode: statusCode,
+          message: '网络连接失败，请检查网络或服务地址。',
+          isConnectionError: true,
         );
       case DioExceptionType.badResponse:
         final exception = ApiException(
@@ -150,9 +157,14 @@ class ApiClient {
           onUnauthorized?.call(message: exception.message);
         }
         return exception;
+      case DioExceptionType.badCertificate:
+        return ApiException(
+          statusCode: statusCode,
+          message: '服务证书校验失败，请检查服务配置。',
+        );
       case DioExceptionType.cancel:
         return ApiException(statusCode: statusCode, message: '请求已取消。');
-      default:
+      case DioExceptionType.unknown:
         return ApiException(
           statusCode: statusCode,
           message: '网络请求失败：${error.message ?? 'unknown'}。',
