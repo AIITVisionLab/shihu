@@ -111,7 +111,7 @@ class _HeroCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              '当前基线已接入主题、路由、设置持久化、真实单图识别、本地历史记录和服务健康检查。下一轮继续补实时识别链路即可。',
+              '当前基线已接入主题、路由、设置持久化、真实单图识别、本地历史记录、服务健康检查和实时测试帧链路。下一轮继续补摄像头预览与真实取帧即可。',
               style: textTheme.titleMedium?.copyWith(
                 color: Colors.white.withValues(alpha: 0.94),
                 height: 1.5,

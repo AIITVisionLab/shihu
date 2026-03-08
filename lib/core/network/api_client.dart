@@ -11,23 +11,37 @@ import 'package:sickandflutter/shared/models/app_settings.dart';
 /// 页面层只依赖上层 Repository，不直接依赖该类。
 class ApiClient {
   /// 根据当前设置和环境配置创建 HTTP 客户端。
-  ApiClient({required AppSettings settings, required EnvConfig envConfig})
-    : _dio = Dio(
-        BaseOptions(
-          baseUrl: settings.baseUrl.isEmpty
-              ? envConfig.baseUrl
-              : settings.baseUrl,
-          connectTimeout: Duration(milliseconds: settings.connectTimeoutMs),
-          receiveTimeout: Duration(milliseconds: settings.receiveTimeoutMs),
-          headers: <String, Object>{
-            'Accept': 'application/json',
-            'X-Platform': currentPlatformType().value,
-          },
-          responseType: ResponseType.json,
-        ),
-      );
+  ApiClient({
+    required AppSettings settings,
+    required EnvConfig envConfig,
+    this.authorizationValue,
+    this.onUnauthorized,
+  }) : _dio = Dio(
+         BaseOptions(
+           baseUrl: settings.baseUrl.isEmpty
+               ? envConfig.baseUrl
+               : settings.baseUrl,
+           connectTimeout: Duration(milliseconds: settings.connectTimeoutMs),
+           receiveTimeout: Duration(milliseconds: settings.receiveTimeoutMs),
+           headers: <String, Object>{
+             'Accept': 'application/json',
+             'X-Platform': currentPlatformType().value,
+             if (_resolvedAuthorizationValue(authorizationValue) != null)
+               'Authorization': _resolvedAuthorizationValue(
+                 authorizationValue,
+               )!,
+           },
+           responseType: ResponseType.json,
+         ),
+       );
 
   final Dio _dio;
+
+  /// 当前客户端附带的认证头值。
+  final String? authorizationValue;
+
+  /// 检测到未授权状态时的统一回调。
+  final void Function({String? message})? onUnauthorized;
 
   /// 当前客户端实际使用的基础地址。
   String get baseUrl => _dio.options.baseUrl;
@@ -55,7 +69,9 @@ class ApiClient {
     required T? Function(Object? data) dataParser,
   }) async {
     final json = await getJson(path, queryParameters: queryParameters);
-    return ApiResponse<T>.fromJson(json, dataParser: dataParser);
+    final response = ApiResponse<T>.fromJson(json, dataParser: dataParser);
+    _notifyUnauthorizedForBusinessResponse(response);
+    return response;
   }
 
   /// 发送 JSON POST 请求并返回 JSON 对象。
@@ -75,7 +91,9 @@ class ApiClient {
     required T? Function(Object? data) dataParser,
   }) async {
     final json = await postJson(path, data: data);
-    return ApiResponse<T>.fromJson(json, dataParser: dataParser);
+    final response = ApiResponse<T>.fromJson(json, dataParser: dataParser);
+    _notifyUnauthorizedForBusinessResponse(response);
+    return response;
   }
 
   /// 发送 multipart 请求并返回 JSON 对象。
@@ -98,7 +116,9 @@ class ApiClient {
     required T? Function(Object? data) dataParser,
   }) async {
     final json = await postMultipart(path, data: data);
-    return ApiResponse<T>.fromJson(json, dataParser: dataParser);
+    final response = ApiResponse<T>.fromJson(json, dataParser: dataParser);
+    _notifyUnauthorizedForBusinessResponse(response);
+    return response;
   }
 
   Map<String, dynamic> _extractJson(Response<Map<String, dynamic>> response) {
@@ -122,10 +142,14 @@ class ApiClient {
           message: '请求超时，请检查网络或服务地址。',
         );
       case DioExceptionType.badResponse:
-        return ApiException(
+        final exception = ApiException(
           statusCode: statusCode,
           message: '服务返回异常状态码：${statusCode ?? 'unknown'}。',
         );
+        if (statusCode == 401) {
+          onUnauthorized?.call(message: exception.message);
+        }
+        return exception;
       case DioExceptionType.cancel:
         return ApiException(statusCode: statusCode, message: '请求已取消。');
       default:
@@ -134,5 +158,23 @@ class ApiClient {
           message: '网络请求失败：${error.message ?? 'unknown'}。',
         );
     }
+  }
+
+  void _notifyUnauthorizedForBusinessResponse<T>(ApiResponse<T> response) {
+    if (response.code == 40101) {
+      final rawMessage = response.message.trim();
+      onUnauthorized?.call(
+        message: rawMessage.isEmpty ? '登录状态已失效，请重新登录。' : rawMessage,
+      );
+    }
+  }
+
+  static String? _resolvedAuthorizationValue(String? rawValue) {
+    final normalizedValue = rawValue?.trim();
+    if (normalizedValue == null || normalizedValue.isEmpty) {
+      return null;
+    }
+
+    return normalizedValue;
   }
 }

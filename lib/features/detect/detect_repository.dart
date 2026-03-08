@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
-import 'package:sickandflutter/core/network/api_client.dart';
+import 'package:sickandflutter/core/network/api_client_factory.dart';
 import 'package:sickandflutter/features/detect/mock_detect_repository.dart';
 import 'package:sickandflutter/features/detect/real_detect_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
@@ -21,8 +21,9 @@ final detectRepositoryProvider = Provider<DetectRepository>((ref) {
   }
 
   final settings = _resolveSettings(ref, envConfig);
+  final apiClientFactory = ref.watch(apiClientFactoryProvider);
   return RealDetectRepository(
-    apiClient: ApiClient(settings: settings, envConfig: envConfig),
+    apiClient: apiClientFactory.create(settings: settings),
   );
 });
 

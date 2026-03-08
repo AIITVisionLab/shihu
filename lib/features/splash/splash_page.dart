@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
+import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 
 /// 启动页，负责初始化本地设置和基础运行信息。
@@ -28,6 +29,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
       await Future.wait<dynamic>(<Future<dynamic>>[
         ref.read(settingsControllerProvider.future),
         ref.read(packageInfoProvider.future),
+        ref.read(authControllerProvider.notifier).ensureInitialized(),
       ]);
       await Future<void>.delayed(AppConstants.splashDuration);
 
@@ -35,7 +37,10 @@ class _SplashPageState extends ConsumerState<SplashPage> {
         return;
       }
 
-      context.goNamed(AppRoutes.home);
+      final authState = ref.read(authControllerProvider);
+      context.goNamed(
+        authState.isAuthenticated ? AppRoutes.home : AppRoutes.login,
+      );
     } catch (error) {
       if (!mounted) {
         return;

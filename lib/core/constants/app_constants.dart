@@ -27,6 +27,9 @@ class AppConstants {
   /// 设置项本地存储键。
   static const String settingsStorageKey = 'app_settings';
 
+  /// 登录会话本地存储键。
+  static const String authSessionStorageKey = 'auth_session';
+
   /// 默认基础服务地址。
   static const String defaultBaseUrl = 'http://127.0.0.1:8080';
 

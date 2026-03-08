@@ -5,6 +5,7 @@ import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/core/utils/platform_utils.dart';
+import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/history/history_repository.dart';
 import 'package:sickandflutter/features/settings/service_health_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
@@ -26,6 +27,7 @@ class SettingsPage extends ConsumerWidget {
     final packageInfo = ref.watch(packageInfoProvider).asData?.value;
     final envConfig = ref.watch(envConfigProvider);
     final serviceHealthAsync = ref.watch(serviceHealthProvider);
+    final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('设置')),
@@ -72,6 +74,44 @@ class SettingsPage extends ConsumerWidget {
                     _ServiceHealthCard(
                       healthAsync: serviceHealthAsync,
                       onRefresh: () => ref.invalidate(serviceHealthProvider),
+                    ),
+                    const SizedBox(height: 20),
+                    _AuthSessionCard(
+                      authState: authState,
+                      onLogout: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (dialogContext) => AlertDialog(
+                            title: const Text('退出登录'),
+                            content: const Text('退出后需要重新登录才能继续使用识别能力，是否继续？'),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(false),
+                                child: const Text('取消'),
+                              ),
+                              FilledButton(
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(true),
+                                child: const Text('确认退出'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirmed != true) {
+                          return;
+                        }
+
+                        await ref
+                            .read(authControllerProvider.notifier)
+                            .logout();
+                        if (!context.mounted) {
+                          return;
+                        }
+
+                        context.goNamed(AppRoutes.login);
+                      },
                     ),
                     const SizedBox(height: 20),
                     _LocalDataCard(
@@ -362,6 +402,76 @@ class _LocalDataCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _AuthSessionCard extends StatelessWidget {
+  const _AuthSessionCard({required this.authState, required this.onLogout});
+
+  final AuthState authState;
+  final Future<void> Function() onLogout;
+
+  @override
+  Widget build(BuildContext context) {
+    final session = authState.session;
+
+    return CommonCard(
+      title: '登录会话',
+      subtitle: session == null ? '当前没有可用登录态。' : '用于展示当前账号、登录模式和会话到期时间。',
+      child: session == null
+          ? const Text('当前未登录。')
+          : Column(
+              children: <Widget>[
+                _SettingRow(title: '当前账号', value: session.user.account),
+                const SizedBox(height: 14),
+                _SettingRow(title: '显示名称', value: session.user.displayName),
+                const SizedBox(height: 14),
+                _SettingRow(title: '登录模式', value: session.loginModeLabel),
+                const SizedBox(height: 14),
+                _SettingRow(
+                  title: '角色',
+                  value: session.user.roles.isEmpty
+                      ? '--'
+                      : session.user.roles.join(', '),
+                ),
+                const SizedBox(height: 14),
+                _SettingRow(
+                  title: '到期时间',
+                  value: _formatExpiry(session.expiresAt),
+                ),
+                const SizedBox(height: 16),
+                CommonButton(
+                  label: authState.isSubmitting ? '退出中...' : '退出登录',
+                  tone: CommonButtonTone.secondary,
+                  icon: const Icon(Icons.logout_rounded),
+                  isLoading: authState.isSubmitting,
+                  onPressed: authState.isSubmitting
+                      ? null
+                      : () async {
+                          await onLogout();
+                        },
+                ),
+              ],
+            ),
+    );
+  }
+
+  String _formatExpiry(String? rawValue) {
+    if (rawValue == null || rawValue.trim().isEmpty) {
+      return '未返回';
+    }
+
+    final dateTime = DateTime.tryParse(rawValue);
+    if (dateTime == null) {
+      return rawValue;
+    }
+
+    final localDateTime = dateTime.toLocal();
+    final month = localDateTime.month.toString().padLeft(2, '0');
+    final day = localDateTime.day.toString().padLeft(2, '0');
+    final hour = localDateTime.hour.toString().padLeft(2, '0');
+    final minute = localDateTime.minute.toString().padLeft(2, '0');
+    return '${localDateTime.year}-$month-$day $hour:$minute';
   }
 }
 

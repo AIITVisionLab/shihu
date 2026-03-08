@@ -402,3 +402,63 @@ extension DetectTaskStatusX on DetectTaskStatus {
     }
   }
 }
+
+/// 实时识别会话状态枚举。
+enum RealtimeSessionStatus {
+  /// 未开始。
+  idle,
+
+  /// 正在初始化。
+  initializing,
+
+  /// 运行中。
+  running,
+
+  /// 已暂停。
+  paused,
+
+  /// 权限受限。
+  permissionDenied,
+
+  /// 已失败。
+  error,
+}
+
+/// 提供实时识别会话状态的标准值和展示文案。
+extension RealtimeSessionStatusX on RealtimeSessionStatus {
+  /// 接口和存储使用的原始值。
+  String get value {
+    switch (this) {
+      case RealtimeSessionStatus.idle:
+        return 'idle';
+      case RealtimeSessionStatus.initializing:
+        return 'initializing';
+      case RealtimeSessionStatus.running:
+        return 'running';
+      case RealtimeSessionStatus.paused:
+        return 'paused';
+      case RealtimeSessionStatus.permissionDenied:
+        return 'permissionDenied';
+      case RealtimeSessionStatus.error:
+        return 'error';
+    }
+  }
+
+  /// 面向界面的中文文案。
+  String get label {
+    switch (this) {
+      case RealtimeSessionStatus.idle:
+        return '未开始';
+      case RealtimeSessionStatus.initializing:
+        return '初始化中';
+      case RealtimeSessionStatus.running:
+        return '运行中';
+      case RealtimeSessionStatus.paused:
+        return '已暂停';
+      case RealtimeSessionStatus.permissionDenied:
+        return '权限受限';
+      case RealtimeSessionStatus.error:
+        return '异常';
+    }
+  }
+}

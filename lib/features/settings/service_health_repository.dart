@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
 import 'package:sickandflutter/core/network/api_client.dart';
+import 'package:sickandflutter/core/network/api_client_factory.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/models/model_utils.dart';
@@ -46,10 +47,11 @@ class ServiceHealthRepository {
 final serviceHealthProvider = FutureProvider.autoDispose<ServiceHealthInfo>((
   ref,
 ) async {
-  final envConfig = ref.watch(envConfigProvider);
+  ref.watch(envConfigProvider);
   final settings = await ref.watch(settingsControllerProvider.future);
+  final apiClientFactory = ref.watch(apiClientFactoryProvider);
   final repository = ServiceHealthRepository(
-    apiClient: ApiClient(settings: settings, envConfig: envConfig),
+    apiClient: apiClientFactory.create(settings: settings),
   );
   return repository.fetchHealth();
 });
