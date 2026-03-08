@@ -5,6 +5,7 @@ import 'package:sickandflutter/features/about/about_page.dart';
 import 'package:sickandflutter/features/detect/detect_page.dart';
 import 'package:sickandflutter/features/history/history_page.dart';
 import 'package:sickandflutter/features/home/home_page.dart';
+import 'package:sickandflutter/features/realtime/realtime_detect_page.dart';
 import 'package:sickandflutter/features/result/result_page.dart';
 import 'package:sickandflutter/features/settings/settings_page.dart';
 import 'package:sickandflutter/features/splash/splash_page.dart';
@@ -32,10 +33,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.realtimeDetectPath,
         name: AppRoutes.realtimeDetect,
-        builder: (context, state) => const _PlaceholderPage(
-          title: '实时监测',
-          message: '实时识别链路会在下一轮接入摄像头预览和帧推理。',
-        ),
+        builder: (context, state) => const RealtimeDetectPage(),
       ),
       GoRoute(
         path: AppRoutes.resultPath,
@@ -129,30 +127,6 @@ class _RouteErrorPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('路由错误')),
       body: Center(child: Text(message)),
-    );
-  }
-}
-
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage({required this.title, required this.message});
-
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-        ),
-      ),
     );
   }
 }
