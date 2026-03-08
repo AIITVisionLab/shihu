@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
 import 'package:sickandflutter/features/auth/mock_auth_repository.dart';
@@ -178,7 +179,7 @@ class _LoginHeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '登录后可访问单图识别、实时监测、历史记录和运行配置。',
+            AppCopy.authLoginOverview,
             style: textTheme.titleMedium?.copyWith(height: 1.5),
           ),
           const SizedBox(height: 24),
@@ -186,9 +187,9 @@ class _LoginHeroCard extends StatelessWidget {
             spacing: 12,
             runSpacing: 12,
             children: const <Widget>[
-              Chip(label: Text('登录态自动恢复')),
-              Chip(label: Text('401 自动退回登录')),
-              Chip(label: Text('请求自动附带 Token')),
+              Chip(label: Text(AppCopy.authRestoreChip)),
+              Chip(label: Text(AppCopy.authUnauthorizedChip)),
+              Chip(label: Text(AppCopy.authTokenChip)),
             ],
           ),
           if (isMockMode) ...<Widget>[
@@ -203,21 +204,21 @@ class _LoginHeroCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    '当前为演示登录模式',
+                    AppCopy.authMockModeTitle,
                     style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '演示账号：demo\n演示密码：demo123456',
+                    AppCopy.authMockAccountHint,
                     style: textTheme.bodyMedium?.copyWith(height: 1.6),
                   ),
                   const SizedBox(height: 12),
                   TextButton.icon(
                     onPressed: onFillDemo,
                     icon: const Icon(Icons.auto_fix_high_rounded),
-                    label: const Text('填充演示账号'),
+                    label: const Text(AppCopy.authFillDemoAccount),
                   ),
                 ],
               ),
@@ -253,16 +254,16 @@ class _LoginFormCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CommonCard(
-      title: '账号登录',
-      subtitle: '当前模式：$loginModeLabel',
+      title: AppCopy.authLoginCardTitle,
+      subtitle: AppCopy.authCurrentMode(loginModeLabel),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           TextField(
             controller: accountController,
             decoration: const InputDecoration(
-              labelText: '账号',
-              hintText: '请输入账号',
+              labelText: AppCopy.authAccountLabel,
+              hintText: AppCopy.authAccountHint,
             ),
             enabled: !isSubmitting,
             textInputAction: TextInputAction.next,
@@ -271,8 +272,10 @@ class _LoginFormCard extends StatelessWidget {
           TextField(
             controller: passwordController,
             decoration: InputDecoration(
-              labelText: '密码',
-              hintText: isMockMode ? '演示密码或自定义 6 位以上密码' : '请输入密码',
+              labelText: AppCopy.authPasswordLabel,
+              hintText: isMockMode
+                  ? AppCopy.authMockPasswordHint
+                  : AppCopy.authPasswordHint,
             ),
             obscureText: true,
             enabled: !isSubmitting,
@@ -299,7 +302,7 @@ class _LoginFormCard extends StatelessWidget {
           ],
           const SizedBox(height: 20),
           CommonButton(
-            label: isSubmitting ? '登录中...' : '登录',
+            label: isSubmitting ? AppCopy.authLoggingIn : AppCopy.authLogin,
             icon: const Icon(Icons.login_rounded),
             isLoading: isSubmitting,
             onPressed: isSubmitting
@@ -310,7 +313,7 @@ class _LoginFormCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           CommonButton(
-            label: '查看项目说明',
+            label: AppCopy.viewAboutProject,
             tone: CommonButtonTone.secondary,
             icon: const Icon(Icons.info_outline),
             onPressed: isSubmitting ? null : onOpenAbout,

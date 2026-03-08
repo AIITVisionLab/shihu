@@ -1,3 +1,4 @@
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
@@ -23,7 +24,7 @@ class MockAuthRepository implements AuthRepository {
   bool get isMockMode => true;
 
   @override
-  String get loginModeLabel => '受控演示登录';
+  String get loginModeLabel => AppCopy.authLoginModeMock;
 
   @override
   Future<AuthSession> login({
@@ -42,15 +43,15 @@ class MockAuthRepository implements AuthRepository {
     if (!isDemoAccount && !isAllowedCustomAccount) {
       throw const ApiException(
         businessCode: 40101,
-        message: '账号或密码不正确，请检查后重试。',
+        message: AppCopy.authCredentialInvalid,
       );
     }
 
     final now = DateTime.now();
     final expiresAt = now.add(const Duration(hours: 8)).toIso8601String();
     final displayName = normalizedAccount == demoAccount
-        ? '演示账号'
-        : '$normalizedAccount 管理员';
+        ? AppCopy.authMockDisplayName
+        : AppCopy.authAdminDisplayName(normalizedAccount);
 
     return AuthSession(
       accessToken: 'mock_access_${now.microsecondsSinceEpoch}',

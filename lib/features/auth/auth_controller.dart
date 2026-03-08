@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/core/storage/auth_storage.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
@@ -36,7 +37,7 @@ class AuthController extends Notifier<AuthState> {
 
     final normalizedAccount = account.trim();
     if (normalizedAccount.isEmpty || password.isEmpty) {
-      state = state.copyWith(errorMessage: '请输入账号和密码。');
+      state = state.copyWith(errorMessage: AppCopy.authInputRequired);
       return false;
     }
 
@@ -70,7 +71,7 @@ class AuthController extends Notifier<AuthState> {
       state = state.copyWith(
         isBootstrapping: false,
         isSubmitting: false,
-        errorMessage: '登录失败：$error',
+        errorMessage: AppCopy.authLoginFailed(error),
       );
       return false;
     }
@@ -105,7 +106,7 @@ class AuthController extends Notifier<AuthState> {
   /// 处理网络层或仓储层回传的未授权状态。
   void handleUnauthorized({String? message}) {
     final effectiveMessage = (message == null || message.trim().isEmpty)
-        ? '登录状态已失效，请重新登录。'
+        ? AppCopy.authUnauthorized
         : message.trim();
 
     if (!state.isAuthenticated &&
@@ -147,8 +148,8 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> _restoreSession() async {
     try {
-      final storage = await ref.read(authStorageProvider.future);
-      final restoredSession = storage.readSession();
+      final storage = ref.read(authStorageProvider);
+      final restoredSession = await storage.readSession();
 
       if (restoredSession == null) {
         state = state.copyWith(isBootstrapping: false, session: null);
@@ -169,7 +170,7 @@ class AuthController extends Notifier<AuthState> {
         state = state.copyWith(
           isBootstrapping: false,
           session: null,
-          unauthorizedMessage: '本地登录态已过期，请重新登录。',
+          unauthorizedMessage: AppCopy.authSessionExpired,
         );
         return;
       }
@@ -183,18 +184,18 @@ class AuthController extends Notifier<AuthState> {
       state = state.copyWith(
         isBootstrapping: false,
         session: null,
-        errorMessage: '恢复登录态失败：$error',
+        errorMessage: AppCopy.authRestoreFailed(error),
       );
     }
   }
 
   Future<void> _persistSession(AuthSession session) async {
-    final storage = await ref.read(authStorageProvider.future);
+    final storage = ref.read(authStorageProvider);
     await storage.writeSession(session);
   }
 
   Future<void> _clearSession() async {
-    final storage = await ref.read(authStorageProvider.future);
+    final storage = ref.read(authStorageProvider);
     await storage.clearSession();
   }
 
@@ -224,7 +225,7 @@ class AuthController extends Notifier<AuthState> {
     } on ApiException catch (error) {
       await _handleUnauthorizedInternal(error.message);
     } catch (error) {
-      await _handleUnauthorizedInternal('登录续期失败：$error');
+      await _handleUnauthorizedInternal(AppCopy.authRefreshFailed(error));
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/core/network/api_client.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/core/utils/platform_utils.dart';
@@ -18,7 +19,7 @@ class RealAuthRepository implements AuthRepository {
   bool get isMockMode => false;
 
   @override
-  String get loginModeLabel => '真实接口登录';
+  String get loginModeLabel => AppCopy.authLoginModeReal;
 
   @override
   Future<AuthSession> login({
@@ -38,7 +39,7 @@ class RealAuthRepository implements AuthRepository {
     if (!response.isSuccess) {
       throw ApiException(
         message: response.message.trim().isEmpty
-            ? '登录失败，请稍后重试。'
+            ? AppCopy.authLoginFailedRetry
             : response.message,
         businessCode: response.code,
       );
@@ -47,7 +48,7 @@ class RealAuthRepository implements AuthRepository {
     final payload = response.data;
     if (payload == null) {
       throw ApiException(
-        message: '登录接口返回成功，但缺少 data 数据体。',
+        message: AppCopy.authLoginMissingData,
         businessCode: response.code,
       );
     }
@@ -61,7 +62,7 @@ class RealAuthRepository implements AuthRepository {
   @override
   Future<AuthSession> refreshSession({required AuthSession session}) async {
     if (!session.hasRefreshToken) {
-      throw const ApiException(message: '当前会话缺少 refreshToken，无法自动续期。');
+      throw const ApiException(message: AppCopy.authRefreshTokenMissing);
     }
 
     final response = await _apiClient.postResponse<Map<String, dynamic>>(
@@ -76,7 +77,7 @@ class RealAuthRepository implements AuthRepository {
     if (!response.isSuccess) {
       throw ApiException(
         message: response.message.trim().isEmpty
-            ? '登录续期失败，请重新登录。'
+            ? AppCopy.authRefreshRetry
             : response.message,
         businessCode: response.code,
       );
@@ -85,7 +86,7 @@ class RealAuthRepository implements AuthRepository {
     final payload = response.data;
     if (payload == null) {
       throw ApiException(
-        message: '登录续期返回成功，但缺少 data 数据体。',
+        message: AppCopy.authRefreshMissingData,
         businessCode: response.code,
       );
     }
@@ -109,7 +110,9 @@ class RealAuthRepository implements AuthRepository {
 
     if (!response.isSuccess) {
       throw ApiException(
-        message: response.message.trim().isEmpty ? '退出登录失败。' : response.message,
+        message: response.message.trim().isEmpty
+            ? AppCopy.authLogoutFailed
+            : response.message,
         businessCode: response.code,
       );
     }

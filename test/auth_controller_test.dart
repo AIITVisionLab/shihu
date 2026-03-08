@@ -1,25 +1,26 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/core/storage/auth_storage.dart';
-import 'package:sickandflutter/core/storage/local_storage.dart';
+import 'package:sickandflutter/core/storage/sensitive_storage.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
 import 'package:sickandflutter/features/auth/mock_auth_repository.dart';
 
 void main() {
   test('AuthController restores persisted session on bootstrap', () async {
-    SharedPreferences.setMockInitialValues(<String, Object>{
-      AppConstants.authSessionStorageKey:
-          '{"accessToken":"token_1","refreshToken":"refresh_1","tokenType":"Bearer","expiresAt":"2099-03-09T12:00:00+08:00","loginModeLabel":"受控演示登录","user":{"userId":"user_demo","account":"demo","displayName":"演示账号","roles":["app_user"]}}',
-    });
-    final preferences = await SharedPreferences.getInstance();
-    final authStorage = AuthStorage(LocalStorage(preferences));
+    final authStorage = AuthStorage(
+      VolatileSensitiveStorage(
+        values: <String, String>{
+          AppConstants.authSessionStorageKey:
+              '{"accessToken":"token_1","refreshToken":"refresh_1","tokenType":"Bearer","expiresAt":"2099-03-09T12:00:00+08:00","loginModeLabel":"受控演示登录","user":{"userId":"user_demo","account":"demo","displayName":"演示账号","roles":["app_user"]}}',
+        },
+      ),
+    );
 
     final container = ProviderContainer(
       overrides: [
-        authStorageProvider.overrideWith((ref) async => authStorage),
+        authStorageProvider.overrideWith((ref) => authStorage),
         authRepositoryProvider.overrideWith(
           (ref) => const MockAuthRepository(responseDelay: Duration.zero),
         ),
@@ -36,13 +37,13 @@ void main() {
   });
 
   test('AuthController logs in and logs out successfully', () async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
-    final preferences = await SharedPreferences.getInstance();
-    final authStorage = AuthStorage(LocalStorage(preferences));
+    final authStorage = AuthStorage(
+      VolatileSensitiveStorage(values: <String, String>{}),
+    );
 
     final container = ProviderContainer(
       overrides: [
-        authStorageProvider.overrideWith((ref) async => authStorage),
+        authStorageProvider.overrideWith((ref) => authStorage),
         authRepositoryProvider.overrideWith(
           (ref) => const MockAuthRepository(responseDelay: Duration.zero),
         ),
@@ -60,22 +61,22 @@ void main() {
 
     expect(loginSuccess, isTrue);
     expect(container.read(authControllerProvider).isAuthenticated, isTrue);
-    expect(authStorage.readSession(), isNotNull);
+    expect(await authStorage.readSession(), isNotNull);
 
     await notifier.logout();
 
     expect(container.read(authControllerProvider).isAuthenticated, isFalse);
-    expect(authStorage.readSession(), isNull);
+    expect(await authStorage.readSession(), isNull);
   });
 
   test('AuthController clears session when unauthorized is reported', () async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
-    final preferences = await SharedPreferences.getInstance();
-    final authStorage = AuthStorage(LocalStorage(preferences));
+    final authStorage = AuthStorage(
+      VolatileSensitiveStorage(values: <String, String>{}),
+    );
 
     final container = ProviderContainer(
       overrides: [
-        authStorageProvider.overrideWith((ref) async => authStorage),
+        authStorageProvider.overrideWith((ref) => authStorage),
         authRepositoryProvider.overrideWith(
           (ref) => const MockAuthRepository(responseDelay: Duration.zero),
         ),

@@ -1,3 +1,4 @@
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/shared/models/model_utils.dart';
 
@@ -10,7 +11,7 @@ class AuthSession {
     this.refreshToken,
     this.tokenType = 'Bearer',
     this.expiresAt,
-    this.loginModeLabel = '真实接口登录',
+    this.loginModeLabel = AppCopy.authLoginModeReal,
   });
 
   /// 从 JSON 构建登录会话对象。
@@ -20,7 +21,10 @@ class AuthSession {
       refreshToken: asNullableString(json['refreshToken']),
       tokenType: asString(json['tokenType'], fallback: 'Bearer'),
       expiresAt: asNullableString(json['expiresAt']),
-      loginModeLabel: asString(json['loginModeLabel'], fallback: '真实接口登录'),
+      loginModeLabel: asString(
+        json['loginModeLabel'],
+        fallback: AppCopy.authLoginModeReal,
+      ),
       user: AuthUser.fromJson(
         asStringMap(json['user']) ?? const <String, dynamic>{},
       ),
