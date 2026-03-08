@@ -105,7 +105,40 @@ void main() {
               .having(
                 (error) => error.message,
                 'message',
-                'invalid image file',
+                '图片文件无效，请重新选择清晰的石斛图片。',
+              ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'RealDetectRepository falls back to backend message for unknown code',
+    () async {
+      final apiClient = _FakeApiClient(
+        responseJson: <String, dynamic>{
+          'code': 49999,
+          'message': 'custom backend error',
+          'data': null,
+        },
+      );
+      final repository = RealDetectRepository(apiClient: apiClient);
+
+      await expectLater(
+        repository.detectImage(
+          imageFile: XFile.fromData(
+            Uint8List.fromList(<int>[3, 2, 1]),
+            name: 'unknown.jpg',
+            mimeType: 'image/jpeg',
+          ),
+        ),
+        throwsA(
+          isA<ApiException>()
+              .having((error) => error.businessCode, 'businessCode', 49999)
+              .having(
+                (error) => error.message,
+                'message',
+                'custom backend error',
               ),
         ),
       );

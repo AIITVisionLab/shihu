@@ -36,6 +36,7 @@
 - `Splash / Home / Detect / Result / History / Settings / About` 主流程页面
 - `flutter_riverpod` 状态管理接入
 - 单图识别主链路：选图 / 拍照 -> 真实 `/api/v1/detect/image` 识别 -> 结果页 -> 保存本地历史
+- `ApiResponse<T>` 通用响应包裹与单图识别业务错误码映射
 - 本地设置持久化、本地历史记录持久化
 - `macOS` 与 `OpenHarmony / 鸿蒙` 平台枚举、运行时识别和基础工程预留
 - 一组基础 Widget 测试与仓储测试

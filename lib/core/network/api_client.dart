@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
+import 'package:sickandflutter/core/network/api_response.dart';
 import 'package:sickandflutter/core/utils/platform_utils.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
@@ -47,6 +48,16 @@ class ApiClient {
     }
   }
 
+  /// 发送 GET 请求并按统一包裹结构解析响应。
+  Future<ApiResponse<T>> getResponse<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    required T? Function(Object? data) dataParser,
+  }) async {
+    final json = await getJson(path, queryParameters: queryParameters);
+    return ApiResponse<T>.fromJson(json, dataParser: dataParser);
+  }
+
   /// 发送 JSON POST 请求并返回 JSON 对象。
   Future<Map<String, dynamic>> postJson(String path, {Object? data}) async {
     try {
@@ -55,6 +66,16 @@ class ApiClient {
     } on DioException catch (error) {
       throw _mapDioException(error);
     }
+  }
+
+  /// 发送 JSON POST 请求并按统一包裹结构解析响应。
+  Future<ApiResponse<T>> postResponse<T>(
+    String path, {
+    Object? data,
+    required T? Function(Object? data) dataParser,
+  }) async {
+    final json = await postJson(path, data: data);
+    return ApiResponse<T>.fromJson(json, dataParser: dataParser);
   }
 
   /// 发送 multipart 请求并返回 JSON 对象。
@@ -68,6 +89,16 @@ class ApiClient {
     } on DioException catch (error) {
       throw _mapDioException(error);
     }
+  }
+
+  /// 发送 multipart 请求并按统一包裹结构解析响应。
+  Future<ApiResponse<T>> postMultipartResponse<T>(
+    String path, {
+    required FormData data,
+    required T? Function(Object? data) dataParser,
+  }) async {
+    final json = await postMultipart(path, data: data);
+    return ApiResponse<T>.fromJson(json, dataParser: dataParser);
   }
 
   Map<String, dynamic> _extractJson(Response<Map<String, dynamic>> response) {

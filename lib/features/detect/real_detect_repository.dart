@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:sickandflutter/core/network/api_client.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/core/utils/platform_utils.dart';
+import 'package:sickandflutter/features/detect/detect_api_error_code.dart';
 import 'package:sickandflutter/features/detect/detect_repository.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/detect_response.dart';
@@ -20,41 +21,37 @@ class RealDetectRepository implements DetectRepository {
   @override
   Future<DetectResponse> detectImage({required XFile imageFile}) async {
     final fileName = _resolveFileName(imageFile);
-    final requestJson = await _apiClient.postMultipart(
-      '/api/v1/detect/image',
-      data: FormData.fromMap(<String, Object>{
-        'file': MultipartFile.fromBytes(
-          await imageFile.readAsBytes(),
-          filename: fileName,
-        ),
-        'clientTraceId': _buildClientTraceId(fileName),
-        'capturedAt': DateTime.now().toIso8601String(),
-        'platform': currentPlatformType().value,
-      }),
-    );
+    final response = await _apiClient
+        .postMultipartResponse<Map<String, dynamic>>(
+          '/api/v1/detect/image',
+          data: FormData.fromMap(<String, Object>{
+            'file': MultipartFile.fromBytes(
+              await imageFile.readAsBytes(),
+              filename: fileName,
+            ),
+            'clientTraceId': _buildClientTraceId(fileName),
+            'capturedAt': DateTime.now().toIso8601String(),
+            'platform': currentPlatformType().value,
+          }),
+          dataParser: asStringMap,
+        );
 
-    final payload = _extractResponsePayload(requestJson);
-    return _normalizeImageUrls(DetectResponse.fromJson(payload));
-  }
-
-  Map<String, dynamic> _extractResponsePayload(Map<String, dynamic> json) {
-    if (json.containsKey('detectId')) {
-      return json;
+    if (!response.isSuccess) {
+      throw ApiException(
+        message: _resolveBusinessMessage(response.code, response.message),
+        businessCode: response.code,
+      );
     }
 
-    final message = asString(json['message'], fallback: '识别接口返回未知错误。');
-    final businessCode = asInt(json['code'], fallback: 500);
-
-    if (businessCode != 200) {
-      throw ApiException(message: message, businessCode: businessCode);
-    }
-
-    final payload = asStringMap(json['data']);
+    final payload = response.data;
     if (payload == null) {
-      throw ApiException(message: '识别接口返回成功，但缺少 data 数据体。');
+      throw ApiException(
+        message: '识别接口返回成功，但缺少 data 数据体。',
+        businessCode: response.code,
+      );
     }
 
-    return payload;
+    return _normalizeImageUrls(DetectResponse.fromJson(payload));
   }
 
   DetectResponse _normalizeImageUrls(DetectResponse response) {
@@ -92,6 +89,20 @@ class RealDetectRepository implements DetectRepository {
   String _buildClientTraceId(String fileName) {
     final timestamp = DateTime.now().microsecondsSinceEpoch;
     return 'flutter_${currentPlatformType().value}_${timestamp}_$fileName';
+  }
+
+  String _resolveBusinessMessage(int code, String rawMessage) {
+    final mappedCode = tryDetectApiErrorCodeFromValue(code);
+    if (mappedCode != null) {
+      return mappedCode.userMessage;
+    }
+
+    final normalizedMessage = rawMessage.trim();
+    if (normalizedMessage.isNotEmpty) {
+      return normalizedMessage;
+    }
+
+    return '识别请求失败，请稍后重试。';
   }
 
   String? _resolveUrl(String? rawUrl) {
