@@ -110,6 +110,11 @@ void main() {
     expect(find.text('服务正常'), findsOneWidget);
     expect(find.text('模型就绪'), findsOneWidget);
     expect(find.text('shihu-detect-service'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('demo'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('demo'), findsOneWidget);
     expect(find.text('受控演示登录'), findsOneWidget);
   });

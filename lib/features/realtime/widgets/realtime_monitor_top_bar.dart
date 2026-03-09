@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_controller.dart';
 import 'package:sickandflutter/features/realtime/realtime_view_utils.dart';
 import 'package:sickandflutter/shared/widgets/common_button.dart';
@@ -11,8 +10,6 @@ class RealtimeMonitorTopBar extends StatelessWidget {
   const RealtimeMonitorTopBar({
     required this.currentUser,
     required this.state,
-    required this.onOpenOverview,
-    required this.onOpenSettings,
     required this.onRefresh,
     required this.onToggleAutoRefresh,
     required this.onLogout,
@@ -24,12 +21,6 @@ class RealtimeMonitorTopBar extends StatelessWidget {
 
   /// 实时监控页状态。
   final RealtimeDetectState state;
-
-  /// 打开平台总览回调。
-  final VoidCallback onOpenOverview;
-
-  /// 打开运维设置回调。
-  final VoidCallback onOpenSettings;
 
   /// 手动刷新回调。
   final Future<void> Function() onRefresh;
@@ -112,18 +103,6 @@ class RealtimeMonitorTopBar extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-              CommonButton(
-                label: AppCopy.realtimeOpenOverview,
-                tone: CommonButtonTone.secondary,
-                icon: const Icon(Icons.dashboard_outlined),
-                onPressed: onOpenOverview,
-              ),
-              CommonButton(
-                label: AppCopy.realtimeOpenSettings,
-                tone: CommonButtonTone.secondary,
-                icon: const Icon(Icons.settings_outlined),
-                onPressed: onOpenSettings,
               ),
               CommonButton(
                 label: '立即刷新',

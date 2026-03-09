@@ -144,6 +144,48 @@ class AppTheme {
           textStyle: textTheme.labelLarge,
         ),
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.white.withValues(alpha: 0.9),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        height: 74,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final isSelected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: isSelected
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
+          );
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final isSelected = states.contains(WidgetState.selected);
+          return textTheme.labelMedium?.copyWith(
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            color: isSelected
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
+          );
+        }),
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: Colors.transparent,
+        indicatorColor: colorScheme.secondaryContainer,
+        selectedIconTheme: IconThemeData(color: colorScheme.primary),
+        unselectedIconTheme: IconThemeData(color: colorScheme.onSurfaceVariant),
+        selectedLabelTextStyle: textTheme.labelMedium?.copyWith(
+          fontWeight: FontWeight.w800,
+          color: colorScheme.primary,
+        ),
+        unselectedLabelTextStyle: textTheme.labelMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurfaceVariant,
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: Colors.white.withValues(alpha: 0.96),
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      ),
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
         side: BorderSide.none,

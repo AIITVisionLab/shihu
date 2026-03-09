@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sickandflutter/app/app_workspace_destination.dart';
 import 'package:sickandflutter/app/routes.dart';
+import 'package:sickandflutter/app/widgets/app_workspace_scaffold.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/home/widgets/home_capability_card.dart';
@@ -11,7 +13,6 @@ import 'package:sickandflutter/features/home/widgets/home_header_card.dart';
 import 'package:sickandflutter/features/settings/device_state_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/widgets/adaptive_wrap_grid.dart';
-import 'package:sickandflutter/shared/widgets/app_backdrop.dart';
 
 /// 首页，作为培育管理平台的总览入口。
 class HomePage extends ConsumerWidget {
@@ -24,89 +25,77 @@ class HomePage extends ConsumerWidget {
         ref.watch(packageInfoProvider).asData?.value.version ?? '--';
     final authState = ref.watch(authControllerProvider);
     final deviceStateAsync = ref.watch(deviceStateProvider);
+    final currentUser =
+        authState.session?.user.displayName ??
+        authState.session?.user.account ??
+        '--';
 
-    return Scaffold(
-      body: Stack(
+    return AppWorkspaceScaffold(
+      destination: AppWorkspaceDestination.home,
+      title: '平台首页',
+      subtitle: '汇总当前设备链路、关键入口和运行基线，作为值守与排障的统一起点。',
+      currentUser: currentUser,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
         children: <Widget>[
-          const Positioned.fill(child: AppBackdrop()),
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1180),
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          HomeHeaderCard(version: version, currentUser: currentUser),
+          const SizedBox(height: 22),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 920;
+              final snapshot = HomeDeviceSnapshotCard(
+                deviceStateAsync: deviceStateAsync,
+                onRefresh: () => ref.invalidate(deviceStateProvider),
+              );
+              const capability = HomeCapabilityCard();
+
+              if (!isWide) {
+                return Column(
                   children: <Widget>[
-                    HomeHeaderCard(
-                      version: version,
-                      currentUser:
-                          authState.session?.user.displayName ??
-                          authState.session?.user.account ??
-                          '--',
-                    ),
-                    const SizedBox(height: 22),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isWide = constraints.maxWidth >= 920;
-                        final snapshot = HomeDeviceSnapshotCard(
-                          deviceStateAsync: deviceStateAsync,
-                          onRefresh: () => ref.invalidate(deviceStateProvider),
-                        );
-                        const capability = HomeCapabilityCard();
-
-                        if (!isWide) {
-                          return Column(
-                            children: <Widget>[
-                              capability,
-                              const SizedBox(height: 18),
-                              snapshot,
-                            ],
-                          );
-                        }
-
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            const Expanded(child: capability),
-                            const SizedBox(width: 18),
-                            Expanded(child: snapshot),
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 22),
-                    const _ActionSectionHeader(),
-                    const SizedBox(height: 16),
-                    AdaptiveWrapGrid(
-                      minItemWidth: 300,
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: <Widget>[
-                        HomeEntryCard(
-                          icon: Icons.monitor_heart_rounded,
-                          title: AppCopy.homeRealtimeTitle,
-                          subtitle: '查看实时设备状态、告警等级和补光控制。',
-                          onTap: () =>
-                              context.pushNamed(AppRoutes.realtimeDetect),
-                        ),
-                        HomeEntryCard(
-                          icon: Icons.info_outline_rounded,
-                          title: AppCopy.homePreviewTitle,
-                          subtitle: AppCopy.homePreviewSubtitle,
-                          onTap: () => context.pushNamed(AppRoutes.about),
-                        ),
-                        HomeEntryCard(
-                          icon: Icons.settings_rounded,
-                          title: AppCopy.homeSettingsTitle,
-                          subtitle: '检查服务健康、当前会话与基础配置。',
-                          onTap: () => context.pushNamed(AppRoutes.settings),
-                        ),
-                      ],
-                    ),
+                    capability,
+                    const SizedBox(height: 18),
+                    snapshot,
                   ],
-                ),
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Expanded(child: capability),
+                  const SizedBox(width: 18),
+                  Expanded(child: snapshot),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 22),
+          const _ActionSectionHeader(),
+          const SizedBox(height: 16),
+          AdaptiveWrapGrid(
+            minItemWidth: 300,
+            spacing: 16,
+            runSpacing: 16,
+            children: <Widget>[
+              HomeEntryCard(
+                icon: Icons.monitor_heart_rounded,
+                title: AppCopy.homeRealtimeTitle,
+                subtitle: '查看实时设备状态、告警等级和补光控制。',
+                onTap: () => context.pushNamed(AppRoutes.realtimeDetect),
               ),
-            ),
+              HomeEntryCard(
+                icon: Icons.info_outline_rounded,
+                title: AppCopy.homePreviewTitle,
+                subtitle: AppCopy.homePreviewSubtitle,
+                onTap: () => context.pushNamed(AppRoutes.about),
+              ),
+              HomeEntryCard(
+                icon: Icons.settings_rounded,
+                title: AppCopy.homeSettingsTitle,
+                subtitle: '检查服务健康、当前会话与基础配置。',
+                onTap: () => context.pushNamed(AppRoutes.settings),
+              ),
+            ],
           ),
         ],
       ),

@@ -8,6 +8,7 @@ import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/features/home/home_page.dart';
+import 'package:sickandflutter/features/home/widgets/home_entry_card.dart';
 import 'package:sickandflutter/features/settings/device_state_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
@@ -71,9 +72,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('监控主控台'), findsOneWidget);
-    expect(find.text('系统总览'), findsOneWidget);
-    expect(find.text('运维设置'), findsOneWidget);
+    expect(find.widgetWithText(HomeEntryCard, '监控主控台'), findsOneWidget);
+    expect(find.widgetWithText(HomeEntryCard, '系统总览'), findsOneWidget);
+    expect(find.widgetWithText(HomeEntryCard, '运维设置'), findsOneWidget);
     expect(find.text('版本 1.2.3'), findsOneWidget);
     expect(find.text('石斛培育柜'), findsOneWidget);
   });
@@ -135,21 +136,21 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('监控主控台'));
+    await tester.tap(find.text('查看实时设备状态、告警等级和补光控制。'));
     await tester.pumpAndSettle();
     expect(find.text('realtime-page'), findsOneWidget);
 
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('系统总览'));
+    await tester.tap(find.text('查看平台定位、设备架构、栽培背景和调控目标。'));
     await tester.pumpAndSettle();
     expect(find.text('about-page'), findsOneWidget);
 
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('运维设置'));
+    await tester.tap(find.text('检查服务健康、当前会话与基础配置。'));
     await tester.pumpAndSettle();
     expect(find.text('settings-page'), findsOneWidget);
   });
