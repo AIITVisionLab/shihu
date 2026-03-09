@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/routes.dart';
-import 'package:sickandflutter/core/config/backend_feature_profile.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
@@ -22,7 +21,6 @@ class HomePage extends ConsumerWidget {
         ref.watch(packageInfoProvider).asData?.value.version ?? '--';
     final authState = ref.watch(authControllerProvider);
     final deviceStateAsync = ref.watch(deviceStateProvider);
-    final featureProfile = ref.watch(backendFeatureProfileProvider);
     final primaryEntries = <Widget>[
       _HomeEntryCard(
         icon: Icons.monitor_heart_rounded,
@@ -42,36 +40,6 @@ class HomePage extends ConsumerWidget {
         subtitle: AppCopy.homeSettingsSubtitle,
         onTap: () => context.pushNamed(AppRoutes.settings),
       ),
-      if (featureProfile.supportsDetectService)
-        _HomeEntryCard(
-          icon: Icons.image_search_rounded,
-          title: AppCopy.homeDetectTitle,
-          subtitle: AppCopy.homeDetectSubtitle,
-          onTap: () => context.pushNamed(AppRoutes.detect),
-        ),
-      if (featureProfile.supportsSavedResultHistory)
-        _HomeEntryCard(
-          icon: Icons.history_rounded,
-          title: AppCopy.homeHistoryTitle,
-          subtitle: AppCopy.homeHistorySubtitle,
-          onTap: () => context.pushNamed(AppRoutes.history),
-        ),
-    ];
-    final extensionEntries = <Widget>[
-      if (!featureProfile.supportsDetectService)
-        const _HomeEntryCard(
-          icon: Icons.image_search_rounded,
-          title: AppCopy.homeDetectTitle,
-          subtitle: AppCopy.homeDetectSubtitle,
-          badgeLabel: AppCopy.homeExtensionBadge,
-        ),
-      if (!featureProfile.supportsSavedResultHistory)
-        const _HomeEntryCard(
-          icon: Icons.history_rounded,
-          title: AppCopy.homeHistoryTitle,
-          subtitle: AppCopy.homeHistorySubtitle,
-          badgeLabel: AppCopy.homeExtensionBadge,
-        ),
     ];
 
     return Scaffold(
@@ -123,10 +91,6 @@ class HomePage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 20),
                 Wrap(spacing: 16, runSpacing: 16, children: primaryEntries),
-                if (extensionEntries.isNotEmpty) ...<Widget>[
-                  const SizedBox(height: 20),
-                  _ExtensionCard(entries: extensionEntries),
-                ],
               ],
             ),
           ),
@@ -461,17 +425,13 @@ class _HomeEntryCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
-    this.onTap,
-    this.badgeLabel,
+    required this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
-  final VoidCallback? onTap;
-  final String? badgeLabel;
-
-  bool get _isEnabled => onTap != null;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -492,89 +452,35 @@ class _HomeEntryCard extends StatelessWidget {
                 width: 54,
                 height: 54,
                 decoration: BoxDecoration(
-                  color: _isEnabled
-                      ? colorScheme.primaryContainer
-                      : colorScheme.surfaceContainerHighest,
+                  color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(
-                  icon,
-                  color: _isEnabled
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                ),
+                child: Icon(icon, color: colorScheme.primary),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    if (badgeLabel != null) ...<Widget>[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          badgeLabel!,
-                          style: Theme.of(context).textTheme.labelMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: _isEnabled ? null : colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       subtitle,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: _isEnabled ? null : colorScheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 16),
-              Icon(
-                _isEnabled
-                    ? Icons.arrow_forward_rounded
-                    : Icons.pending_outlined,
-              ),
+              const Icon(Icons.arrow_forward_rounded),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ExtensionCard extends StatelessWidget {
-  const _ExtensionCard({required this.entries});
-
-  final List<Widget> entries;
-
-  @override
-  Widget build(BuildContext context) {
-    return CommonCard(
-      title: AppCopy.homeExtensionTitle,
-      subtitle: AppCopy.homeExtensionSubtitle,
-      child: Column(
-        children: <Widget>[
-          for (var index = 0; index < entries.length; index++) ...<Widget>[
-            entries[index],
-            if (index != entries.length - 1) const SizedBox(height: 16),
-          ],
-        ],
       ),
     );
   }

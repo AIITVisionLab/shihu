@@ -1,14 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/features/about/about_page.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/login_page.dart';
-import 'package:sickandflutter/features/detect/detect_page.dart';
-import 'package:sickandflutter/features/history/history_page.dart';
 import 'package:sickandflutter/features/home/home_page.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_page.dart';
-import 'package:sickandflutter/features/result/result_page.dart';
 import 'package:sickandflutter/features/settings/settings_page.dart';
 import 'package:sickandflutter/features/splash/splash_page.dart';
 
@@ -39,31 +35,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LoginPage(),
       ),
       GoRoute(
-        path: AppRoutes.detectPath,
-        name: AppRoutes.detect,
-        builder: (context, state) => const DetectPage(),
-      ),
-      GoRoute(
         path: AppRoutes.realtimeDetectPath,
         name: AppRoutes.realtimeDetect,
         builder: (context, state) => const RealtimeDetectPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.resultPath,
-        name: AppRoutes.result,
-        builder: (context, state) {
-          final payload = state.extra;
-          if (payload is! ResultPagePayload) {
-            return const _RouteErrorPage(message: '结果页缺少必要参数。');
-          }
-
-          return ResultPage(payload: payload);
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.historyPath,
-        name: AppRoutes.history,
-        builder: (context, state) => const HistoryPage(),
       ),
       GoRoute(
         path: AppRoutes.settingsPath,
@@ -146,6 +120,11 @@ String? redirectForAuth({
     AppRoutes.loginPath,
     AppRoutes.aboutPath,
   };
+  const unsupportedRuntimeLocations = <String>{
+    AppRoutes.detectPath,
+    AppRoutes.resultPath,
+    AppRoutes.historyPath,
+  };
 
   if (matchedLocation == AppRoutes.splashPath) {
     return null;
@@ -157,12 +136,22 @@ String? redirectForAuth({
 
   final isLogin = matchedLocation == AppRoutes.loginPath;
   final isPublic = publicLocations.contains(matchedLocation);
+  final isUnsupportedRuntimeLocation = unsupportedRuntimeLocations.contains(
+    matchedLocation,
+  );
 
   if (authState.isAuthenticated) {
     if (isLogin) {
       return AppRoutes.realtimeDetectPath;
     }
+    if (isUnsupportedRuntimeLocation) {
+      return AppRoutes.homePath;
+    }
     return null;
+  }
+
+  if (isUnsupportedRuntimeLocation) {
+    return AppRoutes.loginPath;
   }
 
   if (!isPublic) {
@@ -170,18 +159,4 @@ String? redirectForAuth({
   }
 
   return null;
-}
-
-class _RouteErrorPage extends StatelessWidget {
-  const _RouteErrorPage({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('路由错误')),
-      body: Center(child: Text(message)),
-    );
-  }
 }

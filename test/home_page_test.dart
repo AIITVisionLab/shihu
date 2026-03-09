@@ -73,11 +73,7 @@ void main() {
 
     expect(find.text('监控主控台'), findsOneWidget);
     expect(find.text('公开预览'), findsOneWidget);
-    expect(find.text('后续扩展能力'), findsOneWidget);
-    expect(find.text('单图识别'), findsOneWidget);
-    expect(find.text('识别历史'), findsOneWidget);
     expect(find.text('运维设置'), findsOneWidget);
-    expect(find.text('待独立识别服务接入'), findsNWidgets(2));
     expect(find.text('版本 1.2.3'), findsOneWidget);
     expect(find.text('石斛培育柜'), findsOneWidget);
   });
@@ -182,11 +178,6 @@ GoRouter _buildRouter() {
         name: AppRoutes.realtimeDetect,
         builder: (context, state) =>
             const Scaffold(body: Text('realtime-page')),
-      ),
-      GoRoute(
-        path: AppRoutes.historyPath,
-        name: AppRoutes.history,
-        builder: (context, state) => const Scaffold(body: Text('history-page')),
       ),
       GoRoute(
         path: AppRoutes.aboutPath,

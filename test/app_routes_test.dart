@@ -58,4 +58,25 @@ void main() {
 
     expect(redirect, AppRoutes.realtimeDetectPath);
   });
+
+  test('redirectForAuth redirects removed detect route to home page', () {
+    const authState = AuthState(
+      isBootstrapping: false,
+      session: AuthSession(
+        accessToken: 'token_1',
+        user: AuthUser(
+          userId: 'user_demo',
+          account: 'demo',
+          displayName: '演示账号',
+        ),
+      ),
+    );
+
+    final redirect = redirectForAuth(
+      authState: authState,
+      matchedLocation: AppRoutes.detectPath,
+    );
+
+    expect(redirect, AppRoutes.homePath);
+  });
 }
