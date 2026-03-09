@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
+import 'package:sickandflutter/shared/widgets/adaptive_wrap_grid.dart';
 
 /// 关于页，映射后端 `preview.html` 的公开预览页结构。
 class AboutPage extends ConsumerWidget {
@@ -171,81 +172,115 @@ class _PreviewTopBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
-      child: Row(
-        children: <Widget>[
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              gradient: const LinearGradient(
-                colors: <Color>[Color(0xFF57D8FF), Color(0xFF6D7CFF)],
-              ),
-            ),
-            child: const Center(
-              child: Text(
-                '斛',
-                style: TextStyle(
-                  color: Color(0xFF05111B),
-                  fontWeight: FontWeight.w900,
-                  fontSize: 20,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 760;
+          final brand = Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: const LinearGradient(
+                    colors: <Color>[Color(0xFF57D8FF), Color(0xFF6D7CFF)],
+                  ),
+                ),
+                child: const Center(
+                  child: Text(
+                    '斛',
+                    style: TextStyle(
+                      color: Color(0xFF05111B),
+                      fontWeight: FontWeight.w900,
+                      fontSize: 20,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
+              const SizedBox(width: 14),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      AppConstants.appName,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Dendrobium Seedling Smart Cultivation Platform',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF9EB1CA),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+          final actions = Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              if (isAuthenticated)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: Text(
+                    '当前用户：$currentUser',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              FilledButton(
+                onPressed: () => context.goNamed(
+                  isAuthenticated ? AppRoutes.home : AppRoutes.login,
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF57D8FF),
+                  foregroundColor: const Color(0xFF06101D),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: Text(isAuthenticated ? '进入平台' : '登录入口'),
+              ),
+            ],
+          );
+
+          if (isCompact) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  AppConstants.appName,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Dendrobium Seedling Smart Cultivation Platform',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF9EB1CA),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (isAuthenticated)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-              ),
-              child: Text(
-                '当前用户：$currentUser',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          const SizedBox(width: 12),
-          FilledButton(
-            onPressed: () => context.goNamed(
-              isAuthenticated ? AppRoutes.home : AppRoutes.login,
-            ),
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF57D8FF),
-              foregroundColor: const Color(0xFF06101D),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            child: Text(isAuthenticated ? '进入平台' : '登录入口'),
-          ),
-        ],
+              children: <Widget>[brand, const SizedBox(height: 16), actions],
+            );
+          }
+
+          return Row(
+            children: <Widget>[
+              Expanded(child: brand),
+              const SizedBox(width: 16),
+              Flexible(child: actions),
+            ],
+          );
+        },
       ),
     );
   }
@@ -333,7 +368,8 @@ class _HeroLead extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Wrap(
+          const AdaptiveWrapGrid(
+            minItemWidth: 260,
             spacing: 14,
             runSpacing: 14,
             children: <Widget>[
@@ -400,35 +436,32 @@ class _LeadPoint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 280,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF9EB1CA),
-                height: 1.7,
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF9EB1CA),
+              height: 1.7,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -683,7 +716,8 @@ class _PlatformSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: const <Widget>[
-        Wrap(
+        AdaptiveWrapGrid(
+          minItemWidth: 300,
           spacing: 18,
           runSpacing: 18,
           children: <Widget>[
@@ -725,47 +759,44 @@ class _PreviewFeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 360,
-      child: Container(
-        padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  colors: <Color>[Color(0x3357D8FF), Color(0x336D7CFF)],
-                ),
-              ),
-              child: Icon(icon, color: Colors.white),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: const LinearGradient(
+                colors: <Color>[Color(0x3357D8FF), Color(0x336D7CFF)],
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              description,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF9EB1CA),
-                height: 1.8,
-              ),
+            child: Icon(icon, color: Colors.white),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            description,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF9EB1CA),
+              height: 1.8,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -892,7 +923,8 @@ class _ResearchSection extends StatelessWidget {
           ],
         ),
         SizedBox(height: 18),
-        Wrap(
+        AdaptiveWrapGrid(
+          minItemWidth: 300,
           spacing: 18,
           runSpacing: 18,
           children: <Widget>[
@@ -932,43 +964,40 @@ class _PaperCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 360,
-      child: Container(
-        padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                height: 1.5,
-              ),
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              height: 1.5,
             ),
-            const SizedBox(height: 10),
-            Text(
-              meta,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: const Color(0xFF9EB1CA)),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            meta,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: const Color(0xFF9EB1CA)),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            description,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFFD4E3F7),
+              height: 1.85,
             ),
-            const SizedBox(height: 12),
-            Text(
-              description,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFFD4E3F7),
-                height: 1.85,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
