@@ -464,7 +464,7 @@ class AppCopy {
   static const String settingsReceiveTimeout = '接收超时';
 
   /// 服务地址示例提示。
-  static const String settingsBaseUrlHint = '例如：http://127.0.0.1:8082';
+  static const String settingsBaseUrlHint = '例如：http://101.35.79.76:8082';
 
   /// 服务状态检查中提示。
   static const String settingsCheckingHealth = '正在检查服务状态...';

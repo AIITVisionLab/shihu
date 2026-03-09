@@ -34,7 +34,10 @@ class AppConstants {
   static const String rememberedAccountStorageKey = 'remembered_account';
 
   /// 默认基础服务地址。
-  static const String defaultBaseUrl = 'http://127.0.0.1:8082';
+  ///
+  /// 当前仓库默认对接已经部署的 `web` 后端，
+  /// 避免开发环境误连到本机无关端口。
+  static const String defaultBaseUrl = 'http://101.35.79.76:8082';
 
   /// 默认连接超时时间。
   static const int defaultConnectTimeoutMs = 10000;
