@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/routes.dart';
+import 'package:sickandflutter/core/config/backend_feature_profile.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/history/history_repository.dart';
 import 'package:sickandflutter/features/result/result_page.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
@@ -19,6 +21,7 @@ class HistoryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(historyControllerProvider);
+    final featureProfile = ref.watch(backendFeatureProfileProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -58,9 +61,11 @@ class HistoryPage extends ConsumerWidget {
           ),
           data: (records) {
             if (records.isEmpty) {
-              return const EmptyView(
+              return EmptyView(
                 title: '还没有历史记录',
-                message: '先完成一次单图识别并保存结果，再回到这里查看详情。',
+                message: featureProfile.supportsSavedResultHistory
+                    ? '先完成一次单图识别并保存结果，再回到这里查看详情。'
+                    : AppCopy.historyEmptyWithoutDetect,
               );
             }
 

@@ -29,13 +29,21 @@ class AppCopy {
 
   /// 首页主说明。
   static const String homeOverview =
-      '当前 Flutter 前端已经按工作区 Spring Boot 后端收口，主链路围绕登录注册、设备状态轮询、异常码展示、LED 控制与健康检查展开；识别相关页面保留为独立服务扩展位。';
+      '当前 Flutter 前端已经按工作区 Spring Boot 后端收口，主链路围绕登录注册、设备状态轮询、异常码展示、LED 控制与健康检查展开；识别相关能力保留为独立服务扩展位，默认不作为主功能开放。';
+
+  /// 首页入口“公开预览”标题。
+  static const String homePreviewTitle = '公开预览';
+
+  /// 首页入口“公开预览”副标题。
+  static const String homePreviewSubtitle =
+      '查看与后端 `preview.html` 对齐的项目介绍、研究背景和系统目标说明。';
 
   /// 首页入口“开始识别”标题。
   static const String homeDetectTitle = '单图识别';
 
   /// 首页入口“开始识别”副标题。
-  static const String homeDetectSubtitle = '前端结构和结果页仍保留，待独立识别服务并入工作区后继续联调。';
+  static const String homeDetectSubtitle =
+      '当前后端未提供 `/api/v1/detect/image`，该入口先收口为独立识别服务扩展位。';
 
   /// 首页入口“实时监测”标题。
   static const String homeRealtimeTitle = '监控主控台';
@@ -48,13 +56,23 @@ class AppCopy {
   static const String homeHistoryTitle = '识别历史';
 
   /// 首页入口“历史记录”副标题。
-  static const String homeHistorySubtitle = '查看本地保存的识别结果与详情。';
+  static const String homeHistorySubtitle = '识别服务接入后，这里将承接本地保存的结果记录与详情浏览。';
 
   /// 首页入口“设置”标题。
   static const String homeSettingsTitle = '运维设置';
 
   /// 首页入口“设置”副标题。
   static const String homeSettingsSubtitle = '管理服务地址、健康检查、登录会话和本地数据。';
+
+  /// 首页扩展位区标题。
+  static const String homeExtensionTitle = '后续扩展能力';
+
+  /// 首页扩展位区说明。
+  static const String homeExtensionSubtitle =
+      '以下入口保留给独立识别服务并入后的能力扩展，当前不会作为真实后端主链路开放。';
+
+  /// 首页扩展位状态标签。
+  static const String homeExtensionBadge = '待独立识别服务接入';
 
   /// 首页能力标签：Material 3。
   static const String homeMaterialPill = 'Material 3';
@@ -231,6 +249,23 @@ class AppCopy {
   static const String detectGuideSubtitle =
       '当前仓库的 web 分支后端暂未提供 /api/v1/detect/image，页面保留为独立识别服务扩展位。';
 
+  /// 单图识别未接入标题。
+  static const String detectUnavailableTitle = '识别服务暂未并入当前后端';
+
+  /// 单图识别未接入说明。
+  static const String detectUnavailableMessage =
+      '当前工作区后端只覆盖登录、设备状态、LED 控制和健康检查；`/api/v1/detect/image` 对应的独立识别服务尚未并入，因此 Flutter 客户端默认不开放单图识别主链路。';
+
+  /// 单图识别未接入补充说明。
+  static const String detectUnavailableFootnote =
+      '后续识别服务并入后，可直接复用现有结果页、历史记录模型和仓储分层继续联调。';
+
+  /// 单图识别未接入返回总览按钮。
+  static const String detectBackToOverview = '返回平台总览';
+
+  /// 单图识别未接入前往主控台按钮。
+  static const String detectGoRealtime = '前往监控主控台';
+
   /// 单图识别模式标签：受控 mock。
   static const String detectMockModeChip = '受控 mock 链路';
 
@@ -275,6 +310,16 @@ class AppCopy {
 
   /// 开始识别。
   static const String detectStart = '开始识别';
+
+  /// 历史记录空态说明，当前后端未接入识别服务。
+  static const String historyEmptyWithoutDetect =
+      '当前后端未接入识别服务，本地暂无结果记录。后续独立识别服务并入后，这里会展示已保存的识别结果。';
+
+  /// 实时主控台前往总览按钮。
+  static const String realtimeOpenOverview = '平台总览';
+
+  /// 实时主控台前往设置按钮。
+  static const String realtimeOpenSettings = '运维设置';
 
   /// 识别中。
   static const String detectRunning = '识别中...';

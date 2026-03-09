@@ -71,10 +71,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('单图识别'), findsOneWidget);
     expect(find.text('监控主控台'), findsOneWidget);
+    expect(find.text('公开预览'), findsOneWidget);
+    expect(find.text('后续扩展能力'), findsOneWidget);
+    expect(find.text('单图识别'), findsOneWidget);
     expect(find.text('识别历史'), findsOneWidget);
     expect(find.text('运维设置'), findsOneWidget);
+    expect(find.text('待独立识别服务接入'), findsNWidgets(2));
     expect(find.text('版本 1.2.3'), findsOneWidget);
     expect(find.text('石斛培育柜'), findsOneWidget);
   });
@@ -143,16 +146,9 @@ void main() {
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('单图识别'));
+    await tester.tap(find.text('公开预览'));
     await tester.pumpAndSettle();
-    expect(find.text('detect-page'), findsOneWidget);
-
-    router.goNamed(AppRoutes.home);
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('识别历史'));
-    await tester.pumpAndSettle();
-    expect(find.text('history-page'), findsOneWidget);
+    expect(find.text('about-page'), findsOneWidget);
 
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
@@ -182,11 +178,6 @@ GoRouter _buildRouter() {
         builder: (context, state) => const HomePage(),
       ),
       GoRoute(
-        path: AppRoutes.detectPath,
-        name: AppRoutes.detect,
-        builder: (context, state) => const Scaffold(body: Text('detect-page')),
-      ),
-      GoRoute(
         path: AppRoutes.realtimeDetectPath,
         name: AppRoutes.realtimeDetect,
         builder: (context, state) =>
@@ -196,6 +187,11 @@ GoRouter _buildRouter() {
         path: AppRoutes.historyPath,
         name: AppRoutes.history,
         builder: (context, state) => const Scaffold(body: Text('history-page')),
+      ),
+      GoRoute(
+        path: AppRoutes.aboutPath,
+        name: AppRoutes.about,
+        builder: (context, state) => const Scaffold(body: Text('about-page')),
       ),
       GoRoute(
         path: AppRoutes.settingsPath,

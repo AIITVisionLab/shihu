@@ -60,6 +60,8 @@ class _RealtimeDetectPageState extends ConsumerState<RealtimeDetectPage> {
                         authState.session?.user.account ??
                         '--',
                     state: state,
+                    onOpenOverview: () => context.goNamed(AppRoutes.home),
+                    onOpenSettings: () => context.pushNamed(AppRoutes.settings),
                     onRefresh: _controller.refreshNow,
                     onToggleAutoRefresh: _controller.setAutoRefreshEnabled,
                     onLogout: _handleLogout,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/history/history_page.dart';
 import 'package:sickandflutter/features/history/history_repository.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
@@ -34,7 +35,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('还没有历史记录'), findsOneWidget);
-    expect(find.text('先完成一次单图识别并保存结果，再回到这里查看详情。'), findsOneWidget);
+    expect(find.text(AppCopy.historyEmptyWithoutDetect), findsOneWidget);
   });
 
   testWidgets('HistoryPage deletes a record after confirmation', (

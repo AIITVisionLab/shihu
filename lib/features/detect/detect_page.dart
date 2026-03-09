@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/routes.dart';
+import 'package:sickandflutter/core/config/backend_feature_profile.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/detect/detect_controller.dart';
+import 'package:sickandflutter/features/detect/detect_repository.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/widgets/adaptive_image.dart';
 import 'package:sickandflutter/shared/widgets/common_button.dart';
@@ -16,8 +18,14 @@ class DetectPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final featureProfile = ref.watch(backendFeatureProfileProvider);
+    if (!featureProfile.supportsDetectService) {
+      return const _DetectUnavailablePage();
+    }
+
     final state = ref.watch(detectControllerProvider);
     final controller = ref.read(detectControllerProvider.notifier);
+    final useMockDetect = ref.watch(detectUseMockProvider);
     final isRunning = state.status == DetectTaskStatus.running;
 
     Future<void> handleStartDetect() async {
@@ -42,13 +50,27 @@ class DetectPage extends ConsumerWidget {
                 CommonCard(
                   title: AppCopy.detectGuideTitle,
                   subtitle: AppCopy.detectGuideSubtitle,
-                  child: Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: const <Widget>[
-                      Chip(label: Text(AppCopy.detectGalleryChip)),
-                      Chip(label: Text(AppCopy.detectCameraChip)),
-                      Chip(label: Text(AppCopy.detectHistoryChip)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: <Widget>[
+                          const Chip(label: Text(AppCopy.detectGalleryChip)),
+                          const Chip(label: Text(AppCopy.detectCameraChip)),
+                          const Chip(label: Text(AppCopy.detectHistoryChip)),
+                          Chip(
+                            label: Text(
+                              useMockDetect
+                                  ? AppCopy.detectMockModeChip
+                                  : AppCopy.detectRealModeChip,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _DetectModeNotice(useMockDetect: useMockDetect),
                     ],
                   ),
                 ),
@@ -146,6 +168,151 @@ class DetectPage extends ConsumerWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DetectUnavailablePage extends StatelessWidget {
+  const _DetectUnavailablePage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text(AppCopy.detectPageTitle)),
+      body: SafeArea(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 920),
+            child: ListView(
+              padding: const EdgeInsets.all(20),
+              children: <Widget>[
+                CommonCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Icon(
+                          Icons.cloud_off_rounded,
+                          size: 36,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        AppCopy.detectUnavailableTitle,
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        AppCopy.detectUnavailableMessage,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyLarge?.copyWith(height: 1.7),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          AppCopy.detectUnavailableFootnote,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(height: 1.6),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: <Widget>[
+                          CommonButton(
+                            label: AppCopy.detectBackToOverview,
+                            icon: const Icon(Icons.dashboard_outlined),
+                            onPressed: () => context.goNamed(AppRoutes.home),
+                          ),
+                          CommonButton(
+                            label: AppCopy.detectGoRealtime,
+                            tone: CommonButtonTone.secondary,
+                            icon: const Icon(Icons.monitor_heart_outlined),
+                            onPressed: () =>
+                                context.goNamed(AppRoutes.realtimeDetect),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DetectModeNotice extends StatelessWidget {
+  const _DetectModeNotice({required this.useMockDetect});
+
+  final bool useMockDetect;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final backgroundColor = useMockDetect
+        ? colorScheme.secondaryContainer
+        : colorScheme.tertiaryContainer;
+    final foregroundColor = useMockDetect
+        ? colorScheme.onSecondaryContainer
+        : colorScheme.onTertiaryContainer;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Icon(
+              useMockDetect
+                  ? Icons.science_outlined
+                  : Icons.warning_amber_rounded,
+              color: foregroundColor,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                useMockDetect
+                    ? AppCopy.detectMockModeNotice
+                    : AppCopy.detectRealModeNotice,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: foregroundColor,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
