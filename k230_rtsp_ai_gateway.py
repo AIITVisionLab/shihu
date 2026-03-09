@@ -23,6 +23,9 @@ except ImportError:
 
 WIFI_SSID = "A6N107"
 WIFI_PASSWORD = "A6N107666#"
+WIFI_CONNECT_TIMEOUT_S = 20
+WIFI_CONNECT_RETRIES = 3
+WIFI_RETRY_DELAY_MS = 1500
 
 RK3568_HOST = "192.168.1.111"
 RK3568_PORT = 8080
@@ -35,11 +38,12 @@ RTSP_PORT = 8554
 RTSP_SESSION = "test"
 
 DISPLAY_MODE = "virt"
+# 当前固件下 Display.VIRT 实际固定为 1080p，WBC 必须与其保持一致。
 DISPLAY_SIZE = [ALIGN_UP(1920, 16), 1080]
 RGB888P_SIZE = [1280, 720]
 TO_IDE = False
 WIFI_CHECK_INTERVAL_FRAMES = 30
-AI_POST_INTERVAL_MS = 500
+AI_POST_INTERVAL_MS = 1000
 
 KMODEL_PATH = "/sdcard/examples/kmodel/yolo11n-obb.kmodel"
 LABELS = [
@@ -91,32 +95,53 @@ class WiFiStaClient:
         self.password = password
         self.sta = network.WLAN(network.STA_IF)
 
-    def connect(self, timeout_s=20):
-        if not self.sta.active():
-            self.sta.active(True)
-            sleep_ms(200)
-
-        if self.sta.isconnected():
+    def connect(self, timeout_s=WIFI_CONNECT_TIMEOUT_S, retries=WIFI_CONNECT_RETRIES):
+        if self.sta.isconnected() and self.sta.ifconfig()[0] != "0.0.0.0":
             self._print_ip("Wi-Fi 已连接")
             return True
 
-        print("正在连接 Wi-Fi:", self.ssid)
-        self.sta.connect(self.ssid, self.password)
+        last_error = None
+        for attempt in range(1, retries + 1):
+            self._reset_interface()
+            if self._scan_target():
+                print("检测到目标 Wi-Fi:", self.ssid)
+            else:
+                print("未扫描到目标 Wi-Fi，继续尝试连接:", self.ssid)
 
-        deadline = now_ms() + timeout_s * 1000
-        while now_ms() < deadline:
-            if self.sta.isconnected() and self.sta.ifconfig()[0] != "0.0.0.0":
-                self._print_ip("Wi-Fi 连接成功")
-                return True
-            sleep_ms(500)
+            print("正在连接 Wi-Fi(%d/%d): %s" % (attempt, retries, self.ssid))
+            try:
+                self.sta.connect(self.ssid, self.password)
+            except Exception as err:
+                last_error = err
 
-        raise RuntimeError("Wi-Fi 连接超时，请检查 SSID/密码/2.4G 频段")
+            deadline = now_ms() + timeout_s * 1000
+            while now_ms() < deadline:
+                if self.sta.isconnected():
+                    ip_info = self.sta.ifconfig()
+                    if ip_info[0] != "0.0.0.0":
+                        self._print_ip("Wi-Fi 连接成功")
+                        return True
+                sleep_ms(500)
+
+            try:
+                self.sta.disconnect()
+            except Exception:
+                pass
+
+            last_error = RuntimeError(
+                "Wi-Fi 连接超时，请检查 SSID/密码/2.4G 频段"
+            )
+            if attempt < retries:
+                print("Wi-Fi 连接失败，准备重试")
+                sleep_ms(WIFI_RETRY_DELAY_MS)
+
+        raise last_error
 
     def ensure_connected(self):
         if self.sta.isconnected() and self.sta.ifconfig()[0] != "0.0.0.0":
             return True
         try:
-            self.connect()
+            self.connect(timeout_s=10, retries=2)
             return True
         except Exception as err:
             print("Wi-Fi 重连失败:", err)
@@ -135,6 +160,52 @@ class WiFiStaClient:
         print("子网掩码:", ip_info[1])
         print("网关:", ip_info[2])
         print("DNS:", ip_info[3])
+
+    def _reset_interface(self):
+        try:
+            if self.sta.isconnected():
+                try:
+                    self.sta.disconnect()
+                except Exception:
+                    pass
+                sleep_ms(300)
+        except Exception:
+            pass
+
+        try:
+            if not self.sta.active():
+                self.sta.active(True)
+                sleep_ms(300)
+        except Exception:
+            # rt-smart 网络栈默认常驻，active(False/True) 可能不支持。
+            pass
+
+    def _scan_target(self):
+        try:
+            results = self.sta.scan()
+        except Exception:
+            return False
+
+        for item in results:
+            ssid = None
+            try:
+                ssid = item[0]
+            except Exception:
+                if hasattr(item, "ssid"):
+                    ssid = item.ssid
+                elif hasattr(item, "info") and hasattr(item.info, "ssid"):
+                    ssid = item.info.ssid
+
+            if ssid is None:
+                continue
+            if isinstance(ssid, bytes):
+                try:
+                    ssid = ssid.decode("utf-8")
+                except Exception:
+                    ssid = ssid.decode("utf-8", "ignore")
+            if ssid == self.ssid:
+                return True
+        return False
 
 
 class AiResultPublisher:
@@ -391,6 +462,10 @@ def print_banner():
     print("========================================")
 
 
+def normalize_size(size):
+    return [int(size[0]), int(size[1])]
+
+
 def main():
     os.exitpoint(os.EXITPOINT_ENABLE)
     print_banner()
@@ -404,11 +479,26 @@ def main():
     wifi.connect()
 
     try:
-        WBCRtsp.configure(wbc_width=DISPLAY_SIZE[0], wbc_height=DISPLAY_SIZE[1])
-        pl = PipeLine(rgb888p_size=RGB888P_SIZE, display_mode=DISPLAY_MODE)
+        requested_display_size = normalize_size(DISPLAY_SIZE)
+        print("请求显示分辨率:", requested_display_size)
+
+        WBCRtsp.configure(
+            wbc_width=requested_display_size[0], wbc_height=requested_display_size[1]
+        )
+
+        pl = PipeLine(
+            rgb888p_size=RGB888P_SIZE,
+            display_mode=DISPLAY_MODE,
+            display_size=DISPLAY_SIZE,
+        )
         pl.create(to_ide=TO_IDE)
-        actual_display_size = pl.get_display_size()
+        actual_display_size = normalize_size(pl.get_display_size())
         print("显示分辨率:", actual_display_size)
+        if actual_display_size != requested_display_size:
+            raise RuntimeError(
+                "Display.VIRT 实际分辨率与请求值不一致: requested=%s actual=%s"
+                % (requested_display_size, actual_display_size)
+            )
 
         WBCRtsp.start()
         print("RTSP 预计地址: rtsp://%s:%d/%s" % (wifi.ip(), RTSP_PORT, RTSP_SESSION))
