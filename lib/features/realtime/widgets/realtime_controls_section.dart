@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_controller.dart';
 import 'package:sickandflutter/features/realtime/realtime_view_utils.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
+import 'package:sickandflutter/shared/widgets/responsive_info_row.dart';
 
 /// 实时监控页运行明细与远程控制区。
 class RealtimeControlsSection extends StatelessWidget {
@@ -63,31 +64,30 @@ class RealtimeControlsSection extends StatelessWidget {
                 color: colorScheme.outlineVariant.withValues(alpha: 0.42),
               ),
             ),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        'LED 补光控制',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isCompact = constraints.maxWidth < 520;
+                final description = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'LED 补光控制',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        deviceState == null
-                            ? '当前还没有设备状态，暂时无法下发控制命令。'
-                            : !deviceState.canControlLed
-                            ? '后端要求 LED 指令必须携带非空 deviceId，当前先等待设备状态补齐后再开放控制。'
-                            : '后端返回 202 Accepted 后，前端会继续刷新并等待状态回写。',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Switch.adaptive(
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      deviceState == null
+                          ? '当前还没有设备状态，暂时无法下发控制命令。'
+                          : !deviceState.canControlLed
+                          ? '后端要求 LED 指令必须携带非空 deviceId，当前先等待设备状态补齐后再开放控制。'
+                          : '后端返回 202 Accepted 后，前端会继续刷新并等待状态回写。',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                );
+                final ledSwitch = Switch.adaptive(
                   value: deviceState?.ledOn ?? false,
                   onChanged:
                       deviceState == null ||
@@ -97,8 +97,27 @@ class RealtimeControlsSection extends StatelessWidget {
                       : (value) {
                           onToggleLed(value);
                         },
-                ),
-              ],
+                );
+
+                if (isCompact) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      description,
+                      const SizedBox(height: 14),
+                      ledSwitch,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: <Widget>[
+                    Expanded(child: description),
+                    const SizedBox(width: 16),
+                    ledSwitch,
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -120,35 +139,24 @@ class _ControlRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest,
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.36),
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.36),
         ),
       ),
-      child: Row(
-        children: <Widget>[
-          Icon(icon, size: 20, color: colorScheme.primary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.bodyLarge),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
+      child: ResponsiveInfoRow(
+        icon: icon,
+        label: label,
+        value: value,
+        emphasizeValue: true,
+        compactBreakpoint: 420,
+        labelWidth: 76,
       ),
     );
   }

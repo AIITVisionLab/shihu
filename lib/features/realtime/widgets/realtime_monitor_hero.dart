@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_controller.dart';
 import 'package:sickandflutter/features/realtime/realtime_view_utils.dart';
 import 'package:sickandflutter/shared/models/device_state_info.dart';
+import 'package:sickandflutter/shared/widgets/responsive_info_row.dart';
 
 /// 实时监控页主 Hero，汇总设备核心状态与当前告警说明。
 class RealtimeMonitorHero extends StatelessWidget {
@@ -254,27 +255,19 @@ class _StatusMiniRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Row(
-      children: <Widget>[
-        SizedBox(
-          width: 78,
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onPrimary.withValues(alpha: 0.74),
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: colorScheme.onPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ],
+    return ResponsiveInfoRow(
+      label: label,
+      value: value,
+      compactBreakpoint: 320,
+      labelWidth: 78,
+      emphasizeValue: true,
+      labelTextStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+        color: colorScheme.onPrimary.withValues(alpha: 0.74),
+      ),
+      valueTextStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+        color: colorScheme.onPrimary,
+        fontWeight: FontWeight.w700,
+      ),
     );
   }
 }

@@ -1,0 +1,275 @@
+import 'package:flutter/material.dart';
+import 'package:sickandflutter/core/constants/app_constants.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
+
+/// 首页顶部总览卡片。
+class HomeHeaderCard extends StatelessWidget {
+  /// 创建首页顶部总览卡片。
+  const HomeHeaderCard({
+    required this.version,
+    required this.currentUser,
+    super.key,
+  });
+
+  /// 应用版本。
+  final String version;
+
+  /// 当前用户。
+  final String currentUser;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(36),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            Color(0xFF112418),
+            Color(0xFF214B39),
+            Color(0xFFB3884A),
+          ],
+        ),
+        boxShadow: const <BoxShadow>[
+          BoxShadow(
+            color: Color(0x2614291E),
+            blurRadius: 48,
+            offset: Offset(0, 26),
+          ),
+        ],
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 820;
+          final summary = _HeaderSummary(
+            version: version,
+            currentUser: currentUser,
+          );
+          const scoreCard = _HeaderScoreCard();
+
+          if (isCompact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                summary,
+                const SizedBox(height: 20),
+                scoreCard,
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Expanded(flex: 10, child: summary),
+              const SizedBox(width: 22),
+              const Expanded(flex: 5, child: scoreCard),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _HeaderSummary extends StatelessWidget {
+  const _HeaderSummary({required this.version, required this.currentUser});
+
+  final String version;
+  final String currentUser;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: <Widget>[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                AppCopy.homeCrossPlatformDemo,
+                style: textTheme.labelLarge?.copyWith(color: Colors.white),
+              ),
+            ),
+            _MetaPill(label: AppCopy.homeVersionPill(version)),
+            _MetaPill(label: '当前用户 $currentUser'),
+          ],
+        ),
+        const SizedBox(height: 22),
+        Text(
+          AppConstants.appName,
+          style: textTheme.displaySmall?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          '把真实后端能力收进一个可上线的多端客户端，既能看设备，也能控设备，还能稳定恢复会话。',
+          style: textTheme.titleMedium?.copyWith(
+            color: const Color(0xFFF0F4ED),
+            height: 1.65,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          AppCopy.homeOverview,
+          style: textTheme.bodyLarge?.copyWith(
+            color: const Color(0xFFE2E9DD),
+            height: 1.72,
+          ),
+        ),
+        const SizedBox(height: 24),
+        const Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: <Widget>[
+            _SignalChip(label: 'Spring Boot Session'),
+            _SignalChip(label: '/api/status 设备轮询'),
+            _SignalChip(label: '/api/ops/led 远程控制'),
+            _SignalChip(label: 'Material 3 跨端客户端'),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _HeaderScoreCard extends StatelessWidget {
+  const _HeaderScoreCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            '联调基线',
+            style: textTheme.labelLarge?.copyWith(
+              color: const Color(0xFFE6EEE0),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '4 / 4',
+            style: textTheme.headlineLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '登录、状态、健康检查、LED 控制已经全部切到真实后端链路。',
+            style: textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFFE1E9DC),
+              height: 1.7,
+            ),
+          ),
+          const SizedBox(height: 20),
+          const _ScoreRow(label: '会话恢复', value: '已接通'),
+          const SizedBox(height: 10),
+          const _ScoreRow(label: '设备状态', value: '轮询中'),
+          const SizedBox(height: 10),
+          const _ScoreRow(label: '远程控制', value: '已联调'),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaPill extends StatelessWidget {
+  const _MetaPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(
+          context,
+        ).textTheme.labelLarge?.copyWith(color: Colors.white),
+      ),
+    );
+  }
+}
+
+class _SignalChip extends StatelessWidget {
+  const _SignalChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: const Color(0xFFF4F7F1)),
+      ),
+    );
+  }
+}
+
+class _ScoreRow extends StatelessWidget {
+  const _ScoreRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: const Color(0xFFD8E2D3)),
+          ),
+        ),
+        Text(
+          value,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(color: const Color(0xFFFFF3DE)),
+        ),
+      ],
+    );
+  }
+}

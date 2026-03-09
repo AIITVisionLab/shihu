@@ -45,67 +45,100 @@ class RealtimeMonitorTopBar extends StatelessWidget {
     final theme = Theme.of(context);
 
     return CommonCard(
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        crossAxisAlignment: WrapCrossAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          _StatusPill(
-            icon: Icons.person_outline_rounded,
-            label: '当前用户：$currentUser',
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              _StatusPill(
+                icon: Icons.person_outline_rounded,
+                label: '当前用户：$currentUser',
+              ),
+              _StatusPill(
+                icon: Icons.cable_rounded,
+                label: state.errorMessage == null ? '链路正常' : '链路异常',
+                foregroundColor: state.errorMessage == null
+                    ? const Color(0xFF166534)
+                    : theme.colorScheme.error,
+                backgroundColor: state.errorMessage == null
+                    ? const Color(0xFFE8F7EB)
+                    : theme.colorScheme.errorContainer,
+              ),
+              _StatusPill(
+                icon: Icons.schedule_rounded,
+                label: '轮询间隔：${state.isAutoRefreshEnabled ? '3 秒' : '已暂停自动刷新'}',
+              ),
+              _StatusPill(
+                icon: Icons.update_rounded,
+                label: '最近同步：${formatRealtimeTimestamp(state.lastRefreshAt)}',
+              ),
+            ],
           ),
-          _StatusPill(
-            icon: Icons.cable_rounded,
-            label: state.errorMessage == null ? '链路正常' : '链路异常',
-            foregroundColor: state.errorMessage == null
-                ? const Color(0xFF166534)
-                : theme.colorScheme.error,
-            backgroundColor: state.errorMessage == null
-                ? const Color(0xFFE8F7EB)
-                : theme.colorScheme.errorContainer,
-          ),
-          _StatusPill(
-            icon: Icons.schedule_rounded,
-            label: '轮询间隔：${state.isAutoRefreshEnabled ? '3 秒' : '已暂停自动刷新'}',
-          ),
-          _StatusPill(
-            icon: Icons.update_rounded,
-            label: '最近同步：${formatRealtimeTimestamp(state.lastRefreshAt)}',
-          ),
-          Switch.adaptive(
-            value: state.isAutoRefreshEnabled,
-            onChanged: onToggleAutoRefresh,
-          ),
-          Text(
-            '自动刷新',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          CommonButton(
-            label: AppCopy.realtimeOpenOverview,
-            tone: CommonButtonTone.secondary,
-            icon: const Icon(Icons.dashboard_outlined),
-            onPressed: onOpenOverview,
-          ),
-          CommonButton(
-            label: AppCopy.realtimeOpenSettings,
-            tone: CommonButtonTone.secondary,
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: onOpenSettings,
-          ),
-          CommonButton(
-            label: '立即刷新',
-            tone: CommonButtonTone.secondary,
-            isLoading: state.isRefreshing,
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: onRefresh,
-          ),
-          CommonButton(
-            label: '退出登录',
-            tone: CommonButtonTone.danger,
-            icon: const Icon(Icons.logout_rounded),
-            onPressed: onLogout,
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.4,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Switch.adaptive(
+                      value: state.isAutoRefreshEnabled,
+                      onChanged: onToggleAutoRefresh,
+                    ),
+                    Text(
+                      '自动刷新',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              CommonButton(
+                label: AppCopy.realtimeOpenOverview,
+                tone: CommonButtonTone.secondary,
+                icon: const Icon(Icons.dashboard_outlined),
+                onPressed: onOpenOverview,
+              ),
+              CommonButton(
+                label: AppCopy.realtimeOpenSettings,
+                tone: CommonButtonTone.secondary,
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: onOpenSettings,
+              ),
+              CommonButton(
+                label: '立即刷新',
+                tone: CommonButtonTone.secondary,
+                isLoading: state.isRefreshing,
+                icon: const Icon(Icons.refresh_rounded),
+                onPressed: onRefresh,
+              ),
+              CommonButton(
+                label: '退出登录',
+                tone: CommonButtonTone.danger,
+                icon: const Icon(Icons.logout_rounded),
+                onPressed: onLogout,
+              ),
+            ],
           ),
         ],
       ),

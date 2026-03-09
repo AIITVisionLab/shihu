@@ -25,9 +25,31 @@ class CommonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Card(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            Colors.white.withValues(alpha: 0.92),
+            colorScheme.surfaceContainerLowest.withValues(alpha: 0.88),
+          ],
+        ),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.42),
+        ),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: const Color(0x120E1C12),
+            blurRadius: 36,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
       child: Padding(
         padding: padding,
         child: Column(
@@ -35,17 +57,32 @@ class CommonCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             if (title != null) ...<Widget>[
-              Text(
-                title!,
-                style: textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.62),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  title!,
+                  style: textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onPrimaryContainer,
+                  ),
                 ),
               ),
               if (subtitle != null) ...<Widget>[
-                const SizedBox(height: 6),
-                Text(subtitle!, style: textTheme.bodyMedium),
+                const SizedBox(height: 12),
+                Text(
+                  subtitle!,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
             ],
             child,
           ],

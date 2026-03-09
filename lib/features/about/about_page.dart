@@ -5,6 +5,7 @@ import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/shared/widgets/adaptive_wrap_grid.dart';
+import 'package:sickandflutter/shared/widgets/responsive_info_row.dart';
 
 /// 关于页，映射后端 `preview.html` 的公开预览页结构。
 class AboutPage extends ConsumerWidget {
@@ -624,40 +625,19 @@ class _FlowItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
-      child: Row(
-        children: <Widget>[
-          Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: <Color>[Color(0xFF57D8FF), Color(0xFF6D7CFF)],
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 2,
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF9EB1CA)),
-            ),
-          ),
-        ],
+      child: ResponsiveInfoRow(
+        label: label,
+        value: value,
+        compactBreakpoint: 460,
+        labelWidth: 92,
+        gap: 12,
+        labelTextStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+        ),
+        valueTextStyle: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF9EB1CA)),
       ),
     );
   }
@@ -1069,6 +1049,56 @@ class _BarRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 460;
+        final progressBar = Container(
+          height: 16,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          alignment: Alignment.centerLeft,
+          child: FractionallySizedBox(
+            widthFactor: widthFactor,
+            child: Container(
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+        );
+
+        if (isCompact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFFD9E7F9),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    valueLabel,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              progressBar,
+            ],
+          );
+        }
+
         return Row(
           children: <Widget>[
             SizedBox(
@@ -1080,28 +1110,7 @@ class _BarRow extends StatelessWidget {
                 ),
               ),
             ),
-            Expanded(
-              child: Container(
-                height: 16,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
-                ),
-                alignment: Alignment.centerLeft,
-                child: FractionallySizedBox(
-                  widthFactor: widthFactor,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            Expanded(child: progressBar),
             const SizedBox(width: 12),
             SizedBox(
               width: 54,
