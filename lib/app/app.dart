@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sickandflutter/app/app_localizations.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/app/theme.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
@@ -16,6 +17,9 @@ class SickAndFlutterApp extends ConsumerWidget {
     return MaterialApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
+      locale: AppLocalizations.fallbackLocale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.delegates,
       theme: AppTheme.light(),
       routerConfig: router,
     );

@@ -32,6 +32,57 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script>
+    // 某些浏览器或自动化环境会返回字面值 "undefined"，
+    // Flutter Web 在解析语言标签时会直接抛错并导致白屏。
+    (function normalizeNavigatorLanguage() {
+      const fallbackLanguage = 'zh-CN';
+      const fallbackLanguages = Object.freeze([fallbackLanguage, 'en-US']);
+
+      const normalizeLanguage = (value) => {
+        if (typeof value !== 'string') {
+          return fallbackLanguage;
+        }
+        const trimmed = value.trim();
+        if (!trimmed || trimmed.toLowerCase() === 'undefined') {
+          return fallbackLanguage;
+        }
+        return trimmed;
+      };
+
+      const normalizeLanguages = (value) => {
+        if (!Array.isArray(value)) {
+          return fallbackLanguages;
+        }
+        const nextValues = value
+          .map(normalizeLanguage)
+          .filter((item, index, array) => array.indexOf(item) === index);
+        return nextValues.length > 0 ? Object.freeze(nextValues) : fallbackLanguages;
+      };
+
+      const currentLanguage = normalizeLanguage(window.navigator.language);
+      const currentLanguages = normalizeLanguages(window.navigator.languages);
+
+      const redefine = (key, getter) => {
+        try {
+          Object.defineProperty(window.navigator, key, {
+            configurable: true,
+            get: getter,
+          });
+        } catch (_) {
+          try {
+            Object.defineProperty(Navigator.prototype, key, {
+              configurable: true,
+              get: getter,
+            });
+          } catch (_) {}
+        }
+      };
+
+      redefine('language', () => currentLanguage);
+      redefine('languages', () => currentLanguages);
+    })();
+  </script>
   <!--
     可以按需定制 `flutter_bootstrap.js`。
     常见用途包括向 Flutter 加载器注入自定义配置，
