@@ -50,7 +50,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: <Color>[Color(0xFFF4F8EE), Color(0xFFE5EEDC)],
+            colors: <Color>[Color(0xFFEFF6FF), Color(0xFFDCEAFE)],
           ),
         ),
         child: SafeArea(
@@ -161,7 +161,7 @@ class _LoginHeroCard extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: const Color(0xFF1F5C3D),
+              color: const Color(0xFF1D4ED8),
               borderRadius: BorderRadius.circular(24),
             ),
             child: const Icon(
@@ -197,7 +197,7 @@ class _LoginHeroCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F7E8),
+                color: const Color(0xFFEFF6FF),
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Column(

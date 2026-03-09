@@ -73,36 +73,41 @@ class SettingsDeviceStateCard extends StatelessWidget {
               const SizedBox(height: 8),
               SettingsSettingRow(
                 title: '温度',
-                value: _displayValue(state.temperature),
+                value: state.formatMetric(
+                  state.temperature,
+                  state.temperatureUnit,
+                ),
               ),
               const SizedBox(height: 8),
               SettingsSettingRow(
                 title: '湿度',
-                value: _displayValue(state.humidity),
+                value: state.formatMetric(state.humidity, state.humidityUnit),
               ),
               const SizedBox(height: 8),
               SettingsSettingRow(
                 title: '光照',
-                value: _displayValue(state.light),
+                value: state.formatMetric(
+                  state.light,
+                  state.lightUnit,
+                  fractionDigits: 0,
+                ),
               ),
               const SizedBox(height: 8),
-              SettingsSettingRow(title: 'MQ2', value: _displayValue(state.mq2)),
+              SettingsSettingRow(
+                title: 'MQ2',
+                value: state.formatMetric(state.mq2, state.mq2Unit),
+              ),
               const SizedBox(height: 8),
               SettingsSettingRow(
                 title: '错误码',
-                value: state.errorCode == null ? '--' : '${state.errorCode}',
+                value: state.errorCode == null
+                    ? '--'
+                    : '${state.errorCode} · ${state.alertTitle}',
               ),
             ],
           );
         },
       ),
     );
-  }
-
-  String _displayValue(double? value) {
-    if (value == null) {
-      return '--';
-    }
-    return value.toStringAsFixed(2);
   }
 }

@@ -25,35 +25,36 @@ class AppCopy {
   static const String viewAboutProject = '查看关于项目';
 
   /// 首页模块标题。
-  static const String homeCrossPlatformDemo = '跨平台识别演示';
+  static const String homeCrossPlatformDemo = '跨平台培育管理控制台';
 
   /// 首页主说明。
   static const String homeOverview =
-      '当前基线已接入 Spring Boot 登录、设备状态、LED 控制、服务健康检查和本地状态持久化；识别相关页面保留仓储扩展点，待独立识别服务并入后继续联调。';
+      '当前 Flutter 前端已经按工作区 Spring Boot 后端收口，主链路围绕登录会话、设备状态轮询、异常码展示、LED 控制与健康检查展开；识别相关页面保留为独立服务扩展位。';
 
   /// 首页入口“开始识别”标题。
-  static const String homeDetectTitle = '开始识别';
+  static const String homeDetectTitle = '单图识别';
 
   /// 首页入口“开始识别”副标题。
-  static const String homeDetectSubtitle = '识别主链路仍保留前端结构，待独立识别服务并入后继续对接。';
+  static const String homeDetectSubtitle = '前端结构和结果页仍保留，待独立识别服务并入工作区后继续联调。';
 
   /// 首页入口“实时监测”标题。
-  static const String homeRealtimeTitle = '实时监测';
+  static const String homeRealtimeTitle = '监控主控台';
 
   /// 首页入口“实时监测”副标题。
-  static const String homeRealtimeSubtitle = '当前后端已接入设备状态监测；摄像头识别链路待独立识别服务补齐。';
+  static const String homeRealtimeSubtitle =
+      '持续轮询 /api/status，展示设备环境、异常等级和 LED 控制入口。';
 
   /// 首页入口“历史记录”标题。
-  static const String homeHistoryTitle = '历史记录';
+  static const String homeHistoryTitle = '识别历史';
 
   /// 首页入口“历史记录”副标题。
   static const String homeHistorySubtitle = '查看本地保存的识别结果与详情。';
 
   /// 首页入口“设置”标题。
-  static const String homeSettingsTitle = '设置';
+  static const String homeSettingsTitle = '运维设置';
 
   /// 首页入口“设置”副标题。
-  static const String homeSettingsSubtitle = '管理服务地址、环境信息和本地数据。';
+  static const String homeSettingsSubtitle = '管理服务地址、健康检查、登录会话和本地数据。';
 
   /// 首页能力标签：Material 3。
   static const String homeMaterialPill = 'Material 3';
@@ -68,7 +69,8 @@ class AppCopy {
   static String homeVersionPill(String version) => '版本 $version';
 
   /// 登录页主说明。
-  static const String authLoginOverview = '登录后可访问设备状态、服务健康检查和前端预留的识别功能入口。';
+  static const String authLoginOverview =
+      '登录后可进入设备监控主控台，查看 /api/status、执行 /api/ops/led，并在设置页排查 /api/health。';
 
   /// 登录页能力标签：自动恢复。
   static const String authRestoreChip = '登录态自动恢复';
@@ -77,7 +79,7 @@ class AppCopy {
   static const String authUnauthorizedChip = '401 自动退回登录';
 
   /// 登录页能力标签：自动附带 Token。
-  static const String authTokenChip = '请求自动携带会话';
+  static const String authTokenChip = 'Cookie 会话自动续用';
 
   /// 演示登录模式标题。
   static const String authMockModeTitle = '当前为演示登录模式';
@@ -92,7 +94,7 @@ class AppCopy {
   static const String authFillDemoAccount = '填充演示账号';
 
   /// 登录卡片标题。
-  static const String authLoginCardTitle = '账号登录';
+  static const String authLoginCardTitle = '平台登录';
 
   /// 账号输入框标签。
   static const String authAccountLabel = '账号';
@@ -252,24 +254,24 @@ class AppCopy {
 
   /// 关于页项目定位内容。
   static const String aboutProjectDescription =
-      '是一个面向石斛种植与养护场景的跨平台 Flutter 前端，用于演示单图识别、实时识别、结果展示、历史记录和运行环境配置。';
+      '是一个面向石斛幼苗培育场景的跨平台 Flutter 前端，用于承接登录、设备监控、状态展示、远程控制、识别扩展入口和运行环境配置。';
 
   /// 关于页技术基线标题。
   static const String aboutTechTitle = '当前技术基线';
 
   /// 关于页技术基线内容。
   static const String aboutTechDescription =
-      'Flutter 全平台工程、OpenHarmony Flutter 3.35.7 模板、Material 3、GoRouter、Riverpod、Dio、SharedPreferences、FlutterSecureStorage。';
+      'Flutter 全平台工程、OpenHarmony Flutter 3.35.7 模板、Material 3、GoRouter、Riverpod、Dio、SharedPreferences、FlutterSecureStorage，以及与 Spring Boot 后端的 HttpSession + Cookie 会话集成。';
 
   /// 关于页开发策略标题。
   static const String aboutStrategyTitle = '开发策略';
 
   /// 关于页开发策略内容。
   static const String aboutStrategyDescription =
-      '当前已对接 Spring Boot 登录、设备状态、LED 控制与健康检查接口；识别接口仍按独立服务保留仓储扩展点。';
+      '当前优先保证登录、设备状态轮询、LED 控制和健康检查链路稳定，再继续并入独立识别服务，不再沿用过时文档中的假设接口。';
 
   /// 设置页标题。
-  static const String settingsPageTitle = '设置';
+  static const String settingsPageTitle = '运维设置';
 
   /// 设置页加载中提示。
   static const String settingsLoading = '正在加载设置...';
@@ -302,13 +304,14 @@ class AppCopy {
   static const String settingsSessionTitle = '登录会话';
 
   /// 项目说明标题。
-  static const String settingsProjectTitle = '项目说明';
+  static const String settingsProjectTitle = '平台说明';
 
   /// 退出登录标题。
   static const String settingsLogoutTitle = '退出登录';
 
   /// 退出登录确认提示。
-  static const String settingsLogoutMessage = '退出后需要重新登录才能继续使用识别能力，是否继续？';
+  static const String settingsLogoutMessage =
+      '退出后需要重新登录才能继续访问设备监控、远程控制和识别扩展入口，是否继续？';
 
   /// 确认退出登录按钮。
   static const String settingsLogoutConfirm = '确认退出';

@@ -4,8 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sickandflutter/app/routes.dart';
+import 'package:sickandflutter/features/auth/auth_controller.dart';
+import 'package:sickandflutter/features/auth/auth_session.dart';
+import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/features/home/home_page.dart';
+import 'package:sickandflutter/features/settings/device_state_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
+import 'package:sickandflutter/shared/models/app_enums.dart';
+import 'package:sickandflutter/shared/models/device_state_info.dart';
 
 void main() {
   testWidgets('HomePage renders entry cards and version info', (tester) async {
@@ -24,10 +30,39 @@ void main() {
         overrides: [
           packageInfoProvider.overrideWith(
             (ref) async => PackageInfo(
-              appName: '石斛病虫害识别',
+              appName: '石斛幼苗智能培育管理平台',
               packageName: 'com.example.sickandflutter',
               version: '1.2.3',
               buildNumber: '45',
+            ),
+          ),
+          authControllerProvider.overrideWith(
+            () => _TestAuthController(
+              initialState: const AuthState(
+                session: AuthSession(
+                  accessToken: 'session_demo',
+                  loginMode: AuthLoginMode.real,
+                  user: AuthUser(
+                    userId: 'user_1',
+                    account: 'tester',
+                    displayName: '联调用户',
+                    roles: <String>['admin'],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          deviceStateProvider.overrideWith(
+            (ref) async => const DeviceStateInfo(
+              deviceId: 'dev_1',
+              deviceName: '石斛培育柜',
+              temperature: 24.5,
+              humidity: 82.0,
+              light: 1500,
+              mq2: 18,
+              errorCode: 0,
+              ledOn: true,
+              updatedAt: 1741399200000,
             ),
           ),
         ],
@@ -36,11 +71,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('开始识别'), findsOneWidget);
-    expect(find.text('实时监测'), findsOneWidget);
-    expect(find.text('历史记录'), findsOneWidget);
-    expect(find.text('设置'), findsOneWidget);
+    expect(find.text('单图识别'), findsOneWidget);
+    expect(find.text('监控主控台'), findsOneWidget);
+    expect(find.text('识别历史'), findsOneWidget);
+    expect(find.text('运维设置'), findsOneWidget);
     expect(find.text('版本 1.2.3'), findsOneWidget);
+    expect(find.text('石斛培育柜'), findsOneWidget);
   });
 
   testWidgets('HomePage entry cards navigate to named routes', (tester) async {
@@ -59,10 +95,39 @@ void main() {
         overrides: [
           packageInfoProvider.overrideWith(
             (ref) async => PackageInfo(
-              appName: '石斛病虫害识别',
+              appName: '石斛幼苗智能培育管理平台',
               packageName: 'com.example.sickandflutter',
               version: '1.2.3',
               buildNumber: '45',
+            ),
+          ),
+          authControllerProvider.overrideWith(
+            () => _TestAuthController(
+              initialState: const AuthState(
+                session: AuthSession(
+                  accessToken: 'session_demo',
+                  loginMode: AuthLoginMode.real,
+                  user: AuthUser(
+                    userId: 'user_1',
+                    account: 'tester',
+                    displayName: '联调用户',
+                    roles: <String>['admin'],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          deviceStateProvider.overrideWith(
+            (ref) async => const DeviceStateInfo(
+              deviceId: 'dev_1',
+              deviceName: '石斛培育柜',
+              temperature: 24.5,
+              humidity: 82.0,
+              light: 1500,
+              mq2: 18,
+              errorCode: 0,
+              ledOn: true,
+              updatedAt: 1741399200000,
             ),
           ),
         ],
@@ -71,31 +136,40 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('开始识别'));
-    await tester.pumpAndSettle();
-    expect(find.text('detect-page'), findsOneWidget);
-
-    router.goNamed(AppRoutes.home);
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('实时监测'));
+    await tester.tap(find.text('监控主控台'));
     await tester.pumpAndSettle();
     expect(find.text('realtime-page'), findsOneWidget);
 
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('历史记录'));
+    await tester.tap(find.text('单图识别'));
+    await tester.pumpAndSettle();
+    expect(find.text('detect-page'), findsOneWidget);
+
+    router.goNamed(AppRoutes.home);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('识别历史'));
     await tester.pumpAndSettle();
     expect(find.text('history-page'), findsOneWidget);
 
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('设置'));
+    await tester.tap(find.text('运维设置'));
     await tester.pumpAndSettle();
     expect(find.text('settings-page'), findsOneWidget);
   });
+}
+
+class _TestAuthController extends AuthController {
+  _TestAuthController({required this.initialState});
+
+  final AuthState initialState;
+
+  @override
+  AuthState build() => initialState;
 }
 
 GoRouter _buildRouter() {

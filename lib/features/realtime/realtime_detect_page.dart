@@ -1,87 +1,203 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_controller.dart';
-import 'package:sickandflutter/shared/models/app_enums.dart';
-import 'package:sickandflutter/shared/models/detection_item.dart';
+import 'package:sickandflutter/shared/models/device_state_info.dart';
 import 'package:sickandflutter/shared/widgets/common_button.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
 
-/// 实时识别页，承接测试帧链路、会话控制和后续摄像头扩展。
-class RealtimeDetectPage extends ConsumerWidget {
-  /// 创建实时识别页。
+/// 实时监控页，对齐后端 `index.html` 的设备监控主控台。
+class RealtimeDetectPage extends ConsumerStatefulWidget {
+  /// 创建实时监控页。
   const RealtimeDetectPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RealtimeDetectPage> createState() => _RealtimeDetectPageState();
+}
+
+class _RealtimeDetectPageState extends ConsumerState<RealtimeDetectPage> {
+  late final RealtimeDetectController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ref.read(realtimeDetectControllerProvider.notifier);
+    Future<void>.microtask(_controller.startMonitoring);
+  }
+
+  @override
+  void dispose() {
+    _controller.stopMonitoring();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(realtimeDetectControllerProvider);
-    final controller = ref.read(realtimeDetectControllerProvider.notifier);
+    final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('实时监测')),
+      appBar: AppBar(title: const Text('实时监控主控台')),
       body: SafeArea(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1080),
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: <Widget>[
-                _RealtimeStatusCard(state: state),
-                const SizedBox(height: 20),
-                _RealtimePreviewCard(state: state),
-                const SizedBox(height: 20),
-                _RealtimeMetricsSection(state: state),
-                const SizedBox(height: 20),
-                _RealtimeSessionCard(
-                  state: state,
-                  onStart: controller.startSession,
-                  onPause: controller.pauseSession,
-                  onResume: controller.resumeSession,
-                ),
-                const SizedBox(height: 20),
-                _RealtimeDetectionsCard(state: state),
-                const SizedBox(height: 20),
-                const _RealtimeNextStepsCard(),
-              ],
+        child: RefreshIndicator(
+          onRefresh: _controller.refreshNow,
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1180),
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: <Widget>[
+                  _MonitorTopBar(
+                    currentUser:
+                        authState.session?.user.displayName ??
+                        authState.session?.user.account ??
+                        '--',
+                    state: state,
+                    onRefresh: _controller.refreshNow,
+                    onToggleAutoRefresh: _controller.setAutoRefreshEnabled,
+                  ),
+                  const SizedBox(height: 20),
+                  _MonitorHeroSection(state: state),
+                  const SizedBox(height: 20),
+                  if (!state.hasDeviceState && state.isRefreshing)
+                    const CommonCard(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32),
+                        child: Center(
+                          child: CircularProgressIndicator.adaptive(),
+                        ),
+                      ),
+                    )
+                  else ...<Widget>[
+                    _MetricsSection(deviceState: state.deviceState),
+                    const SizedBox(height: 20),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWide = constraints.maxWidth >= 900;
+                        final controls = _MonitorControlsSection(
+                          state: state,
+                          onToggleLed: _handleToggleLed,
+                        );
+                        final guide = _StatusGuideSection(
+                          deviceState: state.deviceState,
+                        );
+
+                        if (!isWide) {
+                          return Column(
+                            children: <Widget>[
+                              controls,
+                              const SizedBox(height: 20),
+                              guide,
+                            ],
+                          );
+                        }
+
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Expanded(child: controls),
+                            const SizedBox(width: 20),
+                            Expanded(child: guide),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+
+  Future<void> _handleToggleLed(bool ledOn) async {
+    try {
+      final message = await _controller.toggleLed(ledOn);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(message)));
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('$error')));
+    }
+  }
 }
 
-class _RealtimeStatusCard extends StatelessWidget {
-  const _RealtimeStatusCard({required this.state});
+class _MonitorTopBar extends StatelessWidget {
+  const _MonitorTopBar({
+    required this.currentUser,
+    required this.state,
+    required this.onRefresh,
+    required this.onToggleAutoRefresh,
+  });
 
+  final String currentUser;
   final RealtimeDetectState state;
+  final Future<void> Function() onRefresh;
+  final Future<void> Function(bool enabled) onToggleAutoRefresh;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return CommonCard(
-      title: '链路状态',
-      subtitle: state.supportsTestFeed
-          ? '当前已接入测试帧会话和摘要刷新，但仍不伪造摄像头预览或真实检测框。'
-          : '当前环境未开放测试帧链路，需接入摄像头取帧后再启用真实实时识别。',
       child: Wrap(
         spacing: 12,
         runSpacing: 12,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: <Widget>[
-          _StatePill(
-            label: '会话状态：${state.status.label}',
-            tone: _pillToneForStatus(state.status),
+          _TopPill(
+            icon: Icons.person_outline_rounded,
+            label: '当前用户：$currentUser',
           ),
-          _StatePill(label: state.supportsTestFeed ? '测试帧链路已接入' : '待接入摄像头取帧'),
-          _StatePill(
-            label: state.hasResult ? '实时摘要已刷新' : '等待首帧摘要',
-            tone: state.hasResult
-                ? _StatePillTone.success
-                : _StatePillTone.neutral,
+          _TopPill(
+            icon: Icons.cable_rounded,
+            label: state.errorMessage == null ? '链路正常' : '链路异常',
+            foregroundColor: state.errorMessage == null
+                ? const Color(0xFF166534)
+                : theme.colorScheme.error,
+            backgroundColor: state.errorMessage == null
+                ? const Color(0xFFE8F7EB)
+                : theme.colorScheme.errorContainer,
           ),
-          _StatePill(
-            label: state.hasResult
-                ? '当前帧检测框 ${state.detectionCount} 个'
-                : 'Overlay 元数据待刷新',
+          _TopPill(
+            icon: Icons.schedule_rounded,
+            label: '轮询间隔：${state.isAutoRefreshEnabled ? '3 秒' : '已暂停自动刷新'}',
+          ),
+          _TopPill(
+            icon: Icons.update_rounded,
+            label: '最近同步：${_formatDateTime(state.lastRefreshAt)}',
+          ),
+          Switch.adaptive(
+            value: state.isAutoRefreshEnabled,
+            onChanged: (value) {
+              onToggleAutoRefresh(value);
+            },
+          ),
+          Text(
+            '自动刷新',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          CommonButton(
+            label: '立即刷新',
+            tone: CommonButtonTone.secondary,
+            isLoading: state.isRefreshing,
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () {
+              onRefresh();
+            },
           ),
         ],
       ),
@@ -89,484 +205,302 @@ class _RealtimeStatusCard extends StatelessWidget {
   }
 }
 
-class _RealtimePreviewCard extends StatelessWidget {
-  const _RealtimePreviewCard({required this.state});
-
-  final RealtimeDetectState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final summary = state.summary;
-
-    return CommonCard(
-      title: '预览区域',
-      subtitle: state.supportsTestFeed
-          ? '当前只展示测试链路状态和 Overlay 元数据，不展示真实摄像头画面。'
-          : '后续将在这里承接摄像头画面、检测框 Overlay 和实时结果高亮。',
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: <Color>[Color(0xFF173628), Color(0xFF32684E)],
-            ),
-          ),
-          child: Stack(
-            fit: StackFit.expand,
-            children: <Widget>[
-              Align(
-                alignment: Alignment.topRight,
-                child: Container(
-                  width: 160,
-                  height: 160,
-                  margin: const EdgeInsets.only(top: 18, right: 18),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.06),
-                  ),
-                ),
-              ),
-              Align(
-                alignment: Alignment.bottomLeft,
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  margin: const EdgeInsets.only(left: 24, bottom: 24),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.05),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    _PreviewBanner(state: state),
-                    const Spacer(),
-                    Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          Container(
-                            width: 84,
-                            height: 84,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: Icon(
-                              state.supportsTestFeed
-                                  ? Icons.stream_outlined
-                                  : Icons.videocam_off_outlined,
-                              size: 42,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-                          Text(
-                            state.supportsTestFeed ? '测试帧链路已接入' : '摄像头预览待接入',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            state.supportsTestFeed
-                                ? '当前会话只刷新测试帧摘要和检测框元数据，避免在真实链路未打通前用假预览制造完成错觉。'
-                                : '当前环境不提供无摄像头测试链路，后续会在这里接入真实预览和 Overlay 渲染。',
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  height: 1.5,
-                                ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.08),
-                        ),
-                      ),
-                      child: Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: _PreviewMetric(
-                              title: '当前主结果',
-                              value: summary?.primaryLabelName ?? '--',
-                            ),
-                          ),
-                          Expanded(
-                            child: _PreviewMetric(
-                              title: '检测框数量',
-                              value: '${state.detectionCount}',
-                            ),
-                          ),
-                          Expanded(
-                            child: _PreviewMetric(
-                              title: '最近刷新',
-                              value: _formatClockTime(state.lastFrameAt),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (state.errorMessage != null) ...<Widget>[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: colorScheme.errorContainer.withValues(
-                            alpha: 0.92,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          state.errorMessage!,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: colorScheme.onErrorContainer),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RealtimeMetricsSection extends StatelessWidget {
-  const _RealtimeMetricsSection({required this.state});
-
-  final RealtimeDetectState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final summary = state.summary;
-
-    return CommonCard(
-      title: '实时摘要',
-      subtitle: state.hasResult
-          ? '最近一帧结果已刷新，可继续观察会话状态和检测框元数据变化。'
-          : '开始测试链路后，这里会展示主识别结果、健康状态和单帧耗时。',
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final cardWidth = _metricCardWidth(constraints.maxWidth);
-
-          return Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: <Widget>[
-              _RealtimeMetricCard(
-                width: cardWidth,
-                title: '主识别结果',
-                value: summary?.primaryLabelName ?? '--',
-                subtitle: state.hasResult ? '最近一帧主标签' : '等待测试帧首个结果',
-              ),
-              _RealtimeMetricCard(
-                width: cardWidth,
-                title: '健康状态',
-                value: summary?.healthStatus.label ?? '--',
-                subtitle: state.hasResult ? '来自最近一帧摘要' : '待接入实时状态',
-              ),
-              _RealtimeMetricCard(
-                width: cardWidth,
-                title: '严重程度',
-                value: summary?.severityLevel.label ?? '--',
-                subtitle: state.hasResult ? '按最近一帧结果刷新' : '待接入严重度判断',
-              ),
-              _RealtimeMetricCard(
-                width: cardWidth,
-                title: '单帧耗时',
-                value: state.lastInferenceMs == null
-                    ? '--'
-                    : '${state.lastInferenceMs} ms',
-                subtitle: state.hasResult ? '模型推理耗时' : '待接入推理延迟',
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _RealtimeSessionCard extends StatelessWidget {
-  const _RealtimeSessionCard({
-    required this.state,
-    required this.onStart,
-    required this.onPause,
-    required this.onResume,
+class _TopPill extends StatelessWidget {
+  const _TopPill({
+    required this.icon,
+    required this.label,
+    this.foregroundColor,
+    this.backgroundColor,
   });
 
-  final RealtimeDetectState state;
-  final Future<void> Function() onStart;
-  final VoidCallback onPause;
-  final Future<void> Function() onResume;
+  final IconData icon;
+  final String label;
+  final Color? foregroundColor;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
-    return CommonCard(
-      title: '会话控制',
-      subtitle: state.supportsTestFeed
-          ? '当前控制的是测试帧轮询，不会触发权限申请或真实摄像头预览。'
-          : '当前环境下只能保留会话入口，需接入摄像头取帧后才能真正运行。',
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 560;
-          final actions = _buildActions();
+    final theme = Theme.of(context);
+    final effectiveForeground = foregroundColor ?? const Color(0xFF344256);
+    final effectiveBackground = backgroundColor ?? const Color(0xFFF3F7FC);
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              if (isCompact)
-                Column(
-                  children: actions
-                      .expand(
-                        (button) => <Widget>[
-                          button,
-                          const SizedBox(height: 12),
-                        ],
-                      )
-                      .take(actions.length * 2 - 1)
-                      .toList(growable: false),
-                )
-              else
-                Row(
-                  children: actions
-                      .expand(
-                        (button) => <Widget>[
-                          Expanded(child: button),
-                          const SizedBox(width: 12),
-                        ],
-                      )
-                      .take(actions.length * 2 - 1)
-                      .toList(growable: false),
-                ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 16,
-                runSpacing: 12,
-                children: <Widget>[
-                  _SessionMetaItem(label: '当前状态', value: state.status.label),
-                  _SessionMetaItem(
-                    label: '会话 ID',
-                    value: state.sessionId ?? '--',
-                  ),
-                  _SessionMetaItem(
-                    label: '已处理帧数',
-                    value: '${state.frameIndex}',
-                  ),
-                  _SessionMetaItem(
-                    label: '最近刷新',
-                    value: _formatClockTime(state.lastFrameAt),
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: effectiveBackground,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFFD8E2EF)),
       ),
-    );
-  }
-
-  List<Widget> _buildActions() {
-    final isInitializing = state.status == RealtimeSessionStatus.initializing;
-    final isRunning = state.status == RealtimeSessionStatus.running;
-    final isPaused = state.status == RealtimeSessionStatus.paused;
-
-    if (isRunning) {
-      return <Widget>[
-        const CommonButton(
-          label: '会话运行中',
-          icon: Icon(Icons.play_circle_fill_rounded),
-        ),
-        CommonButton(
-          label: '暂停会话',
-          tone: CommonButtonTone.secondary,
-          icon: const Icon(Icons.pause_rounded),
-          onPressed: onPause,
-        ),
-      ];
-    }
-
-    if (isPaused) {
-      return <Widget>[
-        CommonButton(
-          label: '继续会话',
-          icon: const Icon(Icons.play_arrow_rounded),
-          onPressed: onResume,
-        ),
-        CommonButton(
-          label: '重新开始',
-          tone: CommonButtonTone.secondary,
-          icon: const Icon(Icons.replay_rounded),
-          onPressed: onStart,
-        ),
-      ];
-    }
-
-    return <Widget>[
-      CommonButton(
-        label: state.supportsTestFeed ? '开始测试链路' : '等待摄像头接入',
-        icon: Icon(
-          state.supportsTestFeed
-              ? Icons.play_arrow_rounded
-              : Icons.videocam_off_outlined,
-        ),
-        isLoading: isInitializing,
-        onPressed: state.supportsTestFeed && !isInitializing ? onStart : null,
-      ),
-      CommonButton(
-        label: '暂停会话',
-        tone: CommonButtonTone.secondary,
-        icon: const Icon(Icons.pause_rounded),
-        onPressed: null,
-      ),
-    ];
-  }
-}
-
-class _RealtimeDetectionsCard extends StatelessWidget {
-  const _RealtimeDetectionsCard({required this.state});
-
-  final RealtimeDetectState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final detections =
-        state.latestResult?.detections ?? const <DetectionItem>[];
-
-    return CommonCard(
-      title: '当前帧检测框',
-      subtitle: state.hasResult
-          ? '当前仅刷新检测框元数据，真实画面叠框渲染仍待摄像头链路接入。'
-          : '开始测试链路后，这里会展示当前帧检测框数量、位置和严重程度。',
-      child: detections.isEmpty
-          ? Text(state.hasResult ? '当前帧未检测到异常框。' : '当前还没有可展示的检测框数据。')
-          : Column(
-              children: detections
-                  .map((item) => _DetectionItemTile(item: item))
-                  .toList(growable: false),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 18, color: effectiveForeground),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: effectiveForeground,
+              fontWeight: FontWeight.w600,
             ),
-    );
-  }
-}
-
-class _RealtimeNextStepsCard extends StatelessWidget {
-  const _RealtimeNextStepsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return CommonCard(
-      title: '下一步接入项',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const <Widget>[
-          _TodoLine(text: '测试帧轮询、会话状态和摘要刷新已接入。', done: true),
-          _TodoLine(text: '接入摄像头权限申请和失败态。'),
-          _TodoLine(text: '承接真实预览、帧采样和实时接口请求。'),
-          _TodoLine(text: '把当前检测框元数据渲染为真实 Overlay。'),
+          ),
         ],
       ),
     );
   }
 }
 
-class _PreviewBanner extends StatelessWidget {
-  const _PreviewBanner({required this.state});
+class _MonitorHeroSection extends StatelessWidget {
+  const _MonitorHeroSection({required this.state});
 
   final RealtimeDetectState state;
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.topLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.18),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Icon(Icons.radar_rounded, size: 18, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              _previewBannerText(state),
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+    final deviceState = state.deviceState;
+    final palette = _alertPalette(deviceState?.alertLevel);
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            Color(0xFF081120),
+            Color(0xFF12305E),
+            Color(0xFF2D7DD6),
           ],
         ),
       ),
-    );
-  }
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 820;
+            final summary = _HeroSummary(
+              deviceState: deviceState,
+              errorMessage: state.errorMessage,
+            );
+            final banner = _HeroStatusBanner(
+              palette: palette,
+              deviceState: deviceState,
+            );
 
-  String _previewBannerText(RealtimeDetectState state) {
-    switch (state.status) {
-      case RealtimeSessionStatus.running:
-        return '测试帧链路运行中';
-      case RealtimeSessionStatus.paused:
-        return '会话已暂停';
-      case RealtimeSessionStatus.initializing:
-        return '正在拉取首帧';
-      case RealtimeSessionStatus.error:
-        return '链路异常';
-      case RealtimeSessionStatus.permissionDenied:
-        return '权限受限';
-      case RealtimeSessionStatus.idle:
-        return state.supportsTestFeed ? '等待开始测试链路' : '等待摄像头接入';
-    }
+            if (isWide) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(flex: 3, child: summary),
+                  const SizedBox(width: 20),
+                  Expanded(flex: 2, child: banner),
+                ],
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[summary, const SizedBox(height: 20), banner],
+            );
+          },
+        ),
+      ),
+    );
   }
 }
 
-class _PreviewMetric extends StatelessWidget {
-  const _PreviewMetric({required this.title, required this.value});
+class _HeroSummary extends StatelessWidget {
+  const _HeroSummary({required this.deviceState, required this.errorMessage});
 
-  final String title;
+  final DeviceStateInfo? deviceState;
+  final String? errorMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            '后端设备状态主链路',
+            style: theme.textTheme.labelLarge?.copyWith(color: Colors.white),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          deviceState?.deviceName.trim().isNotEmpty == true
+              ? deviceState!.deviceName
+              : '等待设备状态上报',
+          style: theme.textTheme.headlineMedium?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          deviceState == null
+              ? '当前页面会持续轮询 /api/status。若后端尚未收到设备上报，这里会先显示等待状态。'
+              : '当前页面会持续轮询 /api/status，并依据错误码把设备状态映射为正常、预警和告警视图。',
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: Colors.white.withValues(alpha: 0.9),
+            height: 1.6,
+          ),
+        ),
+        const SizedBox(height: 18),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: <Widget>[
+            _HeroInfoChip(
+              label: '设备 ID：${_displayText(deviceState?.deviceId)}',
+            ),
+            _HeroInfoChip(
+              label: '最近上报：${_formatDateTime(deviceState?.updatedAtTime)}',
+            ),
+            _HeroInfoChip(label: 'LED：${deviceState?.ledLabel ?? '--'}'),
+          ],
+        ),
+        if (errorMessage != null) ...<Widget>[
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF3C1218).withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFAB3144)),
+            ),
+            child: Text(
+              errorMessage!,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: const Color(0xFFFFD5D8),
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _HeroInfoChip extends StatelessWidget {
+  const _HeroInfoChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: Colors.white),
+      ),
+    );
+  }
+}
+
+class _HeroStatusBanner extends StatelessWidget {
+  const _HeroStatusBanner({required this.palette, required this.deviceState});
+
+  final _AlertPalette palette;
+  final DeviceStateInfo? deviceState;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            '运行状态',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: Colors.white.withValues(alpha: 0.82),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: palette.backgroundColor,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              deviceState?.alertTitle ?? '等待设备上报',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: palette.foregroundColor,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            deviceState?.alertDescription ?? '尚未收到后端的设备状态上报，当前先保持等待视图。',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: Colors.white.withValues(alpha: 0.9),
+              height: 1.7,
+            ),
+          ),
+          const SizedBox(height: 18),
+          _StatusMiniRow(label: '错误码', value: _displayErrorCode(deviceState)),
+          const SizedBox(height: 12),
+          _StatusMiniRow(label: 'LED 状态', value: deviceState?.ledLabel ?? '--'),
+          const SizedBox(height: 12),
+          _StatusMiniRow(label: '状态来源', value: '/api/status'),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusMiniRow extends StatelessWidget {
+  const _StatusMiniRow({required this.label, required this.value});
+
+  final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: <Widget>[
-        Text(
-          title,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: Colors.white.withValues(alpha: 0.72),
+        SizedBox(
+          width: 78,
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.white.withValues(alpha: 0.72),
+            ),
           ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
+        Expanded(
+          child: Text(
+            value,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ],
@@ -574,250 +508,429 @@ class _PreviewMetric extends StatelessWidget {
   }
 }
 
-class _RealtimeMetricCard extends StatelessWidget {
-  const _RealtimeMetricCard({
-    required this.width,
-    required this.title,
-    required this.value,
-    required this.subtitle,
-  });
+class _MetricsSection extends StatelessWidget {
+  const _MetricsSection({required this.deviceState});
 
-  final double width;
-  final String title;
-  final String value;
-  final String subtitle;
+  final DeviceStateInfo? deviceState;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(22),
+    final cards = <Widget>[
+      _MetricCard(
+        icon: Icons.thermostat_rounded,
+        title: '温度',
+        value: deviceState?.formatMetric(
+          deviceState?.temperature,
+          deviceState?.temperatureUnit ?? '°C',
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
-            ],
+        helperText: '来自设备温度上报',
+      ),
+      _MetricCard(
+        icon: Icons.water_drop_rounded,
+        title: '湿度',
+        value: deviceState?.formatMetric(
+          deviceState?.humidity,
+          deviceState?.humidityUnit ?? '%',
+        ),
+        helperText: '来自设备湿度上报',
+      ),
+      _MetricCard(
+        icon: Icons.light_mode_rounded,
+        title: '光照',
+        value: deviceState?.formatMetric(
+          deviceState?.light,
+          deviceState?.lightUnit ?? 'Lux',
+          fractionDigits: 0,
+        ),
+        helperText: '来自设备光照上报',
+      ),
+      _MetricCard(
+        icon: Icons.sensors_rounded,
+        title: 'MQ2',
+        value: deviceState?.formatMetric(
+          deviceState?.mq2,
+          deviceState?.mq2Unit ?? 'ppm',
+        ),
+        helperText: '来自设备气体传感器上报',
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 960;
+        final medium = constraints.maxWidth >= 600;
+        final columns = isWide ? 4 : (medium ? 2 : 1);
+        final itemWidth =
+            (constraints.maxWidth - ((columns - 1) * 16)) / columns;
+
+        return Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: cards
+              .map((item) => SizedBox(width: itemWidth, child: item))
+              .toList(growable: false),
+        );
+      },
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  const _MetricCard({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.helperText,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? value;
+  final String helperText;
+
+  @override
+  Widget build(BuildContext context) {
+    return CommonCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: Theme.of(context).colorScheme.primary),
           ),
-        ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value ?? '--',
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          Text(helperText, style: Theme.of(context).textTheme.bodyMedium),
+        ],
       ),
     );
   }
 }
 
-class _DetectionItemTile extends StatelessWidget {
-  const _DetectionItemTile({required this.item});
+class _MonitorControlsSection extends StatelessWidget {
+  const _MonitorControlsSection({
+    required this.state,
+    required this.onToggleLed,
+  });
 
-  final DetectionItem item;
+  final RealtimeDetectState state;
+  final Future<void> Function(bool ledOn) onToggleLed;
+
+  @override
+  Widget build(BuildContext context) {
+    final deviceState = state.deviceState;
+
+    return CommonCard(
+      title: '运行明细与远程控制',
+      subtitle: '设备状态来自 /api/status，LED 开关通过 /api/ops/led 提交。',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _ControlRow(
+            icon: Icons.memory_rounded,
+            label: '设备名称',
+            value: _displayText(deviceState?.deviceName),
+          ),
+          const SizedBox(height: 12),
+          _ControlRow(
+            icon: Icons.badge_rounded,
+            label: '设备 ID',
+            value: _displayText(deviceState?.deviceId),
+          ),
+          const SizedBox(height: 12),
+          _ControlRow(
+            icon: Icons.error_outline_rounded,
+            label: '错误码',
+            value: _displayErrorCode(deviceState),
+          ),
+          const SizedBox(height: 12),
+          _ControlRow(
+            icon: Icons.update_rounded,
+            label: '更新时间',
+            value: _formatDateTime(deviceState?.updatedAtTime),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F7FB),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFD8E2EF)),
+            ),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'LED 补光控制',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        deviceState == null
+                            ? '当前还没有设备状态，暂时无法下发控制命令。'
+                            : '后端返回 202 Accepted 后，前端会继续刷新并等待状态回写。',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Switch.adaptive(
+                  value: deviceState?.ledOn ?? false,
+                  onChanged: deviceState == null || state.isSubmittingLed
+                      ? null
+                      : (value) {
+                          onToggleLed(value);
+                        },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ControlRow extends StatelessWidget {
+  const _ControlRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FBFF),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE3EAF4)),
+      ),
+      child: Row(
+        children: <Widget>[
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.bodyLarge),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusGuideSection extends StatelessWidget {
+  const _StatusGuideSection({required this.deviceState});
+
+  final DeviceStateInfo? deviceState;
+
+  @override
+  Widget build(BuildContext context) {
+    return CommonCard(
+      title: '状态说明',
+      subtitle: '这一组说明与后端静态控制台保持一致，用于解释错误码展示语义。',
+      child: Column(
+        children: <Widget>[
+          _GuideItem(
+            icon: Icons.verified_outlined,
+            title: '错误码 0',
+            description: '系统运行正常，设备状态处于安全区间，可继续观察实时数据。',
+            isActive: deviceState?.errorCode == 0,
+          ),
+          const SizedBox(height: 14),
+          _GuideItem(
+            icon: Icons.warning_amber_rounded,
+            title: '错误码 1',
+            description: '系统进入预警状态，建议人工复核当前设备环境和控制策略。',
+            isActive: deviceState?.errorCode == 1,
+          ),
+          const SizedBox(height: 14),
+          _GuideItem(
+            icon: Icons.gpp_bad_rounded,
+            title: '错误码 2',
+            description: '系统进入严重告警状态，应优先处理设备异常或环境风险。',
+            isActive: deviceState?.errorCode == 2,
+          ),
+          const SizedBox(height: 14),
+          _GuideItem(
+            icon: Icons.help_outline_rounded,
+            title: '其他情况',
+            description: '当前前端按未知状态展示，用于覆盖后端尚未定义或未返回的错误码。',
+            isActive:
+                deviceState == null ||
+                deviceState?.alertLevel == DeviceAlertLevel.unknown,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuideItem extends StatelessWidget {
+  const _GuideItem({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.isActive,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final bool isActive;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      item.labelName,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '类别：${item.category.label}  ·  严重程度：${item.severityLevel.label}',
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '置信度 ${(item.confidence * 100).toStringAsFixed(1)}%  ·  坐标 (${item.bbox.x.toStringAsFixed(2)}, ${item.bbox.y.toStringAsFixed(2)})',
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              _StatePill(
-                label:
-                    '${(item.bbox.width * 100).toStringAsFixed(0)}% x ${(item.bbox.height * 100).toStringAsFixed(0)}%',
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SessionMetaItem extends StatelessWidget {
-  const _SessionMetaItem({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 220,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-enum _StatePillTone { neutral, success, warning }
-
-class _StatePill extends StatelessWidget {
-  const _StatePill({required this.label, this.tone = _StatePillTone.neutral});
-
-  final String label;
-  final _StatePillTone tone;
-
-  @override
-  Widget build(BuildContext context) {
-    final (background, foreground) = switch (tone) {
-      _StatePillTone.success => (
-        Theme.of(context).colorScheme.tertiaryContainer,
-        Theme.of(context).colorScheme.onTertiaryContainer,
-      ),
-      _StatePillTone.warning => (
-        Theme.of(context).colorScheme.errorContainer,
-        Theme.of(context).colorScheme.onErrorContainer,
-      ),
-      _StatePillTone.neutral => (
-        Theme.of(context).colorScheme.primaryContainer,
-        Theme.of(context).colorScheme.onPrimaryContainer,
-      ),
-    };
-
-    return DecoratedBox(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: foreground,
-            fontWeight: FontWeight.w700,
-          ),
+        color: isActive ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isActive ? const Color(0xFF93C5FD) : const Color(0xFFE2E8F0),
         ),
       ),
-    );
-  }
-}
-
-class _TodoLine extends StatelessWidget {
-  const _TodoLine({required this.text, this.done = false});
-
-  final String text;
-  final bool done;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Icon(
-              done ? Icons.check_circle : Icons.radio_button_unchecked,
-              size: 18,
-              color: done ? Theme.of(context).colorScheme.primary : null,
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isActive ? const Color(0xFFDBEAFE) : Colors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: const Color(0xFF2563EB)),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 10),
-          Expanded(child: Text(text)),
         ],
       ),
     );
   }
 }
 
-_StatePillTone _pillToneForStatus(RealtimeSessionStatus status) {
-  switch (status) {
-    case RealtimeSessionStatus.running:
-      return _StatePillTone.success;
-    case RealtimeSessionStatus.error:
-    case RealtimeSessionStatus.permissionDenied:
-      return _StatePillTone.warning;
-    case RealtimeSessionStatus.idle:
-    case RealtimeSessionStatus.initializing:
-    case RealtimeSessionStatus.paused:
-      return _StatePillTone.neutral;
+class _AlertPalette {
+  const _AlertPalette({
+    required this.backgroundColor,
+    required this.foregroundColor,
+  });
+
+  final Color backgroundColor;
+  final Color foregroundColor;
+}
+
+_AlertPalette _alertPalette(DeviceAlertLevel? level) {
+  switch (level) {
+    case DeviceAlertLevel.safe:
+      return const _AlertPalette(
+        backgroundColor: Color(0xFFE8F7EB),
+        foregroundColor: Color(0xFF166534),
+      );
+    case DeviceAlertLevel.warning:
+      return const _AlertPalette(
+        backgroundColor: Color(0xFFFFF4E5),
+        foregroundColor: Color(0xFFB45309),
+      );
+    case DeviceAlertLevel.danger:
+      return const _AlertPalette(
+        backgroundColor: Color(0xFFFEEBEC),
+        foregroundColor: Color(0xFFB91C1C),
+      );
+    case DeviceAlertLevel.unknown:
+    case null:
+      return const _AlertPalette(
+        backgroundColor: Color(0xFFE5ECF5),
+        foregroundColor: Color(0xFF475569),
+      );
   }
 }
 
-String _formatClockTime(DateTime? value) {
+String _displayText(String? value) {
+  final normalizedValue = value?.trim() ?? '';
+  return normalizedValue.isEmpty ? '--' : normalizedValue;
+}
+
+String _displayErrorCode(DeviceStateInfo? deviceState) {
+  final errorCode = deviceState?.errorCode;
+  if (errorCode == null) {
+    return '--';
+  }
+  return '$errorCode';
+}
+
+String _formatDateTime(DateTime? value) {
   if (value == null) {
     return '--';
   }
 
-  final hours = value.hour.toString().padLeft(2, '0');
-  final minutes = value.minute.toString().padLeft(2, '0');
-  final seconds = value.second.toString().padLeft(2, '0');
-  return '$hours:$minutes:$seconds';
-}
+  String twoDigits(int input) => input.toString().padLeft(2, '0');
 
-double _metricCardWidth(double maxWidth) {
-  if (maxWidth < 420) {
-    return maxWidth;
-  }
-  if (maxWidth < 760) {
-    return (maxWidth - 16) / 2;
-  }
-  if (maxWidth < 1040) {
-    return (maxWidth - 32) / 3;
-  }
-  return (maxWidth - 48) / 4;
+  final year = value.year;
+  final month = twoDigits(value.month);
+  final day = twoDigits(value.day);
+  final hour = twoDigits(value.hour);
+  final minute = twoDigits(value.minute);
+  final second = twoDigits(value.second);
+  return '$year-$month-$day $hour:$minute:$second';
 }

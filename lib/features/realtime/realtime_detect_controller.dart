@@ -2,192 +2,141 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
-import 'package:sickandflutter/features/realtime/realtime_detect_repository.dart';
-import 'package:sickandflutter/shared/models/app_enums.dart';
-import 'package:sickandflutter/shared/models/detect_response.dart';
-import 'package:sickandflutter/shared/models/detect_summary.dart';
+import 'package:sickandflutter/features/settings/device_state_repository.dart';
+import 'package:sickandflutter/shared/models/device_state_info.dart';
 
-/// 实时识别轮询间隔配置。
+/// 实时监控轮询间隔配置。
 final realtimeDetectPollingIntervalProvider = Provider<Duration>((ref) {
   return const Duration(seconds: 3);
 });
 
-/// 实时识别页面状态入口。
+/// 实时监控页面状态入口。
 final realtimeDetectControllerProvider =
     NotifierProvider<RealtimeDetectController, RealtimeDetectState>(
       RealtimeDetectController.new,
     );
 
-/// 管理实时识别会话、测试帧轮询和错误反馈。
+/// 管理设备状态轮询、手动刷新和 LED 控制。
 class RealtimeDetectController extends Notifier<RealtimeDetectState> {
   Timer? _pollingTimer;
-  bool _isRequestInFlight = false;
+  bool _isRefreshing = false;
+  bool _isSubmittingLed = false;
 
   @override
   RealtimeDetectState build() {
     ref.onDispose(_stopPolling);
-
-    final repository = ref.read(realtimeDetectRepositoryProvider);
-    return RealtimeDetectState(supportsTestFeed: repository.supportsTestFeed);
+    return const RealtimeDetectState(isAutoRefreshEnabled: true);
   }
 
-  /// 启动新的实时识别测试会话。
-  Future<void> startSession() async {
-    if (_isRequestInFlight) {
-      return;
+  /// 进入页面后启动实时监控。
+  Future<void> startMonitoring() async {
+    if (state.isAutoRefreshEnabled) {
+      _startPolling();
     }
 
-    final repository = ref.read(realtimeDetectRepositoryProvider);
-    if (!repository.supportsTestFeed) {
-      state = state.copyWith(
-        status: RealtimeSessionStatus.error,
-        errorMessage: '当前环境未开放测试帧链路，需接入摄像头取帧后再启用。',
-      );
-      return;
+    if (!state.hasDeviceState || state.errorMessage != null) {
+      await refreshNow();
     }
+  }
 
+  /// 离开页面后停止轮询。
+  void stopMonitoring() {
     _stopPolling();
-
-    final sessionId = _buildSessionId();
-    state = state.copyWith(
-      status: RealtimeSessionStatus.initializing,
-      sessionId: sessionId,
-      frameIndex: 0,
-      latestResult: null,
-      lastInferenceMs: null,
-      lastFrameAt: null,
-      errorMessage: null,
-    );
-
-    final didStart = await _requestFrame(
-      sessionId: sessionId,
-      nextFrameIndex: 1,
-      successStatus: RealtimeSessionStatus.running,
-    );
-
-    if (didStart) {
-      _startPolling(sessionId);
-    }
   }
 
-  /// 暂停当前会话轮询。
-  void pauseSession() {
-    _stopPolling();
-
-    if (state.status == RealtimeSessionStatus.running ||
-        state.status == RealtimeSessionStatus.initializing) {
-      state = state.copyWith(status: RealtimeSessionStatus.paused);
-    }
-  }
-
-  /// 继续当前会话。
-  Future<void> resumeSession() async {
-    if (_isRequestInFlight) {
+  /// 立即刷新一次设备状态。
+  Future<void> refreshNow() async {
+    if (_isRefreshing) {
       return;
     }
 
-    final sessionId = state.sessionId;
-    if (sessionId == null) {
-      await startSession();
-      return;
-    }
-
-    state = state.copyWith(
-      status: RealtimeSessionStatus.initializing,
-      errorMessage: null,
-    );
-
-    final didResume = await _requestFrame(
-      sessionId: sessionId,
-      nextFrameIndex: state.frameIndex + 1,
-      successStatus: RealtimeSessionStatus.running,
-    );
-
-    if (didResume) {
-      _startPolling(sessionId);
-    }
-  }
-
-  Future<bool> _requestFrame({
-    required String sessionId,
-    required int nextFrameIndex,
-    required RealtimeSessionStatus successStatus,
-  }) async {
-    _isRequestInFlight = true;
+    _isRefreshing = true;
+    state = state.copyWith(isRefreshing: true, errorMessage: null);
 
     try {
-      final response = await ref
-          .read(realtimeDetectRepositoryProvider)
-          .detectFrame(
-            request: RealtimeFrameRequest(
-              sessionId: sessionId,
-              frameIndex: nextFrameIndex,
-              capturedAt: DateTime.now(),
-            ),
-          );
-
-      if (state.sessionId != sessionId) {
-        return false;
-      }
-
-      final effectiveStatus = state.status == RealtimeSessionStatus.paused
-          ? RealtimeSessionStatus.paused
-          : successStatus;
-
+      final repository = await ref.read(deviceStateRepositoryProvider.future);
+      final deviceState = await repository.fetchState();
       state = state.copyWith(
-        status: effectiveStatus,
-        frameIndex: nextFrameIndex,
-        latestResult: response,
-        lastInferenceMs: response.modelInfo?.inferenceMs,
-        lastFrameAt: DateTime.now(),
+        deviceState: deviceState,
+        isRefreshing: false,
         errorMessage: null,
+        lastRefreshAt: DateTime.now(),
       );
-      return true;
     } on ApiException catch (error) {
-      if (state.sessionId != sessionId) {
-        return false;
-      }
-
-      _stopPolling();
       state = state.copyWith(
-        status: RealtimeSessionStatus.error,
+        isRefreshing: false,
         errorMessage: error.message,
+        lastRefreshAt: DateTime.now(),
       );
-      return false;
     } catch (error) {
-      if (state.sessionId != sessionId) {
-        return false;
-      }
-
-      _stopPolling();
       state = state.copyWith(
-        status: RealtimeSessionStatus.error,
-        errorMessage: '实时识别失败：$error',
+        isRefreshing: false,
+        errorMessage: '拉取设备状态失败：$error',
+        lastRefreshAt: DateTime.now(),
       );
-      return false;
     } finally {
-      _isRequestInFlight = false;
+      _isRefreshing = false;
     }
   }
 
-  void _startPolling(String sessionId) {
+  /// 切换自动轮询开关。
+  Future<void> setAutoRefreshEnabled(bool enabled) async {
+    state = state.copyWith(isAutoRefreshEnabled: enabled);
+
+    if (!enabled) {
+      _stopPolling();
+      return;
+    }
+
+    _startPolling();
+    await refreshNow();
+  }
+
+  /// 提交 LED 控制命令，并在成功后刷新最新状态。
+  Future<String> toggleLed(bool ledOn) async {
+    if (_isSubmittingLed) {
+      return '控制指令正在提交，请稍候。';
+    }
+
+    final deviceState = state.deviceState;
+    if (deviceState == null) {
+      throw const ApiException(message: '当前还没有可控制的设备状态。');
+    }
+
+    _isSubmittingLed = true;
+    state = state.copyWith(isSubmittingLed: true, errorMessage: null);
+
+    try {
+      final repository = await ref.read(deviceStateRepositoryProvider.future);
+      await repository.setLed(
+        deviceId: deviceState.deviceId,
+        deviceName: deviceState.deviceName,
+        ledOn: ledOn,
+      );
+      await refreshNow();
+      return ledOn ? '开灯指令已提交，等待设备状态回写。' : '关灯指令已提交，等待设备状态回写。';
+    } on ApiException catch (error) {
+      state = state.copyWith(errorMessage: error.message);
+      rethrow;
+    } catch (error) {
+      final exception = ApiException(message: 'LED 控制失败：$error');
+      state = state.copyWith(errorMessage: exception.message);
+      throw exception;
+    } finally {
+      _isSubmittingLed = false;
+      state = state.copyWith(isSubmittingLed: false);
+    }
+  }
+
+  void _startPolling() {
     _stopPolling();
 
     final interval = ref.read(realtimeDetectPollingIntervalProvider);
     _pollingTimer = Timer.periodic(interval, (_) {
-      if (state.sessionId != sessionId ||
-          state.status != RealtimeSessionStatus.running ||
-          _isRequestInFlight) {
+      if (!state.isAutoRefreshEnabled || _isRefreshing) {
         return;
       }
-
-      unawaited(
-        _requestFrame(
-          sessionId: sessionId,
-          nextFrameIndex: state.frameIndex + 1,
-          successStatus: RealtimeSessionStatus.running,
-        ),
-      );
+      unawaited(refreshNow());
     });
   }
 
@@ -195,89 +144,62 @@ class RealtimeDetectController extends Notifier<RealtimeDetectState> {
     _pollingTimer?.cancel();
     _pollingTimer = null;
   }
-
-  String _buildSessionId() {
-    final timestamp = DateTime.now().microsecondsSinceEpoch;
-    return 'rt_$timestamp';
-  }
 }
 
 const Object _realtimeStateUnset = Object();
 
-/// 实时识别页的视图状态。
+/// 实时监控页的视图状态。
 class RealtimeDetectState {
-  /// 创建实时识别页面状态对象。
+  /// 创建实时监控页面状态对象。
   const RealtimeDetectState({
-    this.status = RealtimeSessionStatus.idle,
-    this.supportsTestFeed = true,
-    this.sessionId,
-    this.frameIndex = 0,
-    this.latestResult,
-    this.lastInferenceMs,
-    this.lastFrameAt,
+    this.deviceState,
+    this.isRefreshing = false,
+    this.isAutoRefreshEnabled = true,
+    this.isSubmittingLed = false,
+    this.lastRefreshAt,
     this.errorMessage,
   });
 
-  /// 当前会话状态。
-  final RealtimeSessionStatus status;
+  /// 当前设备状态。
+  final DeviceStateInfo? deviceState;
 
-  /// 当前仓储是否支持无摄像头测试帧链路。
-  final bool supportsTestFeed;
+  /// 是否正在刷新。
+  final bool isRefreshing;
 
-  /// 当前会话 ID。
-  final String? sessionId;
+  /// 是否启用自动轮询。
+  final bool isAutoRefreshEnabled;
 
-  /// 当前已经完成处理的帧序号。
-  final int frameIndex;
+  /// 是否正在提交 LED 控制命令。
+  final bool isSubmittingLed;
 
-  /// 最近一帧识别结果。
-  final DetectResponse? latestResult;
+  /// 最近一次刷新完成时间。
+  final DateTime? lastRefreshAt;
 
-  /// 最近一帧推理耗时。
-  final int? lastInferenceMs;
-
-  /// 最近一帧刷新时间。
-  final DateTime? lastFrameAt;
-
-  /// 最近一次错误信息。
+  /// 最近一次失败信息。
   final String? errorMessage;
 
-  /// 最近一帧摘要结果。
-  DetectSummary? get summary => latestResult?.summary;
-
-  /// 最近一帧检测框数量。
-  int get detectionCount => latestResult?.detections.length ?? 0;
-
-  /// 当前是否已有识别结果。
-  bool get hasResult => latestResult != null;
+  /// 当前是否已有可展示的设备状态。
+  bool get hasDeviceState => deviceState != null;
 
   /// 返回带增量修改的新状态对象。
   RealtimeDetectState copyWith({
-    RealtimeSessionStatus? status,
-    bool? supportsTestFeed,
-    Object? sessionId = _realtimeStateUnset,
-    int? frameIndex,
-    Object? latestResult = _realtimeStateUnset,
-    Object? lastInferenceMs = _realtimeStateUnset,
-    Object? lastFrameAt = _realtimeStateUnset,
+    Object? deviceState = _realtimeStateUnset,
+    bool? isRefreshing,
+    bool? isAutoRefreshEnabled,
+    bool? isSubmittingLed,
+    Object? lastRefreshAt = _realtimeStateUnset,
     Object? errorMessage = _realtimeStateUnset,
   }) {
     return RealtimeDetectState(
-      status: status ?? this.status,
-      supportsTestFeed: supportsTestFeed ?? this.supportsTestFeed,
-      sessionId: identical(sessionId, _realtimeStateUnset)
-          ? this.sessionId
-          : sessionId as String?,
-      frameIndex: frameIndex ?? this.frameIndex,
-      latestResult: identical(latestResult, _realtimeStateUnset)
-          ? this.latestResult
-          : latestResult as DetectResponse?,
-      lastInferenceMs: identical(lastInferenceMs, _realtimeStateUnset)
-          ? this.lastInferenceMs
-          : lastInferenceMs as int?,
-      lastFrameAt: identical(lastFrameAt, _realtimeStateUnset)
-          ? this.lastFrameAt
-          : lastFrameAt as DateTime?,
+      deviceState: identical(deviceState, _realtimeStateUnset)
+          ? this.deviceState
+          : deviceState as DeviceStateInfo?,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
+      isAutoRefreshEnabled: isAutoRefreshEnabled ?? this.isAutoRefreshEnabled,
+      isSubmittingLed: isSubmittingLed ?? this.isSubmittingLed,
+      lastRefreshAt: identical(lastRefreshAt, _realtimeStateUnset)
+          ? this.lastRefreshAt
+          : lastRefreshAt as DateTime?,
       errorMessage: identical(errorMessage, _realtimeStateUnset)
           ? this.errorMessage
           : errorMessage as String?,
