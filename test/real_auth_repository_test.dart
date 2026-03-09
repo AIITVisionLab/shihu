@@ -85,6 +85,31 @@ void main() {
     expect(session.user.account, 'demo');
   });
 
+  test(
+    'RealAuthRepository register posts credentials to /api/register',
+    () async {
+      final apiClient = _FakeApiClient(
+        responseJson: <String, dynamic>{
+          'success': true,
+          'message': '注册成功，请使用新账号登录',
+        },
+      );
+      final repository = RealAuthRepository(apiClient: apiClient);
+
+      final message = await repository.register(
+        account: ' demo_user ',
+        password: 'demo123456',
+        confirmPassword: 'demo123456',
+      );
+
+      expect(apiClient.capturedPath, '/api/register');
+      expect(apiClient.capturedData?['username'], 'demo_user');
+      expect(apiClient.capturedData?['password'], 'demo123456');
+      expect(apiClient.capturedData?['confirmPassword'], 'demo123456');
+      expect(message, '注册成功，请使用新账号登录');
+    },
+  );
+
   test('RealAuthRepository logout posts to /api/logout', () async {
     final apiClient = _FakeApiClient(
       responseJson: <String, dynamic>{'success': true, 'message': '已登出'},

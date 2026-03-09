@@ -150,6 +150,9 @@ class DeviceStateInfo {
     return ledOn! ? '已开启' : '已关闭';
   }
 
+  /// 当前是否满足 LED 控制接口的最小请求条件。
+  bool get canControlLed => deviceId.trim().isNotEmpty;
+
   /// 是否已收到后端设备上报。
   bool get hasReportedState =>
       deviceId.trim().isNotEmpty ||

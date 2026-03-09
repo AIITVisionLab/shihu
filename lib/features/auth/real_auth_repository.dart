@@ -36,20 +36,14 @@ class RealAuthRepository implements AuthRepository {
         'password': password,
       },
     );
-    final payload = response.data;
-    if (payload == null) {
-      throw const ApiException(message: AppCopy.authLoginFailedRetry);
-    }
-
-    final success = payload['success'] == true;
-    final message = asString(payload['message']);
-    if (!success) {
-      throw ApiException(
-        message: message.trim().isEmpty
-            ? AppCopy.authCredentialInvalid
-            : message,
-      );
-    }
+    final payload = _requirePayload(
+      response.data,
+      fallbackMessage: AppCopy.authLoginFailedRetry,
+    );
+    _throwWhenRequestFailed(
+      payload,
+      fallbackFailureMessage: AppCopy.authCredentialInvalid,
+    );
 
     return AuthSession(
       accessToken: 'session:${DateTime.now().millisecondsSinceEpoch}',
@@ -61,6 +55,31 @@ class RealAuthRepository implements AuthRepository {
         account: normalizedAccount,
         displayName: normalizedAccount,
       ),
+    );
+  }
+
+  @override
+  Future<String> register({
+    required String account,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    final normalizedAccount = account.trim();
+    final payload = await _apiClient.postJson(
+      '/api/register',
+      data: <String, dynamic>{
+        'username': normalizedAccount,
+        'password': password,
+        'confirmPassword': confirmPassword,
+      },
+    );
+    _throwWhenRequestFailed(
+      payload,
+      fallbackFailureMessage: AppCopy.authRegisterFailedRetry,
+    );
+    return _resolveMessage(
+      payload['message'],
+      fallbackMessage: AppCopy.authRegisterSuccessDefault,
     );
   }
 
@@ -94,13 +113,48 @@ class RealAuthRepository implements AuthRepository {
       '/api/logout',
       data: <String, dynamic>{},
     );
-    final success = raw['success'] == true;
-    if (!success) {
-      final message = asString(raw['message']);
-      throw ApiException(
-        message: message.trim().isEmpty ? AppCopy.authLogoutFailed : message,
-      );
+    _throwWhenRequestFailed(
+      raw,
+      fallbackFailureMessage: AppCopy.authLogoutFailed,
+    );
+  }
+
+  Map<String, dynamic> _requirePayload(
+    Map<String, dynamic>? payload, {
+    required String fallbackMessage,
+  }) {
+    if (payload == null) {
+      throw ApiException(message: fallbackMessage);
     }
+    return payload;
+  }
+
+  void _throwWhenRequestFailed(
+    Map<String, dynamic> payload, {
+    required String fallbackFailureMessage,
+  }) {
+    final success = payload['success'] == true;
+    if (success) {
+      return;
+    }
+
+    throw ApiException(
+      message: _resolveMessage(
+        payload['message'],
+        fallbackMessage: fallbackFailureMessage,
+      ),
+    );
+  }
+
+  String _resolveMessage(
+    Object? rawMessage, {
+    required String fallbackMessage,
+  }) {
+    final message = asString(rawMessage).trim();
+    if (message.isEmpty) {
+      return fallbackMessage;
+    }
+    return message;
   }
 
   String? _extractSessionCookie(Headers headers) {

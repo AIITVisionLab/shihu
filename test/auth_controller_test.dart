@@ -72,6 +72,37 @@ void main() {
     expect(await authStorage.readSession(), isNull);
   });
 
+  test(
+    'AuthController registers without creating authenticated session',
+    () async {
+      final authStorage = AuthStorage(
+        VolatileSensitiveStorage(values: <String, String>{}),
+      );
+      final authRepository = _RegisteringAuthRepository();
+
+      final container = ProviderContainer(
+        overrides: [
+          authStorageProvider.overrideWith((ref) => authStorage),
+          authRepositoryProvider.overrideWith((ref) => authRepository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.ensureInitialized();
+
+      final message = await notifier.register(
+        account: 'new_user',
+        password: 'demo123456',
+        confirmPassword: 'demo123456',
+      );
+
+      expect(message, '注册成功，请使用新账号登录。');
+      expect(container.read(authControllerProvider).isAuthenticated, isFalse);
+      expect(await authStorage.readSession(), isNull);
+    },
+  );
+
   test('AuthController clears session when unauthorized is reported', () async {
     final authStorage = AuthStorage(
       VolatileSensitiveStorage(values: <String, String>{}),
@@ -148,6 +179,15 @@ class _RefreshingAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<String> register({
+    required String account,
+    required String password,
+    required String confirmPassword,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<void> logout({required AuthSession session}) async {}
 
   @override
@@ -160,5 +200,38 @@ class _RefreshingAuthRepository implements AuthRepository {
         displayName: 'demo',
       ),
     );
+  }
+}
+
+class _RegisteringAuthRepository implements AuthRepository {
+  @override
+  bool get isMockMode => false;
+
+  @override
+  AuthLoginMode get loginMode => AuthLoginMode.real;
+
+  @override
+  Future<AuthSession> login({
+    required String account,
+    required String password,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> logout({required AuthSession session}) async {}
+
+  @override
+  Future<String> register({
+    required String account,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    return '注册成功，请使用新账号登录。';
+  }
+
+  @override
+  Future<AuthSession> refreshSession({required AuthSession session}) {
+    throw UnimplementedError();
   }
 }

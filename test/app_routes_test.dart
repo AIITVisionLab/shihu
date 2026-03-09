@@ -56,6 +56,6 @@ void main() {
       matchedLocation: AppRoutes.loginPath,
     );
 
-    expect(redirect, AppRoutes.homePath);
+    expect(redirect, AppRoutes.realtimeDetectPath);
   });
 }

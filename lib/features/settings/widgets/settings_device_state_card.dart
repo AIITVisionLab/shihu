@@ -66,7 +66,9 @@ class SettingsDeviceStateCard extends StatelessWidget {
                   ),
                   Switch(
                     value: state.ledOn ?? false,
-                    onChanged: (value) => onToggleLed(state, value),
+                    onChanged: state.canControlLed
+                        ? (value) => onToggleLed(state, value)
+                        : null,
                   ),
                 ],
               ),
@@ -103,6 +105,11 @@ class SettingsDeviceStateCard extends StatelessWidget {
                 value: state.errorCode == null
                     ? '--'
                     : '${state.errorCode} · ${state.alertTitle}',
+              ),
+              const SizedBox(height: 8),
+              SettingsSettingRow(
+                title: 'LED 控制',
+                value: state.canControlLed ? '可用' : '等待 deviceId 上报',
               ),
             ],
           );

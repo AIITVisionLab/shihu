@@ -40,7 +40,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
       final authState = ref.read(authControllerProvider);
       context.goNamed(
-        authState.isAuthenticated ? AppRoutes.home : AppRoutes.login,
+        authState.isAuthenticated ? AppRoutes.realtimeDetect : AppRoutes.login,
       );
     } catch (error) {
       if (!mounted) {

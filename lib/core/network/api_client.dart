@@ -18,6 +18,7 @@ class ApiClient {
     required EnvConfig envConfig,
     this.authorizationValue,
     this.cookieHeader,
+    this.includeBrowserCredentials = false,
     this.onUnauthorized,
   }) : _dio = Dio(
          BaseOptions(
@@ -41,7 +42,10 @@ class ApiClient {
            responseType: ResponseType.json,
          ),
        ) {
-    configureBrowserHttpClientAdapter(_dio);
+    configureBrowserHttpClientAdapter(
+      _dio,
+      withCredentials: includeBrowserCredentials,
+    );
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
@@ -59,6 +63,9 @@ class ApiClient {
 
   /// 当前客户端附带的会话 Cookie。
   final String? cookieHeader;
+
+  /// Web 端是否通过浏览器自动携带会话 Cookie。
+  final bool includeBrowserCredentials;
 
   /// 检测到未授权状态时的统一回调。
   final void Function({String? message})? onUnauthorized;
@@ -211,9 +218,10 @@ class ApiClient {
           isConnectionError: true,
         );
       case DioExceptionType.badResponse:
+        final backendMessage = _extractErrorMessage(error.response?.data);
         final exception = ApiException(
           statusCode: statusCode,
-          message: '服务返回异常状态码：${statusCode ?? 'unknown'}。',
+          message: backendMessage ?? '服务返回异常状态码：${statusCode ?? 'unknown'}。',
         );
         if (statusCode == 401) {
           onUnauthorized?.call(message: exception.message);
@@ -232,6 +240,25 @@ class ApiClient {
           message: '网络请求失败：${error.message ?? 'unknown'}。',
         );
     }
+  }
+
+  String? _extractErrorMessage(Object? responseData) {
+    if (responseData is String) {
+      final normalized = responseData.trim();
+      return normalized.isEmpty ? null : normalized;
+    }
+
+    if (responseData is Map) {
+      final rawMessage = responseData['message'];
+      if (rawMessage is String) {
+        final normalized = rawMessage.trim();
+        if (normalized.isNotEmpty) {
+          return normalized;
+        }
+      }
+    }
+
+    return null;
   }
 
   void _notifyUnauthorizedForBusinessResponse<T>(ApiResponse<T> response) {

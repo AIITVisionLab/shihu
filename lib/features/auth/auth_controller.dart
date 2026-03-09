@@ -78,6 +78,77 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
+  /// 使用账号密码执行注册，不自动写入登录态。
+  Future<String?> register({
+    required String account,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    await ensureInitialized();
+
+    final normalizedAccount = account.trim();
+    if (normalizedAccount.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
+      state = state.copyWith(errorMessage: AppCopy.authRegisterInputRequired);
+      return null;
+    }
+    if (!RegExp(r'^[a-zA-Z0-9_]{3,32}$').hasMatch(normalizedAccount)) {
+      state = state.copyWith(errorMessage: AppCopy.authRegisterAccountInvalid);
+      return null;
+    }
+    if (password.length < 6 || password.length > 32) {
+      state = state.copyWith(
+        errorMessage: AppCopy.authRegisterPasswordLengthInvalid,
+      );
+      return null;
+    }
+
+    if (password != confirmPassword) {
+      state = state.copyWith(
+        errorMessage: AppCopy.authRegisterPasswordMismatch,
+      );
+      return null;
+    }
+
+    state = state.copyWith(
+      isSubmitting: true,
+      errorMessage: null,
+      unauthorizedMessage: null,
+    );
+
+    try {
+      final message = await ref
+          .read(authRepositoryProvider)
+          .register(
+            account: normalizedAccount,
+            password: password,
+            confirmPassword: confirmPassword,
+          );
+      state = state.copyWith(
+        isBootstrapping: false,
+        isSubmitting: false,
+        errorMessage: null,
+        unauthorizedMessage: null,
+      );
+      return message;
+    } on ApiException catch (error) {
+      state = state.copyWith(
+        isBootstrapping: false,
+        isSubmitting: false,
+        errorMessage: error.message,
+      );
+      return null;
+    } catch (error) {
+      state = state.copyWith(
+        isBootstrapping: false,
+        isSubmitting: false,
+        errorMessage: AppCopy.authRegisterFailed(error),
+      );
+      return null;
+    }
+  }
+
   /// 执行本地退出，并尽量通知后端。
   Future<void> logout({bool notifyServer = true}) async {
     await ensureInitialized();
@@ -145,6 +216,15 @@ class AuthController extends Notifier<AuthState> {
     }
 
     state = state.copyWith(errorMessage: null);
+  }
+
+  /// 清空当前错误和未授权提示。
+  void clearMessages() {
+    if (state.errorMessage == null && state.unauthorizedMessage == null) {
+      return;
+    }
+
+    state = state.copyWith(errorMessage: null, unauthorizedMessage: null);
   }
 
   Future<void> _restoreSession() async {

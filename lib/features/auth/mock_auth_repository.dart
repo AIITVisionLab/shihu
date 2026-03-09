@@ -70,6 +70,16 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<String> register({
+    required String account,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    await Future<void>.delayed(responseDelay);
+    throw const ApiException(message: AppCopy.authRegisterUnavailableInMock);
+  }
+
+  @override
   Future<AuthSession> refreshSession({required AuthSession session}) async {
     await Future<void>.delayed(const Duration(milliseconds: 220));
 

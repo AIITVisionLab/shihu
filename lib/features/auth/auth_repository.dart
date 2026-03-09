@@ -22,7 +22,10 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final settings = _resolveSettings(ref, envConfig);
   final apiClientFactory = ref.watch(apiClientFactoryProvider);
   return RealAuthRepository(
-    apiClient: apiClientFactory.create(settings: settings),
+    apiClient: apiClientFactory.create(
+      settings: settings,
+      includeBrowserCredentials: true,
+    ),
   );
 });
 
@@ -48,6 +51,13 @@ abstract class AuthRepository {
   Future<AuthSession> login({
     required String account,
     required String password,
+  });
+
+  /// 使用账号、密码和确认密码执行注册。
+  Future<String> register({
+    required String account,
+    required String password,
+    required String confirmPassword,
   });
 
   /// 根据当前会话尝试刷新登录态。

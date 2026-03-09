@@ -29,7 +29,7 @@ class AppCopy {
 
   /// 首页主说明。
   static const String homeOverview =
-      '当前 Flutter 前端已经按工作区 Spring Boot 后端收口，主链路围绕登录会话、设备状态轮询、异常码展示、LED 控制与健康检查展开；识别相关页面保留为独立服务扩展位。';
+      '当前 Flutter 前端已经按工作区 Spring Boot 后端收口，主链路围绕登录注册、设备状态轮询、异常码展示、LED 控制与健康检查展开；识别相关页面保留为独立服务扩展位。';
 
   /// 首页入口“开始识别”标题。
   static const String homeDetectTitle = '单图识别';
@@ -70,7 +70,7 @@ class AppCopy {
 
   /// 登录页主说明。
   static const String authLoginOverview =
-      '登录后可进入设备监控主控台，查看 /api/status、执行 /api/ops/led，并在设置页排查 /api/health。';
+      '登录或注册后可进入设备监控主控台，查看 /api/status、执行 /api/ops/led，并在设置页排查 /api/health。';
 
   /// 登录页能力标签：自动恢复。
   static const String authRestoreChip = '登录态自动恢复';
@@ -80,6 +80,9 @@ class AppCopy {
 
   /// 登录页能力标签：自动附带 Token。
   static const String authTokenChip = 'Cookie 会话自动续用';
+
+  /// 登录页能力标签：真实接口注册。
+  static const String authRegisterChip = '真实接口注册';
 
   /// 演示登录模式标题。
   static const String authMockModeTitle = '当前为演示登录模式';
@@ -93,8 +96,21 @@ class AppCopy {
   /// 填充演示账号按钮文案。
   static const String authFillDemoAccount = '填充演示账号';
 
+  /// 真实模式注册面板标题。
+  static const String authRegisterPanelTitle = '真实后端模式支持注册';
+
+  /// 真实模式注册面板说明。
+  static const String authRegisterPanelDescription =
+      '当前已对接 /api/register，可在同一张登录卡片内切换到注册模式完成账号创建。';
+
   /// 登录卡片标题。
   static const String authLoginCardTitle = '平台登录';
+
+  /// 登录页模式切换：登录。
+  static const String authLoginTab = '登录';
+
+  /// 登录页模式切换：注册。
+  static const String authRegisterTab = '注册';
 
   /// 账号输入框标签。
   static const String authAccountLabel = '账号';
@@ -111,11 +127,23 @@ class AppCopy {
   /// 演示接口模式密码占位。
   static const String authMockPasswordHint = '演示密码或自定义 6 位以上密码';
 
+  /// 确认密码输入框标签。
+  static const String authConfirmPasswordLabel = '确认密码';
+
+  /// 确认密码输入框占位。
+  static const String authConfirmPasswordHint = '请再次输入密码';
+
   /// 登录按钮文案。
   static const String authLogin = '登录';
 
   /// 登录进行中文案。
   static const String authLoggingIn = '登录中...';
+
+  /// 注册按钮文案。
+  static const String authRegister = '注册';
+
+  /// 注册进行中文案。
+  static const String authRegistering = '注册中...';
 
   /// 本地登录态已失效提示。
   static const String authSessionExpired = '本地登录态已过期，请重新登录。';
@@ -126,6 +154,20 @@ class AppCopy {
   /// 请输入账号密码提示。
   static const String authInputRequired = '请输入账号和密码。';
 
+  /// 请输入注册所需字段提示。
+  static const String authRegisterInputRequired = '请输入账号、密码和确认密码。';
+
+  /// 注册时两次密码不一致提示。
+  static const String authRegisterPasswordMismatch = '两次输入的密码不一致，请重新输入。';
+
+  /// 注册账号格式不符合后端约束提示。
+  static const String authRegisterAccountInvalid =
+      '用户名格式不正确，只能包含字母、数字和下划线，长度需在 3 到 32 位之间。';
+
+  /// 注册密码长度不符合后端约束提示。
+  static const String authRegisterPasswordLengthInvalid =
+      '密码长度需在 6 到 32 位之间，请检查后重试。';
+
   /// 返回当前登录模式文案。
   static String authCurrentMode(String loginModeLabel) =>
       '当前模式：$loginModeLabel';
@@ -133,11 +175,20 @@ class AppCopy {
   /// 通用登录失败提示。
   static String authLoginFailed(Object error) => '登录失败：$error';
 
+  /// 通用注册失败提示。
+  static String authRegisterFailed(Object error) => '注册失败：$error';
+
   /// 登录失败，请稍后重试。
   static const String authLoginFailedRetry = '登录失败，请稍后重试。';
 
+  /// 注册失败，请稍后重试。
+  static const String authRegisterFailedRetry = '注册失败，请稍后重试。';
+
   /// 登录接口缺少数据体。
   static const String authLoginMissingData = '登录接口返回成功，但缺少 data 数据体。';
+
+  /// 注册成功缺省提示。
+  static const String authRegisterSuccessDefault = '注册成功，请使用新账号登录。';
 
   /// 登录态恢复失败提示。
   static String authRestoreFailed(Object error) => '恢复登录态失败：$error';
@@ -160,6 +211,13 @@ class AppCopy {
   /// 账号或密码不正确提示。
   static const String authCredentialInvalid = '账号或密码不正确，请检查后重试。';
 
+  /// 演示模式下不开放注册提示。
+  static const String authRegisterUnavailableInMock =
+      '当前为演示登录模式，注册入口仅在真实后端模式开放。';
+
+  /// 注册规则说明。
+  static const String authRegisterRules = '用户名需为 3-32 位字母、数字或下划线，密码需为 6-32 位。';
+
   /// 返回管理员显示名。
   static String authAdminDisplayName(String account) => '$account 管理员';
 
@@ -171,7 +229,21 @@ class AppCopy {
 
   /// 单图识别说明副标题。
   static const String detectGuideSubtitle =
-      '当前默认调用真实识别接口；开发或测试环境如需演示稳定结果，可通过 dart-define 切回 mock。';
+      '当前仓库的 web 分支后端暂未提供 /api/v1/detect/image，页面保留为独立识别服务扩展位。';
+
+  /// 单图识别模式标签：受控 mock。
+  static const String detectMockModeChip = '受控 mock 链路';
+
+  /// 单图识别模式标签：真实接口。
+  static const String detectRealModeChip = '真实接口链路';
+
+  /// 单图识别 mock 模式说明。
+  static const String detectMockModeNotice =
+      '当前默认使用受控 mock 打通选图、结果页和本地历史记录。后续独立识别服务并入后，再切回真实接口联调。';
+
+  /// 单图识别真实模式说明。
+  static const String detectRealModeNotice =
+      '当前已切到真实识别模式；如果服务仍指向 web 分支后端，会因为缺少 /api/v1/detect/image 而失败。';
 
   /// 单图识别能力标签：本地选图。
   static const String detectGalleryChip = '支持本地选图';
@@ -223,7 +295,7 @@ class AppCopy {
   static const String detectEmptyPreview = '请选择石斛图片后开始识别';
 
   /// 图片预览失败说明。
-  static const String detectPreviewUnavailable = '当前平台无法预览该图片，但识别链路已接通。';
+  static const String detectPreviewUnavailable = '当前平台无法预览该图片，但仍可继续发起识别。';
 
   /// 未选择图片提示。
   static const String detectSelectImageFirst = '请先选择一张石斛图片。';

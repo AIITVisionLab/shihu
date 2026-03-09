@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
 import 'package:sickandflutter/core/network/api_client.dart';
+import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_controller.dart';
 import 'package:sickandflutter/features/settings/device_state_repository.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
@@ -102,9 +103,53 @@ void main() {
       final message = await notifier.toggleLed(true);
 
       final state = container.read(realtimeDetectControllerProvider);
-      expect(message, contains('开灯指令已提交'));
+      expect(message, contains('已通过OneNET API下发LED指令'));
+      expect(message, contains('请求号：req_led_001'));
       expect(repository.lastLedOn, isTrue);
       expect(state.deviceState?.ledOn, isTrue);
+    },
+  );
+
+  test(
+    'RealtimeDetectController blocks led command when deviceId is missing',
+    () async {
+      final repository = _MutableDeviceStateRepository(
+        state: const DeviceStateInfo(
+          deviceId: '',
+          deviceName: '石斛培育柜',
+          temperature: 24.5,
+          humidity: 82.0,
+          light: 1500,
+          mq2: 18,
+          errorCode: 0,
+          ledOn: false,
+          updatedAt: 1741399200000,
+        ),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          deviceStateRepositoryProvider.overrideWith((ref) async => repository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(
+        realtimeDetectControllerProvider.notifier,
+      );
+
+      await notifier.startMonitoring();
+
+      await expectLater(
+        notifier.toggleLed(true),
+        throwsA(
+          isA<ApiException>().having(
+            (error) => error.message,
+            'message',
+            '当前设备状态缺少 deviceId，暂时无法下发 LED 指令。',
+          ),
+        ),
+      );
+      expect(repository.lastLedOn, isNull);
     },
   );
 }
@@ -155,7 +200,7 @@ class _MutableDeviceStateRepository extends DeviceStateRepository {
   Future<DeviceStateInfo> fetchState() async => _state;
 
   @override
-  Future<void> setLed({
+  Future<LedOperationReceipt> setLed({
     required String deviceId,
     required String deviceName,
     required bool ledOn,
@@ -175,6 +220,11 @@ class _MutableDeviceStateRepository extends DeviceStateRepository {
       errorCode: _state.errorCode,
       ledOn: ledOn,
       updatedAt: _state.updatedAt + 3000,
+    );
+    return const LedOperationReceipt(
+      status: 'accepted',
+      requestId: 'req_led_001',
+      message: '已通过OneNET API下发LED指令',
     );
   }
 }

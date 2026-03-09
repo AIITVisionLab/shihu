@@ -160,7 +160,7 @@ String? redirectForAuth({
 
   if (authState.isAuthenticated) {
     if (isLogin) {
-      return AppRoutes.homePath;
+      return AppRoutes.realtimeDetectPath;
     }
     return null;
   }

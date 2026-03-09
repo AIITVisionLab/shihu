@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/routes.dart';
-import 'package:sickandflutter/core/constants/app_constants.dart';
-import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
+import 'package:sickandflutter/features/auth/auth_form_mode.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
 import 'package:sickandflutter/features/auth/mock_auth_repository.dart';
-import 'package:sickandflutter/shared/widgets/common_button.dart';
-import 'package:sickandflutter/shared/widgets/common_card.dart';
+import 'package:sickandflutter/features/auth/remembered_account_repository.dart';
+import 'package:sickandflutter/features/auth/widgets/auth_entry_shell.dart';
+import 'package:sickandflutter/features/auth/widgets/auth_form_card.dart';
+import 'package:sickandflutter/features/auth/widgets/auth_overview_panel.dart';
 
-/// 登录页，负责恢复受保护页面前的账号认证入口。
+/// 登录页，按 Material 3 语义承接后端登录、注册和会话恢复入口。
 class LoginPage extends ConsumerStatefulWidget {
   /// 创建登录页。
   const LoginPage({super.key});
@@ -22,18 +23,30 @@ class LoginPage extends ConsumerStatefulWidget {
 class _LoginPageState extends ConsumerState<LoginPage> {
   late final TextEditingController _accountController;
   late final TextEditingController _passwordController;
+  late final TextEditingController _confirmPasswordController;
+  AuthFormMode _formMode = AuthFormMode.login;
+  String? _localHelperMessage;
+  AuthFeedbackTone? _localHelperTone;
+  bool _rememberAccount = false;
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
 
   @override
   void initState() {
     super.initState();
     _accountController = TextEditingController();
     _passwordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+    _passwordController.addListener(_handlePasswordChanged);
+    Future<void>.microtask(_restoreRememberedAccount);
   }
 
   @override
   void dispose() {
+    _passwordController.removeListener(_handlePasswordChanged);
     _accountController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -41,285 +54,191 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final authRepository = ref.watch(authRepositoryProvider);
+    final effectiveFormMode = authRepository.isMockMode
+        ? AuthFormMode.login
+        : _formMode;
     final helperMessage =
-        authState.unauthorizedMessage ?? authState.errorMessage;
+        _localHelperMessage ??
+        authState.unauthorizedMessage ??
+        authState.errorMessage;
+    final helperTone = helperMessage == null
+        ? null
+        : (_localHelperMessage == null
+              ? AuthFeedbackTone.error
+              : (_localHelperTone ?? AuthFeedbackTone.error));
 
-    return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: <Color>[Color(0xFFEFF6FF), Color(0xFFDCEAFE)],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 980),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isCompact = constraints.maxWidth < 760;
-
-                    return isCompact
-                        ? ListView(
-                            children: <Widget>[
-                              _LoginHeroCard(
-                                isMockMode: authRepository.isMockMode,
-                                onFillDemo: _fillDemoCredentials,
-                              ),
-                              const SizedBox(height: 20),
-                              _LoginFormCard(
-                                accountController: _accountController,
-                                passwordController: _passwordController,
-                                helperMessage: helperMessage,
-                                isSubmitting: authState.isSubmitting,
-                                isMockMode: authRepository.isMockMode,
-                                loginModeLabel: authRepository.loginModeLabel,
-                                onSubmit: _submit,
-                                onOpenAbout: () =>
-                                    context.pushNamed(AppRoutes.about),
-                              ),
-                            ],
-                          )
-                        : Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: _LoginHeroCard(
-                                  isMockMode: authRepository.isMockMode,
-                                  onFillDemo: _fillDemoCredentials,
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: _LoginFormCard(
-                                  accountController: _accountController,
-                                  passwordController: _passwordController,
-                                  helperMessage: helperMessage,
-                                  isSubmitting: authState.isSubmitting,
-                                  isMockMode: authRepository.isMockMode,
-                                  loginModeLabel: authRepository.loginModeLabel,
-                                  onSubmit: _submit,
-                                  onOpenAbout: () =>
-                                      context.pushNamed(AppRoutes.about),
-                                ),
-                              ),
-                            ],
-                          );
-                  },
-                ),
-              ),
-            ),
-          ),
-        ),
+    return AuthEntryShell(
+      onBackPressed: authState.isSubmitting
+          ? null
+          : () => context.pushNamed(AppRoutes.about),
+      overviewPanel: AuthOverviewPanel(
+        isMockMode: authRepository.isMockMode,
+        supportsRegister: !authRepository.isMockMode,
+        onFillDemo: _fillDemoCredentials,
+      ),
+      formPanel: AuthFormCard(
+        accountController: _accountController,
+        passwordController: _passwordController,
+        confirmPasswordController: _confirmPasswordController,
+        helperMessage: helperMessage,
+        helperTone: helperTone,
+        isSubmitting: authState.isSubmitting,
+        isMockMode: authRepository.isMockMode,
+        loginModeLabel: authRepository.loginModeLabel,
+        formMode: effectiveFormMode,
+        rememberAccount: _rememberAccount,
+        showPassword: _showPassword,
+        showConfirmPassword: _showConfirmPassword,
+        passwordStrength: _passwordStrengthLevel(_passwordController.text),
+        onRememberAccountChanged: (value) {
+          setState(() {
+            _rememberAccount = value;
+          });
+        },
+        onTogglePasswordVisibility: () {
+          setState(() {
+            _showPassword = !_showPassword;
+          });
+        },
+        onToggleConfirmPasswordVisibility: () {
+          setState(() {
+            _showConfirmPassword = !_showConfirmPassword;
+          });
+        },
+        onSelectMode: _switchFormMode,
+        onSubmit: _submit,
       ),
     );
+  }
+
+  void _handlePasswordChanged() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+  }
+
+  Future<void> _restoreRememberedAccount() async {
+    final repository = await ref.read(
+      rememberedAccountRepositoryProvider.future,
+    );
+    final rememberedAccount = repository.readRememberedAccount();
+    if (!mounted || rememberedAccount == null || rememberedAccount.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _accountController.text = rememberedAccount;
+      _rememberAccount = true;
+    });
+  }
+
+  Future<void> _persistRememberedAccount() async {
+    final repository = await ref.read(
+      rememberedAccountRepositoryProvider.future,
+    );
+    final normalizedAccount = _accountController.text.trim();
+    if (_rememberAccount && normalizedAccount.isNotEmpty) {
+      await repository.saveRememberedAccount(normalizedAccount);
+      return;
+    }
+
+    await repository.clearRememberedAccount();
   }
 
   void _fillDemoCredentials() {
     _accountController.text = MockAuthRepository.demoAccount;
     _passwordController.text = MockAuthRepository.demoPassword;
+    _confirmPasswordController.clear();
+    _clearLocalHelper();
+  }
+
+  void _switchFormMode(AuthFormMode nextMode) {
+    if (_formMode == nextMode) {
+      return;
+    }
+
+    ref.read(authControllerProvider.notifier).clearMessages();
+    setState(() {
+      _formMode = nextMode;
+      _localHelperMessage = null;
+      _localHelperTone = null;
+      _showPassword = false;
+      _showConfirmPassword = false;
+    });
+    _confirmPasswordController.clear();
   }
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
-    ref.read(authControllerProvider.notifier).clearErrorMessage();
+    _clearLocalHelper();
 
-    final success = await ref
-        .read(authControllerProvider.notifier)
-        .login(
-          account: _accountController.text,
-          password: _passwordController.text,
-        );
+    final controller = ref.read(authControllerProvider.notifier);
+    controller.clearMessages();
+    final authRepository = ref.read(authRepositoryProvider);
+    final effectiveFormMode = authRepository.isMockMode
+        ? AuthFormMode.login
+        : _formMode;
 
-    if (!mounted || !success) {
+    if (effectiveFormMode == AuthFormMode.login) {
+      await _persistRememberedAccount();
+      final success = await controller.login(
+        account: _accountController.text,
+        password: _passwordController.text,
+      );
+
+      if (!mounted || !success) {
+        return;
+      }
+
+      context.goNamed(AppRoutes.realtimeDetect);
       return;
     }
 
-    context.goNamed(AppRoutes.home);
-  }
-}
-
-class _LoginHeroCard extends StatelessWidget {
-  const _LoginHeroCard({required this.isMockMode, required this.onFillDemo});
-
-  final bool isMockMode;
-  final VoidCallback onFillDemo;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return CommonCard(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1D4ED8),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: const Icon(
-              Icons.lock_open_rounded,
-              color: Colors.white,
-              size: 36,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            AppConstants.appName,
-            style: textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            AppCopy.authLoginOverview,
-            style: textTheme.titleMedium?.copyWith(height: 1.5),
-          ),
-          const SizedBox(height: 24),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: const <Widget>[
-              Chip(label: Text(AppCopy.authRestoreChip)),
-              Chip(label: Text(AppCopy.authUnauthorizedChip)),
-              Chip(label: Text(AppCopy.authTokenChip)),
-            ],
-          ),
-          if (isMockMode) ...<Widget>[
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    AppCopy.authMockModeTitle,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AppCopy.authMockAccountHint,
-                    style: textTheme.bodyMedium?.copyWith(height: 1.6),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton.icon(
-                    onPressed: onFillDemo,
-                    icon: const Icon(Icons.auto_fix_high_rounded),
-                    label: const Text(AppCopy.authFillDemoAccount),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
+    final registerMessage = await controller.register(
+      account: _accountController.text,
+      password: _passwordController.text,
+      confirmPassword: _confirmPasswordController.text,
     );
+    if (!mounted || registerMessage == null) {
+      return;
+    }
+
+    setState(() {
+      _formMode = AuthFormMode.login;
+      _localHelperMessage = registerMessage;
+      _localHelperTone = AuthFeedbackTone.success;
+      _showPassword = false;
+      _showConfirmPassword = false;
+    });
+    _passwordController.clear();
+    _confirmPasswordController.clear();
   }
-}
 
-class _LoginFormCard extends StatelessWidget {
-  const _LoginFormCard({
-    required this.accountController,
-    required this.passwordController,
-    required this.helperMessage,
-    required this.isSubmitting,
-    required this.isMockMode,
-    required this.loginModeLabel,
-    required this.onSubmit,
-    required this.onOpenAbout,
-  });
+  void _clearLocalHelper() {
+    if (_localHelperMessage == null) {
+      return;
+    }
 
-  final TextEditingController accountController;
-  final TextEditingController passwordController;
-  final String? helperMessage;
-  final bool isSubmitting;
-  final bool isMockMode;
-  final String loginModeLabel;
-  final Future<void> Function() onSubmit;
-  final VoidCallback onOpenAbout;
+    setState(() {
+      _localHelperMessage = null;
+      _localHelperTone = null;
+    });
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return CommonCard(
-      title: AppCopy.authLoginCardTitle,
-      subtitle: AppCopy.authCurrentMode(loginModeLabel),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          TextField(
-            controller: accountController,
-            decoration: const InputDecoration(
-              labelText: AppCopy.authAccountLabel,
-              hintText: AppCopy.authAccountHint,
-            ),
-            enabled: !isSubmitting,
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: passwordController,
-            decoration: InputDecoration(
-              labelText: AppCopy.authPasswordLabel,
-              hintText: isMockMode
-                  ? AppCopy.authMockPasswordHint
-                  : AppCopy.authPasswordHint,
-            ),
-            obscureText: true,
-            enabled: !isSubmitting,
-            onSubmitted: (_) async {
-              await onSubmit();
-            },
-          ),
-          if (helperMessage?.isNotEmpty ?? false) ...<Widget>[
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.errorContainer,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                helperMessage!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onErrorContainer,
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: 20),
-          CommonButton(
-            label: isSubmitting ? AppCopy.authLoggingIn : AppCopy.authLogin,
-            icon: const Icon(Icons.login_rounded),
-            isLoading: isSubmitting,
-            onPressed: isSubmitting
-                ? null
-                : () async {
-                    await onSubmit();
-                  },
-          ),
-          const SizedBox(height: 12),
-          CommonButton(
-            label: AppCopy.viewAboutProject,
-            tone: CommonButtonTone.secondary,
-            icon: const Icon(Icons.info_outline),
-            onPressed: isSubmitting ? null : onOpenAbout,
-          ),
-        ],
-      ),
-    );
+  int _passwordStrengthLevel(String value) {
+    var score = 0;
+    if (value.length >= 6) {
+      score += 1;
+    }
+    if ((RegExp(r'[A-Za-z]').hasMatch(value) &&
+            RegExp(r'\d').hasMatch(value)) ||
+        RegExp(r'[A-Z]').hasMatch(value)) {
+      score += 1;
+    }
+    if (RegExp(r'[^A-Za-z0-9_]').hasMatch(value) || value.length >= 10) {
+      score += 1;
+    }
+    return score.clamp(0, 3);
   }
 }

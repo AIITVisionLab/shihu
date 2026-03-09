@@ -47,12 +47,19 @@ class ApiClientFactory {
   final void Function({String? message}) onUnauthorized;
 
   /// 生成新的 API 客户端实例。
-  ApiClient create({required AppSettings settings}) {
+  ///
+  /// `includeBrowserCredentials` 仅在 Web 端生效，用于按接口链路决定是否让
+  /// 浏览器自动附带 Cookie，避免公共跨域接口被浏览器按“携带凭据请求”拦截。
+  ApiClient create({
+    required AppSettings settings,
+    bool includeBrowserCredentials = false,
+  }) {
     return ApiClient(
       settings: settings,
       envConfig: _envConfig,
       authorizationValue: authorizationValue,
       cookieHeader: cookieHeader,
+      includeBrowserCredentials: includeBrowserCredentials,
       onUnauthorized: onUnauthorized,
     );
   }

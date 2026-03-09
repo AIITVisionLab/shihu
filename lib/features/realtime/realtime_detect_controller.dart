@@ -102,19 +102,22 @@ class RealtimeDetectController extends Notifier<RealtimeDetectState> {
     if (deviceState == null) {
       throw const ApiException(message: '当前还没有可控制的设备状态。');
     }
+    if (!deviceState.canControlLed) {
+      throw const ApiException(message: '当前设备状态缺少 deviceId，暂时无法下发 LED 指令。');
+    }
 
     _isSubmittingLed = true;
     state = state.copyWith(isSubmittingLed: true, errorMessage: null);
 
     try {
       final repository = await ref.read(deviceStateRepositoryProvider.future);
-      await repository.setLed(
+      final receipt = await repository.setLed(
         deviceId: deviceState.deviceId,
         deviceName: deviceState.deviceName,
         ledOn: ledOn,
       );
       await refreshNow();
-      return ledOn ? '开灯指令已提交，等待设备状态回写。' : '关灯指令已提交，等待设备状态回写。';
+      return receipt.buildUserMessage(ledOn: ledOn);
     } on ApiException catch (error) {
       state = state.copyWith(errorMessage: error.message);
       rethrow;
