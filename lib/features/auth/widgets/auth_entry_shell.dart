@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/shared/widgets/app_backdrop.dart';
 
-/// 认证入口页通用壳层，统一背景、标题区和响应式双栏布局。
+/// 认证入口页通用壳层，统一背景、页头和响应式双栏布局。
 class AuthEntryShell extends StatelessWidget {
   /// 创建认证入口页壳层。
   const AuthEntryShell({
@@ -18,7 +18,7 @@ class AuthEntryShell extends StatelessWidget {
   /// 右侧表单面板。
   final Widget formPanel;
 
-  /// 返回预览页回调。
+  /// 返回系统总览回调。
   final VoidCallback? onBackPressed;
 
   @override
@@ -148,7 +148,7 @@ class _AuthEntryHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Material 3 设备主控台认证入口',
+                      '设备管控认证入口',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -161,7 +161,7 @@ class _AuthEntryHeader extends StatelessWidget {
           final backButton = FilledButton.tonalIcon(
             onPressed: onBackPressed,
             icon: const Icon(Icons.arrow_back_rounded),
-            label: const Text('返回介绍主页'),
+            label: const Text('返回系统总览'),
           );
 
           if (isCompact) {

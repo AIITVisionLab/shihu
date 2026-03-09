@@ -10,7 +10,7 @@ class HomeCapabilityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return const CommonCard(
       title: '当前后端能力',
-      subtitle: '以下链路已经按真实服务收口，并由 Flutter 客户端直接承接。',
+      subtitle: '以下链路已经按真实服务收口，并由统一客户端直接承接。',
       child: Column(
         children: <Widget>[
           _CapabilityRow(

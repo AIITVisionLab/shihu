@@ -30,7 +30,7 @@ void main() {
         overrides: [
           packageInfoProvider.overrideWith(
             (ref) async => PackageInfo(
-              appName: '石斛幼苗智能培育管理平台',
+              appName: '斛生',
               packageName: 'com.example.sickandflutter',
               version: '1.2.3',
               buildNumber: '45',
@@ -72,7 +72,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('监控主控台'), findsOneWidget);
-    expect(find.text('公开预览'), findsOneWidget);
+    expect(find.text('系统总览'), findsOneWidget);
     expect(find.text('运维设置'), findsOneWidget);
     expect(find.text('版本 1.2.3'), findsOneWidget);
     expect(find.text('石斛培育柜'), findsOneWidget);
@@ -94,7 +94,7 @@ void main() {
         overrides: [
           packageInfoProvider.overrideWith(
             (ref) async => PackageInfo(
-              appName: '石斛幼苗智能培育管理平台',
+              appName: '斛生',
               packageName: 'com.example.sickandflutter',
               version: '1.2.3',
               buildNumber: '45',
@@ -142,7 +142,7 @@ void main() {
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('公开预览'));
+    await tester.tap(find.text('系统总览'));
     await tester.pumpAndSettle();
     expect(find.text('about-page'), findsOneWidget);
 

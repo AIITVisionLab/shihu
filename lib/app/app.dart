@@ -6,9 +6,9 @@ import 'package:sickandflutter/app/theme.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
 
 /// 应用级根组件，集中接入主题、路由和全局 Provider 容器。
-class SickAndFlutterApp extends ConsumerWidget {
+class HuShengApp extends ConsumerWidget {
   /// 创建应用根组件。
-  const SickAndFlutterApp({super.key});
+  const HuShengApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

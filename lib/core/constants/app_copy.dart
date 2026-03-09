@@ -21,22 +21,21 @@ class AppCopy {
   /// 通用重新加载按钮文案。
   static const String reload = '重新加载';
 
-  /// 通用关于页入口文案。
-  static const String viewAboutProject = '查看关于项目';
+  /// 通用系统总览入口文案。
+  static const String viewAboutProject = '查看系统总览';
 
   /// 首页模块标题。
-  static const String homeCrossPlatformDemo = '跨平台培育管理控制台';
+  static const String homeCrossPlatformDemo = '培育运营中枢';
 
   /// 首页主说明。
   static const String homeOverview =
-      '当前 Flutter 前端已经按工作区 Spring Boot 后端收口，主链路围绕登录注册、设备状态轮询、异常码展示、LED 控制与健康检查展开；识别相关能力保留为独立服务扩展位，默认不作为主功能开放。';
+      '当前版本围绕账号认证、环境监测、风险预警、远程执行和运维自检构建统一工作闭环；只有真实后端已经支撑的链路会作为主功能开放。';
 
-  /// 首页入口“公开预览”标题。
-  static const String homePreviewTitle = '公开预览';
+  /// 首页入口“系统总览”标题。
+  static const String homePreviewTitle = '系统总览';
 
-  /// 首页入口“公开预览”副标题。
-  static const String homePreviewSubtitle =
-      '查看与后端 `preview.html` 对齐的项目介绍、研究背景和系统目标说明。';
+  /// 首页入口“系统总览”副标题。
+  static const String homePreviewSubtitle = '查看平台定位、设备架构、栽培背景和调控目标。';
 
   /// 首页入口“开始识别”标题。
   static const String homeDetectTitle = '单图识别';
@@ -74,33 +73,33 @@ class AppCopy {
   /// 首页扩展位状态标签。
   static const String homeExtensionBadge = '待独立识别服务接入';
 
-  /// 首页能力标签：Material 3。
-  static const String homeMaterialPill = 'Material 3';
+  /// 首页能力标签：多端一致体验。
+  static const String homeMaterialPill = '多端一致体验';
 
   /// 首页能力标签：Riverpod。
-  static const String homeRiverpodPill = 'Flutter Riverpod';
+  static const String homeRiverpodPill = '状态分层';
 
   /// 首页能力标签：本地历史记录。
-  static const String homeHistoryPill = '本地历史记录';
+  static const String homeHistoryPill = '本地数据沉淀';
 
   /// 返回首页版本标签。
   static String homeVersionPill(String version) => '版本 $version';
 
   /// 登录页主说明。
   static const String authLoginOverview =
-      '登录或注册后可进入设备监控主控台，查看 /api/status、执行 /api/ops/led，并在设置页排查 /api/health。';
+      '登录或注册后可进入设备监控主控台，查看设备状态、提交补光指令，并在运维设置中完成健康检查与环境排查。';
 
   /// 登录页能力标签：自动恢复。
   static const String authRestoreChip = '登录态自动恢复';
 
   /// 登录页能力标签：401 回退。
-  static const String authUnauthorizedChip = '401 自动退回登录';
+  static const String authUnauthorizedChip = '状态失效自动回退';
 
   /// 登录页能力标签：自动附带 Token。
-  static const String authTokenChip = 'Cookie 会话自动续用';
+  static const String authTokenChip = '会话自动续用';
 
   /// 登录页能力标签：真实接口注册。
-  static const String authRegisterChip = '真实接口注册';
+  static const String authRegisterChip = '账号在线开通';
 
   /// 演示登录模式标题。
   static const String authMockModeTitle = '当前为演示登录模式';
@@ -254,7 +253,7 @@ class AppCopy {
 
   /// 单图识别未接入说明。
   static const String detectUnavailableMessage =
-      '当前工作区后端只覆盖登录、设备状态、LED 控制和健康检查；`/api/v1/detect/image` 对应的独立识别服务尚未并入，因此 Flutter 客户端默认不开放单图识别主链路。';
+      '当前工作区后端只覆盖登录、设备状态、LED 控制和健康检查；`/api/v1/detect/image` 对应的独立识别服务尚未并入，因此客户端默认不开放单图识别主链路。';
 
   /// 单图识别未接入补充说明。
   static const String detectUnavailableFootnote =
@@ -363,27 +362,27 @@ class AppCopy {
   /// 启动失败提示。
   static String splashInitFailed(Object error) => '初始化失败：$error';
 
-  /// 关于页标题。
-  static const String aboutPageTitle = '关于项目';
+  /// 系统总览页标题。
+  static const String aboutPageTitle = '系统总览';
 
-  /// 关于页项目定位标题。
-  static const String aboutProjectTitle = '项目定位';
+  /// 系统总览页平台定位标题。
+  static const String aboutProjectTitle = '平台定位';
 
-  /// 关于页项目定位内容。
+  /// 系统总览页平台定位内容。
   static const String aboutProjectDescription =
-      '是一个面向石斛幼苗培育场景的跨平台 Flutter 前端，用于承接登录、设备监控、状态展示、远程控制、识别扩展入口和运行环境配置。';
+      '是一个面向石斛幼苗培育场景的统一管理软件，用于承接登录认证、设备监控、状态展示、远程控制、识别扩展入口和运行环境配置。';
 
-  /// 关于页技术基线标题。
-  static const String aboutTechTitle = '当前技术基线';
+  /// 系统总览页系统基线标题。
+  static const String aboutTechTitle = '系统基线';
 
-  /// 关于页技术基线内容。
+  /// 系统总览页系统基线内容。
   static const String aboutTechDescription =
-      'Flutter 全平台工程、OpenHarmony Flutter 3.35.7 模板、Material 3、GoRouter、Riverpod、Dio、SharedPreferences、FlutterSecureStorage，以及与 Spring Boot 后端的 HttpSession + Cookie 会话集成。';
+      '跨平台客户端工程、OpenHarmony 工程接入、统一路由、状态管理、网络封装、本地持久化，以及与设备服务的 HttpSession + Cookie 会话集成。';
 
-  /// 关于页开发策略标题。
-  static const String aboutStrategyTitle = '开发策略';
+  /// 系统总览页建设策略标题。
+  static const String aboutStrategyTitle = '建设策略';
 
-  /// 关于页开发策略内容。
+  /// 系统总览页建设策略内容。
   static const String aboutStrategyDescription =
       '当前优先保证登录、设备状态轮询、LED 控制和健康检查链路稳定，再继续并入独立识别服务，不再沿用过时文档中的假设接口。';
 
@@ -421,7 +420,7 @@ class AppCopy {
   static const String settingsSessionTitle = '登录会话';
 
   /// 项目说明标题。
-  static const String settingsProjectTitle = '平台说明';
+  static const String settingsProjectTitle = '系统总览';
 
   /// 退出登录标题。
   static const String settingsLogoutTitle = '退出登录';

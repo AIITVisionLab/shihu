@@ -1,11 +1,11 @@
 {
-    "name": "sickandflutter",
-    "short_name": "sickandflutter",
+    "name": "斛生",
+    "short_name": "斛生",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "石斛病虫害识别项目 Flutter 前端",
+    "description": "斛生客户端",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

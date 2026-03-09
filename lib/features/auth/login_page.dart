@@ -11,7 +11,7 @@ import 'package:sickandflutter/features/auth/widgets/auth_entry_shell.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_form_card.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_overview_panel.dart';
 
-/// 登录页，按 Material 3 语义承接后端登录、注册和会话恢复入口。
+/// 登录页，承接后端登录、注册和会话恢复入口。
 class LoginPage extends ConsumerStatefulWidget {
   /// 创建登录页。
   const LoginPage({super.key});

@@ -117,7 +117,7 @@ class _HeaderSummary extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          '把真实后端能力收进一个可上线的多端客户端，既能看设备，也能控设备，还能稳定恢复会话。',
+          '把栽培环境、设备状态和执行动作收进同一个运营中枢，既能稳定查看，也能直接执行。',
           style: textTheme.titleMedium?.copyWith(
             color: const Color(0xFFF0F4ED),
             height: 1.65,
@@ -136,10 +136,10 @@ class _HeaderSummary extends StatelessWidget {
           spacing: 10,
           runSpacing: 10,
           children: <Widget>[
-            _SignalChip(label: 'Spring Boot Session'),
-            _SignalChip(label: '/api/status 设备轮询'),
-            _SignalChip(label: '/api/ops/led 远程控制'),
-            _SignalChip(label: 'Material 3 跨端客户端'),
+            _SignalChip(label: '统一会话管理'),
+            _SignalChip(label: '设备状态轮询'),
+            _SignalChip(label: '远程补光控制'),
+            _SignalChip(label: AppCopy.homeMaterialPill),
           ],
         ),
       ],

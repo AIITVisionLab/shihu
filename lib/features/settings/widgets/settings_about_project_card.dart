@@ -3,12 +3,12 @@ import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/shared/widgets/common_button.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
 
-/// 设置页项目说明卡片。
+/// 设置页系统总览入口卡片。
 class SettingsAboutProjectCard extends StatelessWidget {
   /// 创建项目说明卡片。
   const SettingsAboutProjectCard({required this.onOpenAbout, super.key});
 
-  /// 打开项目说明页回调。
+  /// 打开系统总览页回调。
   final VoidCallback onOpenAbout;
 
   @override

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
 
-/// 认证页说明面板，承接后端能力说明和 Flutter 端设计说明。
+/// 认证页说明面板，承接认证链路说明和当前可用能力。
 class AuthOverviewPanel extends StatelessWidget {
   /// 创建认证页说明面板。
   const AuthOverviewPanel({
@@ -98,16 +98,16 @@ class AuthOverviewPanel extends StatelessWidget {
           const SizedBox(height: 24),
           const _OverviewSection(
             icon: Icons.device_hub_outlined,
-            title: '后端唯一来源',
+            title: '统一服务来源',
             description:
-                '认证与设备能力统一映射工作区里的 Spring Boot 服务，当前链路围绕登录、注册、会话检查、设备状态、LED 控制和健康检查展开。',
+                '认证与设备能力统一映射到当前线上设备服务，链路围绕登录、注册、会话检查、设备状态、补光控制和健康检查展开。',
           ),
           const SizedBox(height: 16),
           const _OverviewSection(
             icon: Icons.design_services_outlined,
-            title: 'Flutter 独立设计',
+            title: '软件工作台',
             description:
-                '页面不复刻后端静态页，而是用 Material 3 的卡片、分段控制、表单反馈和响应式双栏布局重组真实业务流程。',
+                '认证流程、状态反馈和工作台信息集中收敛在同一入口里，确保账号开通、登录恢复和失败提示都能在一页内闭环完成。',
           ),
           const SizedBox(height: 16),
           _OverviewSection(
@@ -137,7 +137,7 @@ class AuthOverviewPanel extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '登录成功后前端会跳转到实时监控主控台，并沿用服务端会话检查 `/api/check-login` 的结果决定是否恢复访问。',
+                      '登录成功后会直接进入实时监控主控台，并依据 `/api/check-login` 的结果决定是否恢复访问。',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         height: 1.6,
                         color: colorScheme.onSurfaceVariant,

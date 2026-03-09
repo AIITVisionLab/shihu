@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/routes.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/home/widgets/home_capability_card.dart';
 import 'package:sickandflutter/features/home/widgets/home_device_snapshot_card.dart';
@@ -83,20 +84,20 @@ class HomePage extends ConsumerWidget {
                       children: <Widget>[
                         HomeEntryCard(
                           icon: Icons.monitor_heart_rounded,
-                          title: '监控主控台',
+                          title: AppCopy.homeRealtimeTitle,
                           subtitle: '查看实时设备状态、告警等级和补光控制。',
                           onTap: () =>
                               context.pushNamed(AppRoutes.realtimeDetect),
                         ),
                         HomeEntryCard(
                           icon: Icons.info_outline_rounded,
-                          title: '公开预览',
-                          subtitle: '查看项目背景、架构说明和研究叙事。',
+                          title: AppCopy.homePreviewTitle,
+                          subtitle: AppCopy.homePreviewSubtitle,
                           onTap: () => context.pushNamed(AppRoutes.about),
                         ),
                         HomeEntryCard(
                           icon: Icons.settings_rounded,
-                          title: '运维设置',
+                          title: AppCopy.homeSettingsTitle,
                           subtitle: '检查服务健康、当前会话与基础配置。',
                           onTap: () => context.pushNamed(AppRoutes.settings),
                         ),
@@ -133,7 +134,7 @@ class _ActionSectionHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            '进入工作流',
+            '进入工作台',
             style: Theme.of(
               context,
             ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
