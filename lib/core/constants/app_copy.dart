@@ -399,6 +399,13 @@ class AppCopy {
   static const String videoPageSubtitle =
       '统一查看视频流清单、单路详情与播放入口，客户端只消费元数据，不代理媒体流。';
 
+  /// 视频中心主视觉标签。
+  static const String videoHeroBadge = '视频直连工作台';
+
+  /// 视频中心主视觉说明。
+  static const String videoHeroDescription =
+      '视频流由 Java 服务统一编排，客户端只消费元数据并调起外部播放入口，媒体链路仍保持直连网关。';
+
   /// 视频中心加载中提示。
   static const String videoLoading = '正在同步视频流清单...';
 
@@ -418,6 +425,35 @@ class AppCopy {
 
   /// 视频服务异常说明。
   static String videoServiceErrorMessage(Object error) => '视频服务返回失败：$error';
+
+  /// 视频流筛选区标题。
+  static const String videoFilterTitle = '快速定位';
+
+  /// 视频流检索占位提示。
+  static const String videoSearchHint = '按流标识、设备标识或名称检索';
+
+  /// 视频流筛选标签：全部。
+  static const String videoFilterAll = '全部流';
+
+  /// 视频流筛选标签：仅在线。
+  static const String videoFilterAvailable = '仅在线';
+
+  /// 视频流筛选标签：已转发 AI。
+  static const String videoFilterAiForwarded = '已转发 AI';
+
+  /// 当前筛选结果计数。
+  static String videoVisibleCount(int visibleCount, int totalCount) =>
+      '当前展示 $visibleCount / $totalCount';
+
+  /// 视频流经过筛选后为空的标题。
+  static const String videoFilteredEmptyTitle = '没有符合当前筛选条件的视频流';
+
+  /// 视频流经过筛选后为空的说明。
+  static const String videoFilteredEmptyMessage =
+      '可以尝试清空检索词或切回全部流，查看当前服务返回的完整视频流清单。';
+
+  /// 复制接口地址按钮。
+  static const String videoCopyServiceUrl = '复制接口地址';
 
   /// 视频流详情页标题。
   static const String videoDetailPageTitle = '流详情';
@@ -445,6 +481,9 @@ class AppCopy {
 
   /// 外部浏览器打开成功提示。
   static const String videoOpenedExternal = '已拉起外部浏览器。';
+
+  /// 服务地址复制成功提示。
+  static const String videoServiceUrlCopied = '已复制视频服务接口地址。';
 
   /// 链接复制成功提示。
   static String videoCopied(String copiedLabel) => '已复制$copiedLabel链接。';

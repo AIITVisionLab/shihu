@@ -53,6 +53,13 @@ class VideoStreamActionsCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ResponsiveInfoRow(label: '公网端点', value: stream.publicEndpointLabel),
+          const SizedBox(height: 14),
+          Text(
+            '建议优先打开播放页进行值守；网关页主要用于排障和媒体链路核查。',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(height: 20),
           Wrap(
             spacing: 12,

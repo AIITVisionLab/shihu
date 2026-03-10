@@ -25,8 +25,11 @@ class VideoHubOverviewCard extends StatelessWidget {
     final aiForwardedCount = streams
         .where((stream) => stream.aiResultForwarded)
         .length;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return CommonCard(
+      title: '接入说明',
+      subtitle: '把视频编排入口、播放模式和当前接入数量集中在同一个区域，方便值守时快速确认链路完整性。',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -40,9 +43,17 @@ class VideoHubOverviewCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          Text(
-            '视频流信息由 Java 服务下发，客户端只消费流元数据并打开外部播放地址，媒体字节流仍直接走网关链路。',
-            style: Theme.of(context).textTheme.bodyLarge,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.secondaryContainer.withValues(alpha: 0.52),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Text(
+              '视频流信息由 Java 服务下发，客户端只消费流元数据并打开外部播放地址，媒体字节流仍直接走网关链路。',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
           ),
           const SizedBox(height: 18),
           Text(

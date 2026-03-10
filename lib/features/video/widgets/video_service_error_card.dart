@@ -10,6 +10,7 @@ class VideoServiceErrorCard extends StatelessWidget {
     required this.serviceBaseUrl,
     required this.error,
     required this.onRetry,
+    this.onCopyServiceUrl,
     super.key,
   });
 
@@ -21,6 +22,9 @@ class VideoServiceErrorCard extends StatelessWidget {
 
   /// 重试回调。
   final VoidCallback onRetry;
+
+  /// 复制服务地址回调。
+  final VoidCallback? onCopyServiceUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +66,15 @@ class VideoServiceErrorCard extends StatelessWidget {
             icon: const Icon(Icons.refresh_rounded),
             onPressed: onRetry,
           ),
+          if (onCopyServiceUrl != null) ...<Widget>[
+            const SizedBox(height: 12),
+            CommonButton(
+              label: AppCopy.videoCopyServiceUrl,
+              tone: CommonButtonTone.secondary,
+              icon: const Icon(Icons.content_copy_rounded),
+              onPressed: onCopyServiceUrl,
+            ),
+          ],
         ],
       ),
     );

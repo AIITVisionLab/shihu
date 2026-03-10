@@ -105,6 +105,83 @@ void main() {
     expect(find.text('视频服务暂未就绪'), findsOneWidget);
     expect(find.textContaining('empty reply'), findsOneWidget);
   });
+
+  testWidgets('VideoHubPage supports filter and search interactions', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(1440, 2400)
+      ..devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            () => _TestAuthController(initialState: const AuthState()),
+          ),
+          videoServiceBaseUrlProvider.overrideWith(
+            (ref) async => 'http://101.35.79.76:19081',
+          ),
+          videoStreamsProvider.overrideWith(
+            (ref) async => const <VideoStreamInfo>[
+              VideoStreamInfo(
+                streamId: 'k230',
+                deviceId: 'cabinet_a',
+                displayName: 'A 区主摄像头',
+                gatewayPageUrl: 'http://101.35.79.76:1984/',
+                playerUrl:
+                    'http://101.35.79.76:1984/stream.html?src=k230&mode=webrtc,mse',
+                preferredMode: 'webrtc',
+                fallbackMode: 'mse',
+                publicHost: '101.35.79.76',
+                webrtcPort: 8555,
+                available: true,
+                aiResultForwarded: true,
+              ),
+              VideoStreamInfo(
+                streamId: 'k230_backup',
+                deviceId: 'cabinet_b',
+                displayName: 'B 区备用摄像头',
+                gatewayPageUrl: 'http://101.35.79.76:1984/',
+                playerUrl:
+                    'http://101.35.79.76:1984/stream.html?src=k230_backup&mode=mse',
+                preferredMode: 'mse',
+                fallbackMode: 'mse',
+                publicHost: '101.35.79.76',
+                webrtcPort: 8555,
+                available: false,
+                aiResultForwarded: false,
+              ),
+            ],
+          ),
+        ],
+        child: const MaterialApp(home: VideoHubPage()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('A 区主摄像头'), findsOneWidget);
+    expect(find.text('B 区备用摄像头'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(ChoiceChip, '仅在线'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('A 区主摄像头'), findsOneWidget);
+    expect(find.text('B 区备用摄像头'), findsNothing);
+
+    await tester.tap(find.widgetWithText(ChoiceChip, '全部流'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'cabinet_b');
+    await tester.pumpAndSettle();
+
+    expect(find.text('A 区主摄像头'), findsNothing);
+    expect(find.text('B 区备用摄像头'), findsOneWidget);
+  });
 }
 
 class _TestAuthController extends AuthController {
