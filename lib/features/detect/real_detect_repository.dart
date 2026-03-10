@@ -86,7 +86,7 @@ class RealDetectRepository implements DetectRepository {
           return _normalizeImageUrls(DetectResponse.fromJson(payload));
         }
       } on ApiException catch (error) {
-        lastError = error;
+        lastError = _normalizeRequestError(error);
       }
 
       if (!_shouldRetry(error: lastError, attempt: attempt)) {
@@ -183,6 +183,18 @@ class RealDetectRepository implements DetectRepository {
     }
 
     return '识别请求失败，请稍后重试。';
+  }
+
+  ApiException _normalizeRequestError(ApiException error) {
+    if (error.statusCode == 404) {
+      return ApiException(
+        statusCode: error.statusCode,
+        message:
+            '当前后端未提供 /api/v1/detect/image，请先并入独立识别服务，或在开发环境使用 USE_MOCK_DETECT=true。',
+      );
+    }
+
+    return error;
   }
 
   String? _resolveUrl(String? rawUrl) {

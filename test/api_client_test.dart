@@ -95,13 +95,39 @@ void main() {
         throwsA(
           isA<ApiException>()
               .having((error) => error.statusCode, 'statusCode', 401)
-              .having((error) => error.message, 'message', '服务返回异常状态码：401。'),
+              .having((error) => error.message, 'message', 'unauthorized'),
         ),
       );
 
-      expect(unauthorizedMessages, <String?>['服务返回异常状态码：401。']);
+      expect(unauthorizedMessages, <String?>['unauthorized']);
     },
   );
+
+  test('ApiClient keeps backend message for HTTP 400 response', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(server.close);
+
+    server.listen((request) async {
+      request.response
+        ..statusCode = HttpStatus.badRequest
+        ..headers.contentType = ContentType.json
+        ..write('{"status":"error","message":"deviceId不能为空"}');
+      await request.response.close();
+    });
+
+    final client = _buildClient(baseUrl: 'http://127.0.0.1:${server.port}');
+
+    await expectLater(
+      client.postJson('/bad-request', data: <String, dynamic>{}),
+      throwsA(
+        isA<ApiException>().having(
+          (error) => error.message,
+          'message',
+          'deviceId不能为空',
+        ),
+      ),
+    );
+  });
 
   test(
     'ApiClient invokes unauthorized callback for business code 40101',

@@ -213,6 +213,36 @@ void main() {
       expect(delays, <Duration>[const Duration(milliseconds: 300)]);
     },
   );
+
+  test(
+    'RealDetectRepository maps 404 to missing backend capability message',
+    () async {
+      final apiClient = _FakeApiClient(
+        results: <Object>[
+          const ApiException(statusCode: 404, message: '服务返回异常状态码：404。'),
+        ],
+      );
+      final repository = RealDetectRepository(apiClient: apiClient);
+
+      await expectLater(
+        repository.detectImage(
+          imageFile: XFile.fromData(
+            Uint8List.fromList(<int>[4, 0, 4]),
+            name: 'missing.jpg',
+            mimeType: 'image/jpeg',
+          ),
+        ),
+        throwsA(
+          isA<ApiException>().having(
+            (error) => error.message,
+            'message',
+            '当前后端未提供 /api/v1/detect/image，请先并入独立识别服务，或在开发环境使用 USE_MOCK_DETECT=true。',
+          ),
+        ),
+      );
+      expect(apiClient.requestCount, 1);
+    },
+  );
 }
 
 const Map<String, dynamic> _successResponseJson = <String, dynamic>{

@@ -7,6 +7,55 @@ import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/models/device_state_info.dart';
 import 'package:sickandflutter/shared/models/model_utils.dart';
 
+/// LED 操作回执。
+class LedOperationReceipt {
+  /// 创建 LED 操作回执。
+  const LedOperationReceipt({
+    required this.status,
+    required this.requestId,
+    required this.message,
+  });
+
+  /// 后端返回的状态值。
+  final String status;
+
+  /// 后端分配的请求 ID。
+  final String? requestId;
+
+  /// 后端返回的说明信息。
+  final String message;
+
+  /// 是否属于后端接受或登记成功的状态。
+  bool get isAcceptedLike {
+    return status == 'accepted' ||
+        status == 'success' ||
+        status == 'ok' ||
+        status == 'pending';
+  }
+
+  /// 是否已进入后端待处理队列。
+  bool get isPending => status == 'pending';
+
+  /// 构建面向用户的操作反馈文案。
+  String buildUserMessage({required bool ledOn}) {
+    final normalizedMessage = message.trim();
+    final fallbackMessage = isPending
+        ? 'LED 指令已登记到待处理队列，等待后端继续下发。'
+        : ledOn
+        ? '开灯指令已提交，等待设备状态回写。'
+        : '关灯指令已提交，等待设备状态回写。';
+    final baseMessage = normalizedMessage.isEmpty
+        ? fallbackMessage
+        : normalizedMessage;
+    final normalizedRequestId = requestId?.trim();
+    if (normalizedRequestId == null || normalizedRequestId.isEmpty) {
+      return baseMessage;
+    }
+
+    return '$baseMessage（请求号：$normalizedRequestId）';
+  }
+}
+
 /// 设备状态与控制接口仓储。
 class DeviceStateRepository {
   /// 创建设备状态仓储。
@@ -22,7 +71,7 @@ class DeviceStateRepository {
   }
 
   /// 设置 LED 开关。
-  Future<void> setLed({
+  Future<LedOperationReceipt> setLed({
     required String deviceId,
     required String deviceName,
     required bool ledOn,
@@ -37,11 +86,17 @@ class DeviceStateRepository {
     );
 
     final status = asString(response['status']).trim().toLowerCase();
-    if (status == 'accepted' || status == 'success' || status == 'ok') {
-      return;
+    final message = asString(response['message']);
+    final requestId = asString(response['requestId']).trim();
+    final receipt = LedOperationReceipt(
+      status: status,
+      requestId: requestId.isEmpty ? null : requestId,
+      message: message,
+    );
+    if (receipt.isAcceptedLike) {
+      return receipt;
     }
 
-    final message = asString(response['message']);
     throw ApiException(message: message.isEmpty ? 'LED 控制失败。' : message);
   }
 }

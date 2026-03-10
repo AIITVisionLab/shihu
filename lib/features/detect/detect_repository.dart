@@ -8,13 +8,20 @@ import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
 import 'package:sickandflutter/shared/models/detect_response.dart';
 
+/// 当前单图识别链路是否使用受控 mock。
+final detectUseMockProvider = Provider<bool>((ref) {
+  return shouldUseMockDetectRepository();
+});
+
+/// 返回当前构建下是否应启用受控 mock 单图识别仓储。
+bool shouldUseMockDetectRepository() {
+  return const bool.fromEnvironment('USE_MOCK_DETECT', defaultValue: true);
+}
+
 /// 单图识别仓储入口。
 final detectRepositoryProvider = Provider<DetectRepository>((ref) {
   final envConfig = ref.watch(envConfigProvider);
-  final useMock = const bool.fromEnvironment(
-    'USE_MOCK_DETECT',
-    defaultValue: true,
-  );
+  final useMock = ref.watch(detectUseMockProvider);
 
   if (useMock) {
     return const MockDetectRepository();

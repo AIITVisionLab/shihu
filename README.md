@@ -35,8 +35,9 @@
 - Flutter 工程初始化、主题、路由、分析规则和基础目录结构
 - `Splash / Login / Home / Detect / Result / History / Settings / About` 主流程页面
 - `flutter_riverpod` 状态管理接入
-- 登录主链路：启动恢复会话 -> 登录页 -> 路由守卫 -> 设置页退出登录
-- 单图识别主链路：选图 / 拍照 -> 真实 `/api/v1/detect/image` 识别（含有限次瞬时失败重试） -> 结果页 -> 保存本地历史
+- 认证主链路：启动恢复会话 -> 登录 / 注册 -> 首页 -> 设置页退出登录
+- `web` 分支后端联调主链路：`/api/login`、`/api/check-login`、`/api/logout`、`/api/status`、`/api/ops/led`、`/api/health`
+- 单图识别主链路：选图 / 拍照 -> 受控 mock 或独立识别服务仓储 -> 结果页 -> 保存本地历史
 - `ApiResponse<T>` 通用响应包裹与单图识别业务错误码映射
 - 设置页服务健康检查卡片与手动刷新能力
 - 实时监控页设备状态轮询、异常等级展示和 LED 控制
@@ -98,7 +99,7 @@
 - V1 首版必须保留 `本地历史记录` 能力。
 - 状态管理统一使用 `flutter_riverpod`。
 - 受保护页面必须经过登录守卫；开发 / 测试环境默认允许通过 `USE_MOCK_AUTH=true` 使用受控演示登录。
-- 单图识别默认走真实接口；开发 / 测试环境可通过 `USE_MOCK_DETECT=true` 切回受控 mock；历史记录和设置始终走本地真实持久化。
+- 当前 `web` 分支后端只覆盖登录、设备状态、LED 控制和健康检查；单图识别默认使用受控 mock，待独立识别服务并入后再切回真实接口。
 - `RealtimeDetectPage` 当前已经收口为设备监控主控台；摄像头实时识别继续等待独立识别服务并入。
 - 平台差异统一收敛到适配层，不在页面层分叉业务逻辑。
 
@@ -123,6 +124,24 @@
 2. 继续验证 Android、iOS、Web、桌面端的 Cookie 会话恢复行为。
 3. 为未来摄像头实时识别恢复独立页面职责和接口链路。
 4. 补齐更多 Widget / 集成测试，并逐步完成 Android、Web、Windows、macOS、OpenHarmony 的构建验证。
+
+## 与 `web` 分支联调
+
+当前仓库的后端基线来自同一远端仓库的 `web` 分支。推荐在 Flutter 仓库同级目录挂出一个 worktree，便于文档、代码和接口契约统一指向同一份源码：
+
+```bash
+git worktree add ../shihu-web origin/web
+cd ../shihu-web
+mvn spring-boot:run
+```
+
+Flutter 端当前默认 `BASE_URL` 指向已部署的 `http://101.35.79.76:8082`。如果要切到本地 `web` worktree 联调，可在运行时显式覆盖：
+
+```bash
+flutter run --dart-define=BASE_URL=http://127.0.0.1:8082
+```
+
+当前已接通的链路包括登录、设备状态、LED 控制和健康检查；识别接口仍需独立识别服务补齐。
 
 ## 结论
 
