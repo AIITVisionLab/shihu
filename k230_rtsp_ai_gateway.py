@@ -1,4 +1,4 @@
-from libs.PipeLine import PipeLine
+﻿from libs.PipeLine import PipeLine
 from libs.AIBase import AIBase
 from libs.AI2D import Ai2d
 from libs.Utils import *
@@ -21,13 +21,20 @@ except ImportError:
     import usocket as socket
 
 
+LAN_ENABLED = True
+LAN_STATIC_IP = "172.18.8.103"
+LAN_NETMASK = "255.255.255.0"
+LAN_GATEWAY = "172.18.8.1"
+LAN_DNS = "172.18.8.1"
+LAN_CONNECT_TIMEOUT_S = 8
+
 WIFI_SSID = "A6N107"
 WIFI_PASSWORD = "A6N107666#"
 WIFI_CONNECT_TIMEOUT_S = 20
 WIFI_CONNECT_RETRIES = 3
 WIFI_RETRY_DELAY_MS = 1500
 
-RK3568_HOST = "192.168.1.111"
+RK3568_HOST = "172.18.8.19"
 RK3568_PORT = 8080
 RK3568_AI_PATH = "/api/ai"
 HTTP_TIMEOUT_S = 2
@@ -38,7 +45,6 @@ RTSP_PORT = 8554
 RTSP_SESSION = "test"
 
 DISPLAY_MODE = "virt"
-# 当前固件下 Display.VIRT 实际固定为 1080p，WBC 必须与其保持一致。
 DISPLAY_SIZE = [ALIGN_UP(1920, 16), 1080]
 RGB888P_SIZE = [1280, 720]
 TO_IDE = False
@@ -89,26 +95,136 @@ def now_ms():
         return 0
 
 
+def normalize_size(size):
+    return [int(size[0]), int(size[1])]
+
+
+class LanClient:
+    def __init__(self):
+        self.iface = None
+        self._init_error = None
+        self._init_iface()
+
+    def mode(self):
+        return "lan"
+
+    def connect(self, timeout_s=LAN_CONNECT_TIMEOUT_S):
+        if self.iface is None:
+            raise RuntimeError("LAN interface unavailable: %s" % self._init_error)
+
+        self._prepare()
+        deadline = now_ms() + timeout_s * 1000
+        while now_ms() < deadline:
+            if self._is_connected():
+                ip_info = self.iface.ifconfig()
+                if ip_info[0] != "0.0.0.0":
+                    self._print_ip("LAN connected")
+                    return True
+            sleep_ms(500)
+
+        raise RuntimeError("LAN link timeout")
+
+    def ensure_connected(self):
+        if self.iface is None:
+            return False
+        if self._is_connected():
+            try:
+                if self.iface.ifconfig()[0] != "0.0.0.0":
+                    return True
+            except Exception:
+                pass
+        try:
+            self.connect(timeout_s=4)
+            return True
+        except Exception as err:
+            print("LAN reconnect failed:", err)
+            return False
+
+    def ip(self):
+        if self.iface is None:
+            return "0.0.0.0"
+        try:
+            return self.iface.ifconfig()[0]
+        except Exception:
+            return "0.0.0.0"
+
+    def _init_iface(self):
+        if not hasattr(network, "LAN"):
+            self._init_error = "network.LAN not found"
+            return
+
+        creators = []
+        creators.append(lambda: network.LAN())
+        creators.append(lambda: network.LAN(0))
+        for attr in ("ETH", "LAN"):
+            if hasattr(network, attr):
+                value = getattr(network, attr)
+                creators.append(lambda value=value: network.LAN(value))
+
+        for create in creators:
+            try:
+                self.iface = create()
+                self._init_error = None
+                return
+            except Exception as err:
+                self._init_error = err
+
+    def _prepare(self):
+        try:
+            if hasattr(self.iface, "active"):
+                self.iface.active(True)
+                sleep_ms(300)
+        except Exception:
+            pass
+
+        try:
+            self.iface.ifconfig((LAN_STATIC_IP, LAN_NETMASK, LAN_GATEWAY, LAN_DNS))
+        except Exception as err:
+            print("LAN static IP apply failed:", err)
+
+    def _is_connected(self):
+        try:
+            if hasattr(self.iface, "isconnected"):
+                return bool(self.iface.isconnected())
+        except Exception:
+            pass
+        try:
+            return self.iface.ifconfig()[0] != "0.0.0.0"
+        except Exception:
+            return False
+
+    def _print_ip(self, prefix):
+        ip_info = self.iface.ifconfig()
+        print(prefix)
+        print("IP:", ip_info[0])
+        print("Netmask:", ip_info[1])
+        print("Gateway:", ip_info[2])
+        print("DNS:", ip_info[3])
+
+
 class WiFiStaClient:
     def __init__(self, ssid, password):
         self.ssid = ssid
         self.password = password
         self.sta = network.WLAN(network.STA_IF)
 
+    def mode(self):
+        return "wifi"
+
     def connect(self, timeout_s=WIFI_CONNECT_TIMEOUT_S, retries=WIFI_CONNECT_RETRIES):
         if self.sta.isconnected() and self.sta.ifconfig()[0] != "0.0.0.0":
-            self._print_ip("Wi-Fi 已连接")
+            self._print_ip("Wi-Fi already connected")
             return True
 
         last_error = None
         for attempt in range(1, retries + 1):
             self._reset_interface()
             if self._scan_target():
-                print("检测到目标 Wi-Fi:", self.ssid)
+                print("Wi-Fi target detected:", self.ssid)
             else:
-                print("未扫描到目标 Wi-Fi，继续尝试连接:", self.ssid)
+                print("Wi-Fi target not seen, still trying:", self.ssid)
 
-            print("正在连接 Wi-Fi(%d/%d): %s" % (attempt, retries, self.ssid))
+            print("Connecting Wi-Fi (%d/%d): %s" % (attempt, retries, self.ssid))
             try:
                 self.sta.connect(self.ssid, self.password)
             except Exception as err:
@@ -119,7 +235,7 @@ class WiFiStaClient:
                 if self.sta.isconnected():
                     ip_info = self.sta.ifconfig()
                     if ip_info[0] != "0.0.0.0":
-                        self._print_ip("Wi-Fi 连接成功")
+                        self._print_ip("Wi-Fi connected")
                         return True
                 sleep_ms(500)
 
@@ -128,11 +244,9 @@ class WiFiStaClient:
             except Exception:
                 pass
 
-            last_error = RuntimeError(
-                "Wi-Fi 连接超时，请检查 SSID/密码/2.4G 频段"
-            )
+            last_error = RuntimeError("Wi-Fi connect timeout")
             if attempt < retries:
-                print("Wi-Fi 连接失败，准备重试")
+                print("Wi-Fi connect failed, retrying")
                 sleep_ms(WIFI_RETRY_DELAY_MS)
 
         raise last_error
@@ -144,7 +258,7 @@ class WiFiStaClient:
             self.connect(timeout_s=10, retries=2)
             return True
         except Exception as err:
-            print("Wi-Fi 重连失败:", err)
+            print("Wi-Fi reconnect failed:", err)
             return False
 
     def ip(self):
@@ -156,9 +270,9 @@ class WiFiStaClient:
     def _print_ip(self, prefix):
         ip_info = self.sta.ifconfig()
         print(prefix)
-        print("IP地址:", ip_info[0])
-        print("子网掩码:", ip_info[1])
-        print("网关:", ip_info[2])
+        print("IP:", ip_info[0])
+        print("Netmask:", ip_info[1])
+        print("Gateway:", ip_info[2])
         print("DNS:", ip_info[3])
 
     def _reset_interface(self):
@@ -177,7 +291,6 @@ class WiFiStaClient:
                 self.sta.active(True)
                 sleep_ms(300)
         except Exception:
-            # rt-smart 网络栈默认常驻，active(False/True) 可能不支持。
             pass
 
     def _scan_target(self):
@@ -208,9 +321,45 @@ class WiFiStaClient:
         return False
 
 
+class NetworkManager:
+    def __init__(self):
+        self.lan = LanClient() if LAN_ENABLED else None
+        self.wifi = WiFiStaClient(WIFI_SSID, WIFI_PASSWORD)
+        self.active_client = None
+
+    def connect(self):
+        if self.lan is not None:
+            try:
+                print("Trying LAN first")
+                self.lan.connect()
+                self.active_client = self.lan
+                return True
+            except Exception as err:
+                print("LAN unavailable, fallback to Wi-Fi:", err)
+
+        self.wifi.connect()
+        self.active_client = self.wifi
+        return True
+
+    def ensure_connected(self):
+        if self.active_client is not None and self.active_client.ensure_connected():
+            return True
+        return self.connect()
+
+    def ip(self):
+        if self.active_client is None:
+            return "0.0.0.0"
+        return self.active_client.ip()
+
+    def mode(self):
+        if self.active_client is None:
+            return "unknown"
+        return self.active_client.mode()
+
+
 class AiResultPublisher:
-    def __init__(self, wifi_client):
-        self.wifi_client = wifi_client
+    def __init__(self, net_client):
+        self.net_client = net_client
         self._lock = _thread.allocate_lock()
         self._latest_payload = None
         self._latest_seq = 0
@@ -246,16 +395,16 @@ class AiResultPublisher:
                 self._lock.release()
 
             if payload is not None and seq != self._last_sent_seq:
-                if self.wifi_client.ensure_connected():
+                if self.net_client.ensure_connected():
                     try:
                         self._post_json(payload)
                         self._last_sent_seq = seq
                         print(
-                            "AI结果已上送: frameId=%s detections=%s"
+                            "AI result posted: frameId=%s detections=%s"
                             % (payload.get("frameId", -1), len(payload.get("detections", [])))
                         )
                     except Exception as err:
-                        print("AI结果上送失败:", err)
+                        print("AI result post failed:", err)
 
             sleep_ms(AI_POST_INTERVAL_MS)
 
@@ -286,7 +435,7 @@ class AiResultPublisher:
             self._send_all(sock, request)
             status_line = self._recv_status_line(sock)
             if b" 200 " not in status_line:
-                raise OSError("HTTP状态异常: %s" % status_line.decode(errors="ignore"))
+                raise OSError("HTTP status invalid: %s" % status_line.decode(errors="ignore"))
         finally:
             try:
                 sock.close()
@@ -455,32 +604,30 @@ class ObbDetectionApp(AIBase):
 
 def print_banner():
     print("========================================")
-    print("K230 Wi-Fi + RTSP + AI JSON 网关启动")
+    print("K230 LAN/Wi-Fi + RTSP + AI JSON gateway")
+    print("LAN preferred:", LAN_ENABLED)
+    print("LAN static IP:", LAN_STATIC_IP)
     print("Wi-Fi SSID:", WIFI_SSID)
-    print("RK3568 AI接口: http://%s:%d%s" % (RK3568_HOST, RK3568_PORT, RK3568_AI_PATH))
-    print("Display模式:", DISPLAY_MODE)
+    print("RK3568 AI endpoint: http://%s:%d%s" % (RK3568_HOST, RK3568_PORT, RK3568_AI_PATH))
+    print("Display mode:", DISPLAY_MODE)
     print("========================================")
-
-
-def normalize_size(size):
-    return [int(size[0]), int(size[1])]
 
 
 def main():
     os.exitpoint(os.EXITPOINT_ENABLE)
     print_banner()
 
-    wifi = WiFiStaClient(WIFI_SSID, WIFI_PASSWORD)
-    publisher = AiResultPublisher(wifi)
+    net_client = NetworkManager()
+    publisher = AiResultPublisher(net_client)
     pl = None
     detector = None
     frame_id = 0
 
-    wifi.connect()
+    net_client.connect()
 
     try:
         requested_display_size = normalize_size(DISPLAY_SIZE)
-        print("请求显示分辨率:", requested_display_size)
+        print("Requested display size:", requested_display_size)
 
         WBCRtsp.configure(
             wbc_width=requested_display_size[0], wbc_height=requested_display_size[1]
@@ -493,15 +640,16 @@ def main():
         )
         pl.create(to_ide=TO_IDE)
         actual_display_size = normalize_size(pl.get_display_size())
-        print("显示分辨率:", actual_display_size)
+        print("Actual display size:", actual_display_size)
         if actual_display_size != requested_display_size:
             raise RuntimeError(
-                "Display.VIRT 实际分辨率与请求值不一致: requested=%s actual=%s"
+                "Display.VIRT size mismatch: requested=%s actual=%s"
                 % (requested_display_size, actual_display_size)
             )
 
         WBCRtsp.start()
-        print("RTSP 预计地址: rtsp://%s:%d/%s" % (wifi.ip(), RTSP_PORT, RTSP_SESSION))
+        print("Active network mode:", net_client.mode())
+        print("RTSP endpoint: rtsp://%s:%d/%s" % (net_client.ip(), RTSP_PORT, RTSP_SESSION))
 
         detector = ObbDetectionApp(
             KMODEL_PATH,
@@ -528,11 +676,11 @@ def main():
                 frame_id += 1
 
                 if frame_id % WIFI_CHECK_INTERVAL_FRAMES == 0:
-                    wifi.ensure_connected()
+                    net_client.ensure_connected()
 
                 gc.collect()
     except KeyboardInterrupt as err:
-        print("用户停止:", err)
+        print("Stopped by user:", err)
     except BaseException as err:
         sys.print_exception(err)
     finally:

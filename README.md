@@ -1,65 +1,67 @@
-# K230_RTSP
+﻿# K230 RTSP AI Gateway
 
-这个目录用于放置 `K230` 侧的单文件脚本。当前目标是和 `EdgeLink_RK3568` 联动，完成两条并行链路：
+该目录存放 `K230` 端单文件脚本，用于把端侧视觉能力接入当前石斛平台链路。
 
-- `K230 -> RK3568/go2rtc`：输出带框 `RTSP(H264)` 视频流
-- `K230 -> RK3568/edgelink-gateway`：按帧批量上送 `AI JSON`
+当前实现的职责有三项：
+- `K230 -> RK3568/go2rtc`：输出 `RTSP(H264)` 视频流
+- `K230 -> RK3568 /api/ai`：上送逐帧 `AI JSON`
+- 本地执行 `YOLO11 OBB` 推理，并把检测框叠加到 RTSP 画面
 
-## 参考资料
+## 当前网络方案
 
-- RK3568 联动说明：
-  - `Z:\home\linaro\project\EdgeLink_RK3568\docs\k230-tencent-cloud-cooperation.md`
-- 庐山派 K230 Wi-Fi STA 说明：
-  - `network.WLAN(network.STA_IF)`、`sta.connect()`、`sta.ifconfig()`
-- 官方 RTSP/WBCRtsp 示例：
-  - CanMV K230 `AI+RTSP推流`
-- 官方显示模块说明：
-  - `Display.VIRT` 支持无实体屏的虚拟显示
+当前脚本采用“有线优先，Wi-Fi 兜底”的接入策略：
+- 优先尝试 `USB-RJ45` 有线网卡
+- 有线成功时固定使用 `172.18.8.103/24`
+- RK3568 默认目标地址固定为 `172.18.8.19`
+- 若有线不可用，再回退到 `WIFI_SSID/WIFI_PASSWORD` 指定的 Wi-Fi
+- 无论当前走有线还是 Wi-Fi，K230 只负责持续输出 `RTSP` 和 `POST /api/ai`
+- RK3568 会根据 `/api/ai` 的来源地址自动更新 `go2rtc` 的 `streams.k230`，然后重启 `go2rtc`
+- 因此 K230 不需要在有线和 Wi-Fi 之间切换时手动修改 RK3568 配置
 
-## 当前设计
+默认网络参数：
+- `LAN_STATIC_IP = 172.18.8.103`
+- `LAN_NETMASK = 255.255.255.0`
+- `LAN_GATEWAY = 172.18.8.1`
+- `LAN_DNS = 172.18.8.1`
+- `RK3568_HOST = 172.18.8.19`
+- `RK3568_AI_PATH = /api/ai`
 
-脚本固定完成这几件事：
+## 运行链路
 
-1. `K230` 以 `STA` 模式连接现有 `2.4G Wi-Fi`
-2. 使用 `PipeLine + WBCRtsp + Display.VIRT` 输出带框 `RTSP`
-3. 在本地执行 `YOLO11 OBB` 推理
-4. 将当前帧全部检测结果批量 `HTTP POST` 到 `RK3568`
+```text
+K230 --RTSP(H264)--> RK3568 go2rtc --WebRTC/MSE--> 浏览器
+  \
+   +--HTTP POST /api/ai--> RK3568 edgelink-gateway
+```
 
-`RK3568` 侧约定如下：
+当 K230 的活动接口变化时，链路实际行为如下：
+- K230 有线在线时，`/api/ai` 来源地址通常为 `172.18.8.103`
+- K230 回退到 Wi-Fi 时，`/api/ai` 来源地址会变成 Wi-Fi 网段地址，例如 `192.168.1.103`
+- RK3568 收到连续稳定的来源地址后，会自动把 `go2rtc` 源流切换到对应的 `rtsp://<来源IP>:8554/test`
+- 浏览器和 Java 协作者继续使用原有播放入口，不需要感知底层源地址切换
 
-- RTSP 由 `go2rtc` 主动拉取
-- AI 结果发送到：
-  - `POST http://<RK3568_LAN_IP>:8080/api/ai`
+RTSP 访问地址固定格式：
+```text
+rtsp://<K230_IP>:8554/test
+```
 
-## 文件说明
+## 主要配置项
 
-- `k230_rtsp_ai_gateway.py`
-  - 当前主入口脚本
-  - 直接在脚本顶部修改 Wi-Fi、RTSP、RK3568 地址、模型路径等常量
-
-## 需要修改的常量
-
-脚本顶部需要按现场修改这些值：
-
+脚本顶部需要按现场修改的常量：
+- `LAN_ENABLED`
+- `LAN_STATIC_IP`
+- `LAN_NETMASK`
+- `LAN_GATEWAY`
+- `LAN_DNS`
 - `WIFI_SSID`
 - `WIFI_PASSWORD`
 - `RK3568_HOST`
-- `RK3568_PORT`
-- `RK3568_AI_PATH`
 - `KMODEL_PATH`
 - `LABELS`
 
-当前默认值按现有联调环境写死为：
+## AI JSON 结构
 
-- `WIFI_SSID = "A6N107"`
-- `WIFI_PASSWORD = "A6N107666#"`
-- `RK3568_HOST = "172.18.8.19"`
-- `RK3568_PORT = 8080`
-- `RK3568_AI_PATH = "/api/ai"`
-
-## AI JSON 协议
-
-K230 上送到 RK3568 的 JSON 结构如下：
+K230 上送到 RK3568 的 JSON 保持当前网关既有格式：
 
 ```json
 {
@@ -84,57 +86,39 @@ K230 上送到 RK3568 的 JSON 结构如下：
 ```
 
 说明：
-
-- `detections` 是“当前帧全部目标”的数组
-- `quad` 是 OBB 四点坐标
-- `bbox` 是外接矩形，便于 RK3568 后续处理
-- 如果当前帧没有目标，仍会上送空数组 `[]`
-- `confidence` 只有在运行时确实拿到时才会附带，不会伪造
+- `detections` 表示当前帧全部检测目标
+- `quad` 为 OBB 四点坐标
+- `bbox` 为轴对齐外接框
+- 当前帧无目标时，仍会上送空数组 `[]`
+- `confidence` 只有在运行时拿到时才附带
 
 ## 运行步骤
 
-1. 把脚本放到 K230 的 CanMV 运行目录
-2. 确认模型路径可访问
-3. 修改脚本顶部常量
-4. 运行 `k230_rtsp_ai_gateway.py`
-5. 观察串口输出：
-   - Wi-Fi 是否连通
-   - 分配到的 IP
-   - RTSP 地址
-   - AI JSON 是否投递成功
+1. 将 `k230_rtsp_ai_gateway.py` 放到 K230 的运行目录
+2. 确认模型文件存在：`/sdcard/examples/kmodel/yolo11n-obb.kmodel`
+3. 连接 USB-RJ45 到 `172.18.8.x` 局域网
+4. 运行脚本，观察启动日志中的网络模式与 RTSP 地址
+5. 在 RK3568 上确认：
+   - `go2rtc` 已拉取 `rtsp://172.18.8.103:8554/test`
+   - `/api/ai` 能持续收到数据
 
-## 预期联动结果
+## 排障优先级
 
-### RTSP
+1. 先确认 K230 当前使用的是 `lan` 还是 `wifi`
+2. 再确认 RTSP 地址是否与 RK3568 `go2rtc.yaml` 一致
+3. 再确认 `POST /api/ai` 来源地址是否与当前活动接口一致
+4. 最后再看公网 `go2rtc + frp` 是否正常
 
-脚本启动后，`WBCRtsp` 会在 K230 上开启 RTSP 推流。默认按官方示例约定，访问地址形如：
+## 与 RK3568 的自动联动
 
-```text
-rtsp://<K230_IP>:8554/test
-```
+RK3568 当前已经实现了基于 `/api/ai` 来源地址的自动切换逻辑：
+- 只对 `deviceId == "k230"` 的 AI 请求生效
+- 同一候选来源地址需要连续命中多次后才触发切换
+- 切换后会自动重启 `go2rtc`，更新 `streams.k230`
+- 如果 `go2rtc` 重启失败，RK3568 会在 `/healthz` 中暴露切换失败状态
 
-RK3568 的 `go2rtc` 直接填这个地址即可。
+这意味着 K230 侧只要满足两件事即可：
+- RTSP 一直输出到 `rtsp://<当前活动IP>:8554/test`
+- `/api/ai` 一直发到 `http://172.18.8.19:8080/api/ai`
 
-### AI 结果
-
-RK3568 的 `edgelink-gateway` 需要已经实现：
-
-- `POST /api/ai`
-
-并返回：
-
-```json
-{"code":0,"msg":"accepted"}
-```
-
-## 排障顺序
-
-1. 先确认 K230 已连上 Wi-Fi 并获得 IP
-2. 再确认 `WBCRtsp` 已成功启动
-3. 再确认 RK3568 的 `/api/ai` 已可访问
-4. 最后再联动 `go2rtc + frp`
-
-如果 `Display.VIRT + WBCRtsp` 现场不稳定：
-
-- 不在同一版脚本里强塞第二套实现
-- 下一版直接切换到“底层 RTSP 编码 + AI JSON 上送”的回退方案
+其余的源地址同步由 RK3568 完成。
