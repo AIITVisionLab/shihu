@@ -39,6 +39,15 @@ class AppConstants {
   /// 避免开发环境误连到本机无关端口。
   static const String defaultBaseUrl = 'http://101.35.79.76:8082';
 
+  /// 默认视频服务地址。
+  ///
+  /// 该地址用于请求 Java 视频协作接口，
+  /// 与设备状态服务的 `8082` 端口分开部署。
+  static const String defaultVideoBaseUrl = 'http://101.35.79.76:19081';
+
+  /// 默认视频服务端口。
+  static const int defaultVideoServicePort = 19081;
+
   /// 默认连接超时时间。
   static const int defaultConnectTimeoutMs = 10000;
 

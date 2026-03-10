@@ -7,6 +7,8 @@ import 'package:sickandflutter/features/home/home_page.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_page.dart';
 import 'package:sickandflutter/features/settings/settings_page.dart';
 import 'package:sickandflutter/features/splash/splash_page.dart';
+import 'package:sickandflutter/features/video/video_hub_page.dart';
+import 'package:sickandflutter/features/video/video_stream_detail_page.dart';
 
 /// 全局路由配置入口。
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -40,6 +42,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RealtimeDetectPage(),
       ),
       GoRoute(
+        path: AppRoutes.videoPath,
+        name: AppRoutes.video,
+        builder: (context, state) => const VideoHubPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.videoStreamDetailPath,
+        name: AppRoutes.videoStreamDetail,
+        builder: (context, state) => VideoStreamDetailPage(
+          streamId: state.pathParameters['streamId'] ?? '',
+        ),
+      ),
+      GoRoute(
         path: AppRoutes.settingsPath,
         name: AppRoutes.settings,
         builder: (context, state) => const SettingsPage(),
@@ -70,6 +84,12 @@ final class AppRoutes {
   /// 实时识别页路由名。
   static const String realtimeDetect = 'realtimeDetect';
 
+  /// 视频中心页路由名。
+  static const String video = 'video';
+
+  /// 单路视频流详情页路由名。
+  static const String videoStreamDetail = 'videoStreamDetail';
+
   /// 结果页路由名。
   static const String result = 'result';
 
@@ -96,6 +116,12 @@ final class AppRoutes {
 
   /// 实时识别页路由路径。
   static const String realtimeDetectPath = '/realtime-detect';
+
+  /// 视频中心页路由路径。
+  static const String videoPath = '/video';
+
+  /// 单路视频流详情页路由路径。
+  static const String videoStreamDetailPath = '/video/:streamId';
 
   /// 结果页路由路径。
   static const String resultPath = '/result';

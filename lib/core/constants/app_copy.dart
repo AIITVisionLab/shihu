@@ -29,7 +29,7 @@ class AppCopy {
 
   /// 首页主说明。
   static const String homeOverview =
-      '当前版本围绕账号认证、环境监测、风险预警、远程执行和运维自检构建统一工作闭环，所有主入口都对准当前版本可直接使用的业务能力。';
+      '当前版本围绕账号认证、视频流接入、环境监测、风险预警、远程执行和运维自检构建统一工作闭环，所有主入口都对准当前版本可直接使用的业务能力。';
 
   /// 首页入口“系统总览”标题。
   static const String homePreviewTitle = '系统总览';
@@ -50,6 +50,12 @@ class AppCopy {
   /// 首页入口“实时监测”副标题。
   static const String homeRealtimeSubtitle =
       '持续同步设备环境、异常等级和补光控制状态，作为值守与处置的核心入口。';
+
+  /// 首页入口“视频中心”标题。
+  static const String homeVideoTitle = '视频中心';
+
+  /// 首页入口“视频中心”副标题。
+  static const String homeVideoSubtitle = '查看视频流清单、单路详情、播放地址与 AI 转发状态。';
 
   /// 首页入口“历史记录”标题。
   static const String homeHistoryTitle = '识别历史';
@@ -385,6 +391,63 @@ class AppCopy {
   /// 系统总览页建设策略内容。
   static const String aboutStrategyDescription =
       '当前优先保证登录、设备状态轮询、LED 控制和健康检查链路稳定，再继续并入独立识别服务，不再沿用过时文档中的假设接口。';
+
+  /// 视频中心页标题。
+  static const String videoPageTitle = '视频中心';
+
+  /// 视频中心页副标题。
+  static const String videoPageSubtitle =
+      '统一查看视频流清单、单路详情与播放入口，客户端只消费元数据，不代理媒体流。';
+
+  /// 视频中心加载中提示。
+  static const String videoLoading = '正在同步视频流清单...';
+
+  /// 视频中心空态标题。
+  static const String videoEmptyTitle = '当前没有可展示的视频流';
+
+  /// 视频中心空态说明。
+  static const String videoEmptyMessage =
+      '视频服务已返回成功，但数据列表为空。请检查 Java 服务是否已经登记视频流信息。';
+
+  /// 视频服务异常标题。
+  static const String videoServiceErrorTitle = '视频服务暂未就绪';
+
+  /// 视频服务异常副标题。
+  static const String videoServiceErrorSubtitle =
+      '客户端已接入视频模块，但需要 Java 视频服务稳定返回流清单后才能展示。';
+
+  /// 视频服务异常说明。
+  static String videoServiceErrorMessage(Object error) => '视频服务返回失败：$error';
+
+  /// 视频流详情页标题。
+  static const String videoDetailPageTitle = '流详情';
+
+  /// 视频流详情加载提示。
+  static const String videoDetailLoading = '正在同步视频流详情...';
+
+  /// 返回视频中心按钮。
+  static const String videoBackToHub = '返回视频中心';
+
+  /// 打开播放入口按钮。
+  static const String videoOpenPlayer = '打开播放页';
+
+  /// 复制播放入口按钮。
+  static const String videoCopyPlayer = '复制播放页';
+
+  /// 打开网关入口按钮。
+  static const String videoOpenGateway = '打开网关页';
+
+  /// 复制网关入口按钮。
+  static const String videoCopyGateway = '复制网关页';
+
+  /// 打开视频流详情按钮。
+  static const String videoOpenDetail = '查看详情';
+
+  /// 外部浏览器打开成功提示。
+  static const String videoOpenedExternal = '已拉起外部浏览器。';
+
+  /// 链接复制成功提示。
+  static String videoCopied(String copiedLabel) => '已复制$copiedLabel链接。';
 
   /// 设置页标题。
   static const String settingsPageTitle = '运维设置';

@@ -16,6 +16,17 @@ void main() {
     expect(redirect, AppRoutes.loginPath);
   });
 
+  test('redirectForAuth protects video hub for anonymous users', () {
+    const authState = AuthState(isBootstrapping: false);
+
+    final redirect = redirectForAuth(
+      authState: authState,
+      matchedLocation: AppRoutes.videoPath,
+    );
+
+    expect(redirect, AppRoutes.loginPath);
+  });
+
   test('redirectForAuth keeps public about page accessible', () {
     const authState = AuthState(isBootstrapping: false);
 

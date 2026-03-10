@@ -78,6 +78,12 @@ class HomePage extends ConsumerWidget {
             runSpacing: 16,
             children: <Widget>[
               HomeEntryCard(
+                icon: Icons.videocam_rounded,
+                title: AppCopy.homeVideoTitle,
+                subtitle: AppCopy.homeVideoSubtitle,
+                onTap: () => context.pushNamed(AppRoutes.video),
+              ),
+              HomeEntryCard(
                 icon: Icons.monitor_heart_rounded,
                 title: AppCopy.homeRealtimeTitle,
                 subtitle: '查看实时设备状态、告警等级和补光控制。',

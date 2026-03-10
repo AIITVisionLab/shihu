@@ -30,6 +30,7 @@ void main() {
 
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.text('平台总览'), findsOneWidget);
+    expect(find.text('视频中心'), findsOneWidget);
     expect(find.text('监控主控台'), findsOneWidget);
     expect(find.text('系统总览'), findsOneWidget);
     expect(find.text('运维设置'), findsOneWidget);
@@ -61,6 +62,7 @@ void main() {
 
       expect(find.byType(NavigationBar), findsOneWidget);
       expect(find.text('平台总览'), findsOneWidget);
+      expect(find.text('视频中心'), findsOneWidget);
       expect(find.text('监控主控台'), findsOneWidget);
       expect(find.text('系统总览'), findsOneWidget);
       expect(find.text('运维设置'), findsOneWidget);

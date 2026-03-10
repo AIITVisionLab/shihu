@@ -73,6 +73,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(HomeEntryCard, '监控主控台'), findsOneWidget);
+    expect(find.widgetWithText(HomeEntryCard, '视频中心'), findsOneWidget);
     expect(find.widgetWithText(HomeEntryCard, '系统总览'), findsOneWidget);
     expect(find.widgetWithText(HomeEntryCard, '运维设置'), findsOneWidget);
     expect(find.text('版本 1.2.3'), findsOneWidget);
@@ -136,21 +137,29 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('查看实时设备状态、告警等级和补光控制。'));
+    await tester.tap(find.widgetWithText(HomeEntryCard, '视频中心'));
+    await tester.pumpAndSettle();
+    expect(find.text('video-page'), findsOneWidget);
+
+    router.goNamed(AppRoutes.home);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(HomeEntryCard, '监控主控台'));
     await tester.pumpAndSettle();
     expect(find.text('realtime-page'), findsOneWidget);
 
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('查看平台定位、设备架构、栽培背景和调控目标。'));
+    await tester.tap(find.widgetWithText(HomeEntryCard, '系统总览'));
     await tester.pumpAndSettle();
     expect(find.text('about-page'), findsOneWidget);
 
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('检查服务健康、当前会话与基础配置。'));
+    await tester.ensureVisible(find.widgetWithText(HomeEntryCard, '运维设置'));
+    await tester.tap(find.widgetWithText(HomeEntryCard, '运维设置'));
     await tester.pumpAndSettle();
     expect(find.text('settings-page'), findsOneWidget);
   });
@@ -173,6 +182,11 @@ GoRouter _buildRouter() {
         path: AppRoutes.homePath,
         name: AppRoutes.home,
         builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.videoPath,
+        name: AppRoutes.video,
+        builder: (context, state) => const Scaffold(body: Text('video-page')),
       ),
       GoRoute(
         path: AppRoutes.realtimeDetectPath,

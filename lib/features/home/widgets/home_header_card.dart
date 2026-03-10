@@ -136,6 +136,7 @@ class _HeaderSummary extends StatelessWidget {
           spacing: 10,
           runSpacing: 10,
           children: <Widget>[
+            _SignalChip(label: '视频流入口'),
             _SignalChip(label: '统一会话管理'),
             _SignalChip(label: '设备状态轮询'),
             _SignalChip(label: '远程补光控制'),
@@ -172,7 +173,7 @@ class _HeaderScoreCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '4 / 4',
+            '5 / 5',
             style: textTheme.headlineLarge?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w800,
@@ -180,13 +181,15 @@ class _HeaderScoreCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '账号、状态、健康检查与补光控制已经全部接入在线服务。',
+            '账号、视频流、状态、健康检查与补光控制已经全部接入统一工作台。',
             style: textTheme.bodyMedium?.copyWith(
               color: const Color(0xFFE1E9DC),
               height: 1.7,
             ),
           ),
           const SizedBox(height: 20),
+          const _ScoreRow(label: '视频流清单', value: '已接入'),
+          const SizedBox(height: 10),
           const _ScoreRow(label: '会话恢复', value: '可用'),
           const SizedBox(height: 10),
           const _ScoreRow(label: '设备状态', value: '同步中'),

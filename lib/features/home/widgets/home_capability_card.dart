@@ -14,6 +14,12 @@ class HomeCapabilityCard extends StatelessWidget {
       child: Column(
         children: <Widget>[
           _CapabilityRow(
+            icon: Icons.videocam_outlined,
+            title: '视频接入',
+            description: '通过 Java 视频服务统一下发流清单、播放地址、网关入口和 AI 转发状态，不在客户端代理媒体流。',
+          ),
+          SizedBox(height: 14),
+          _CapabilityRow(
             icon: Icons.lock_outline_rounded,
             title: '认证会话',
             description: '支持登录、账号开通、会话校验与安全退出，保证设备权限按账号闭环管理。',
