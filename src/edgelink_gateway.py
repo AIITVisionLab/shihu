@@ -13,14 +13,17 @@ from __future__ import annotations
 
 import argparse
 import configparser
+import ipaddress
 import json
 import logging
+import subprocess
 import signal
 import sys
 import threading
 import time
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
@@ -73,6 +76,18 @@ class AiForwardConfig:
     only_non_empty: bool = True
 
 
+@dataclass
+class VideoSourceSwitchConfig:
+    enabled: bool = True
+    device_id: str = "k230"
+    go2rtc_config: str = "/home/linaro/project/EdgeLink_RK3568/config/go2rtc.yaml"
+    stream_name: str = "k230"
+    stream_port: int = 8554
+    stream_path: str = "/test"
+    min_switch_interval_ms: int = 5000
+    confirm_hits: int = 2
+
+
 class SouthboundDispatcher:
     """Placeholder for future RK3568 -> F429 -> PLC control flow."""
 
@@ -98,6 +113,11 @@ class GatewayState:
         self.ai_forward_enabled = False
         self.last_ai_forward_ok: Optional[bool] = None
         self.last_ai_forward_ms = 0
+        self.current_k230_stream_ip = ""
+        self.pending_k230_stream_ip = ""
+        self.pending_k230_hit_count = 0
+        self.last_go2rtc_switch_ok: Optional[bool] = None
+        self.last_go2rtc_switch_ms = 0
 
 
 class GatewayApp:
@@ -111,6 +131,8 @@ class GatewayApp:
         self._stop_event = threading.Event()
         self._ai_forward_event = threading.Event()
         self._ai_forward_thread: Optional[threading.Thread] = None
+        self._video_switch_event = threading.Event()
+        self._video_switch_thread: Optional[threading.Thread] = None
 
         self.http_host = config.get("http", "bind_host", fallback="0.0.0.0")
         self.http_port = config.getint("http", "bind_port", fallback=8080)
@@ -123,6 +145,7 @@ class GatewayApp:
         self.keepalive = config.getint("onenet", "keepalive", fallback=120)
         self.publish_qos = config.getint("onenet", "qos", fallback=0)
         self.ai_forward = self._load_ai_forward_config(config)
+        self.video_source_switch = self._load_video_source_switch_config(config)
 
         self.topic_post = f"$sys/{self.product_id}/{self.device_name}/thing/property/post"
         self.topic_post_reply = f"$sys/{self.product_id}/{self.device_name}/thing/property/post/reply"
@@ -130,6 +153,7 @@ class GatewayApp:
         self.topic_set_reply = f"$sys/{self.product_id}/{self.device_name}/thing/property/set_reply"
 
         self.state.ai_forward_enabled = self.ai_forward.enabled
+        self.state.current_k230_stream_ip = self._read_current_stream_ip()
 
     @staticmethod
     def _load_ai_forward_config(config: configparser.ConfigParser) -> AiForwardConfig:
@@ -140,6 +164,25 @@ class GatewayApp:
             timeout_s=config.getfloat("ai_forward", "timeout_s", fallback=2.0),
             retry_interval_ms=config.getint("ai_forward", "retry_interval_ms", fallback=1000),
             only_non_empty=config.getboolean("ai_forward", "only_non_empty", fallback=True),
+        )
+
+    @staticmethod
+    def _load_video_source_switch_config(config: configparser.ConfigParser) -> VideoSourceSwitchConfig:
+        return VideoSourceSwitchConfig(
+            enabled=config.getboolean("video_source_switch", "enabled", fallback=True),
+            device_id=config.get("video_source_switch", "device_id", fallback="k230").strip(),
+            go2rtc_config=config.get(
+                "video_source_switch",
+                "go2rtc_config",
+                fallback="/home/linaro/project/EdgeLink_RK3568/config/go2rtc.yaml",
+            ).strip(),
+            stream_name=config.get("video_source_switch", "stream_name", fallback="k230").strip(),
+            stream_port=config.getint("video_source_switch", "stream_port", fallback=8554),
+            stream_path=config.get("video_source_switch", "stream_path", fallback="/test").strip(),
+            min_switch_interval_ms=config.getint(
+                "video_source_switch", "min_switch_interval_ms", fallback=5000
+            ),
+            confirm_hits=config.getint("video_source_switch", "confirm_hits", fallback=2),
         )
 
     def _build_mqtt_client(self) -> mqtt.Client:
@@ -229,15 +272,19 @@ class GatewayApp:
     def start(self) -> None:
         self._stop_event.clear()
         self._ai_forward_event.clear()
+        self._video_switch_event.clear()
         self._mqtt_client.connect_async(self.broker, self.broker_port, keepalive=self.keepalive)
         self._mqtt_client.loop_start()
         self._start_http_server()
         if self.ai_forward.enabled:
             self._start_ai_forward_thread()
+        if self.video_source_switch.enabled:
+            self._start_video_switch_thread()
 
     def stop(self) -> None:
         self._stop_event.set()
         self._ai_forward_event.set()
+        self._video_switch_event.set()
         if self._http_server is not None:
             self._http_server.shutdown()
             self._http_server.server_close()
@@ -245,6 +292,8 @@ class GatewayApp:
             self._http_thread.join(timeout=5)
         if self._ai_forward_thread is not None:
             self._ai_forward_thread.join(timeout=5)
+        if self._video_switch_thread is not None:
+            self._video_switch_thread.join(timeout=5)
         self._mqtt_client.loop_stop()
         try:
             self._mqtt_client.disconnect()
@@ -262,6 +311,23 @@ class GatewayApp:
             self.ai_forward.only_non_empty,
             self.ai_forward.retry_interval_ms,
             self.ai_forward.timeout_s,
+        )
+
+    def _start_video_switch_thread(self) -> None:
+        if self._video_switch_thread is not None and self._video_switch_thread.is_alive():
+            return
+        self._video_switch_thread = threading.Thread(
+            target=self._video_switch_loop,
+            name="video-source-switch",
+            daemon=True,
+        )
+        self._video_switch_thread.start()
+        logging.info(
+            "video source switch enabled: device=%s current_ip=%s confirm_hits=%s min_switch_interval_ms=%s",
+            self.video_source_switch.device_id,
+            self.state.current_k230_stream_ip or "-",
+            self.video_source_switch.confirm_hits,
+            self.video_source_switch.min_switch_interval_ms,
         )
 
     def _ai_forward_loop(self) -> None:
@@ -331,6 +397,162 @@ class GatewayApp:
             error_text,
         )
 
+    def _video_switch_loop(self) -> None:
+        while not self._stop_event.is_set():
+            self._video_switch_event.wait(timeout=1.0)
+            self._video_switch_event.clear()
+            if self._stop_event.is_set():
+                return
+            self._maybe_switch_video_source()
+
+    def _track_k230_source_ip(self, device_id: str, source_ip: str) -> None:
+        if not self.video_source_switch.enabled:
+            return
+        if device_id != self.video_source_switch.device_id:
+            return
+        try:
+            parsed_ip = ipaddress.ip_address(source_ip)
+        except ValueError:
+            return
+        if parsed_ip.version != 4 or parsed_ip.is_loopback:
+            return
+
+        with self.state.lock:
+            current_ip = self.state.current_k230_stream_ip
+            pending_ip = self.state.pending_k230_stream_ip
+            if source_ip == current_ip:
+                if pending_ip:
+                    self.state.pending_k230_stream_ip = ""
+                    self.state.pending_k230_hit_count = 0
+                return
+
+            if source_ip == pending_ip:
+                self.state.pending_k230_hit_count += 1
+            else:
+                self.state.pending_k230_stream_ip = source_ip
+                self.state.pending_k230_hit_count = 1
+
+            logging.info(
+                "k230 source candidate observed: source_ip=%s hits=%s current_ip=%s",
+                source_ip,
+                self.state.pending_k230_hit_count,
+                current_ip or "-",
+            )
+        self._video_switch_event.set()
+
+    def _maybe_switch_video_source(self) -> None:
+        with self.state.lock:
+            pending_ip = self.state.pending_k230_stream_ip
+            hit_count = self.state.pending_k230_hit_count
+            current_ip = self.state.current_k230_stream_ip
+            last_switch_ms = self.state.last_go2rtc_switch_ms
+
+        if not pending_ip or pending_ip == current_ip:
+            return
+        if hit_count < max(self.video_source_switch.confirm_hits, 1):
+            return
+        if now_ms() - last_switch_ms < max(self.video_source_switch.min_switch_interval_ms, 0):
+            return
+
+        target_url = self._build_rtsp_url(pending_ip)
+        try:
+            self._update_go2rtc_stream_url(target_url)
+            self._restart_go2rtc()
+            with self.state.lock:
+                self.state.current_k230_stream_ip = pending_ip
+                self.state.pending_k230_stream_ip = ""
+                self.state.pending_k230_hit_count = 0
+                self.state.last_go2rtc_switch_ok = True
+                self.state.last_go2rtc_switch_ms = now_ms()
+            logging.info(
+                "k230 video source switched: source_ip=%s rtsp=%s",
+                pending_ip,
+                target_url,
+            )
+        except Exception as exc:
+            with self.state.lock:
+                self.state.last_go2rtc_switch_ok = False
+                self.state.last_go2rtc_switch_ms = now_ms()
+            logging.warning(
+                "k230 video source switch failed: source_ip=%s rtsp=%s error=%s",
+                pending_ip,
+                target_url,
+                exc,
+            )
+
+    def _build_rtsp_url(self, source_ip: str) -> str:
+        return "rtsp://%s:%s%s" % (
+            source_ip,
+            self.video_source_switch.stream_port,
+            self.video_source_switch.stream_path,
+        )
+
+    def _read_current_stream_ip(self) -> str:
+        try:
+            lines = Path(self.video_source_switch.go2rtc_config).read_text(encoding="utf-8-sig").splitlines()
+        except Exception:
+            return ""
+
+        in_streams = False
+        in_target = False
+        for line in lines:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if not line.startswith(" "):
+                in_target = False
+                in_streams = stripped == "streams:"
+                continue
+            if in_streams and stripped == f"{self.video_source_switch.stream_name}:":
+                in_target = True
+                continue
+            if in_target and stripped.startswith("- "):
+                url = stripped[2:].strip().strip('"').strip("'")
+                parsed = urlparse(url)
+                return parsed.hostname or ""
+        return ""
+
+    def _update_go2rtc_stream_url(self, target_url: str) -> None:
+        path = Path(self.video_source_switch.go2rtc_config)
+        lines = path.read_text(encoding="utf-8-sig").splitlines()
+        in_streams = False
+        in_target = False
+        replaced = False
+
+        for idx, line in enumerate(lines):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if not line.startswith(" "):
+                in_target = False
+                in_streams = stripped == "streams:"
+                continue
+            if in_streams and stripped == f"{self.video_source_switch.stream_name}:":
+                in_target = True
+                continue
+            if in_target and stripped.startswith("- "):
+                indent = line[: len(line) - len(line.lstrip())]
+                lines[idx] = f'{indent}- "{target_url}"'
+                replaced = True
+                break
+
+        if not replaced:
+            raise RuntimeError("failed to locate streams.%s in go2rtc config" % self.video_source_switch.stream_name)
+
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    @staticmethod
+    def _restart_go2rtc() -> None:
+        subprocess.run(["sudo", "-n", "systemctl", "restart", "go2rtc"], check=True)
+        status = subprocess.run(
+            ["systemctl", "is-active", "go2rtc"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if status.stdout.strip() != "active":
+            raise RuntimeError("go2rtc not active after restart: %s" % status.stdout.strip())
+
     def _start_http_server(self) -> None:
         app = self
 
@@ -346,6 +568,8 @@ class GatewayApp:
             protocol_version = "HTTP/1.1"
 
             def do_POST(self) -> None:
+                source_ip = self.client_address[0]
+
                 if self.path == "/api/uplink":
                     handler = self.server.app.handle_snapshot
                 elif self.path == "/api/ai":
@@ -371,7 +595,10 @@ class GatewayApp:
                     self._write_json(400, {"code": 400, "msg": "invalid json"})
                     return
 
-                ok, message = handler(body)
+                if self.path == "/api/ai":
+                    ok, message = handler(body, source_ip=source_ip)
+                else:
+                    ok, message = handler(body)
                 if ok:
                     self._write_json(200, {"code": 0, "msg": message})
                 else:
@@ -396,6 +623,10 @@ class GatewayApp:
                         ),
                         "lastAiForwardOk": self.server.app.state.last_ai_forward_ok,
                         "lastAiForwardMs": self.server.app.state.last_ai_forward_ms,
+                        "currentK230StreamIp": self.server.app.state.current_k230_stream_ip,
+                        "pendingK230StreamIp": self.server.app.state.pending_k230_stream_ip,
+                        "lastGo2rtcSwitchOk": self.server.app.state.last_go2rtc_switch_ok,
+                        "lastGo2rtcSwitchMs": self.server.app.state.last_go2rtc_switch_ms,
                     }
                 self._write_json(200, response)
 
@@ -432,7 +663,7 @@ class GatewayApp:
         logging.info("snapshot accepted: deviceId=%s messageId=%s", body.get("deviceId", "-"), message_id)
         return True, "accepted"
 
-    def handle_ai_result(self, body: Dict[str, Any]) -> Tuple[bool, str]:
+    def handle_ai_result(self, body: Dict[str, Any], source_ip: str = "") -> Tuple[bool, str]:
         if body.get("type") != "AI_DETECTIONS":
             return False, "unsupported type"
         detections = body.get("detections")
@@ -476,6 +707,8 @@ class GatewayApp:
             body.get("frameId", "-"),
             len(detections),
         )
+        if source_ip:
+            self._track_k230_source_ip(str(body.get("deviceId", "")), source_ip)
         return True, "accepted"
 
     def _apply_snapshot_locked(self, payload: Dict[str, Any]) -> None:
@@ -570,8 +803,23 @@ class GatewayApp:
             parsed = urlparse(self.ai_forward.target_url)
             if parsed.scheme not in {"http", "https"} or not parsed.netloc:
                 raise ValueError(f"invalid ai_forward target_url: {self.ai_forward.target_url}")
+        if self.video_source_switch.stream_port <= 0:
+            raise ValueError("video_source_switch stream_port must be > 0")
+        if self.video_source_switch.confirm_hits <= 0:
+            raise ValueError("video_source_switch confirm_hits must be > 0")
+        if self.video_source_switch.min_switch_interval_ms < 0:
+            raise ValueError("video_source_switch min_switch_interval_ms must be >= 0")
+        if self.video_source_switch.enabled:
+            if not Path(self.video_source_switch.go2rtc_config).exists():
+                raise ValueError(
+                    f"video_source_switch go2rtc_config not found: {self.video_source_switch.go2rtc_config}"
+                )
+            if not self._read_current_stream_ip():
+                raise ValueError(
+                    "video_source_switch failed to parse current stream IP from go2rtc config"
+                )
         logging.info(
-            "config loaded: http=%s:%s broker=%s:%s device=%s video.enabled=%s ai_forward.enabled=%s",
+            "config loaded: http=%s:%s broker=%s:%s device=%s video.enabled=%s ai_forward.enabled=%s video_source_switch.enabled=%s",
             self.http_host,
             self.http_port,
             self.broker,
@@ -579,6 +827,7 @@ class GatewayApp:
             self.device_name,
             self.config.getboolean("video", "enabled", fallback=False),
             self.ai_forward.enabled,
+            self.video_source_switch.enabled,
         )
 
 
@@ -587,7 +836,7 @@ def load_config(config_path: str) -> configparser.ConfigParser:
     read_files = parser.read(config_path, encoding="utf-8")
     if not read_files:
         raise FileNotFoundError(f"config file not found: {config_path}")
-    for section in ("http", "onenet", "video", "ai_forward"):
+    for section in ("http", "onenet", "video", "ai_forward", "video_source_switch"):
         if not parser.has_section(section):
             raise ValueError(f"missing config section: {section}")
     return parser
