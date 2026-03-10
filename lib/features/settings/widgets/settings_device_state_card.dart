@@ -28,7 +28,7 @@ class SettingsDeviceStateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return CommonCard(
       title: '设备状态',
-      subtitle: '来自 /api/status 与 /api/ops/led',
+      subtitle: '查看设备实时数据，并在状态完整时提交补光控制。',
       child: deviceStateAsync.when(
         loading: () => const Text('正在拉取设备状态...'),
         error: (error, stackTrace) {
@@ -109,7 +109,7 @@ class SettingsDeviceStateCard extends StatelessWidget {
               const SizedBox(height: 8),
               SettingsSettingRow(
                 title: 'LED 控制',
-                value: state.canControlLed ? '可用' : '等待 deviceId 上报',
+                value: state.canControlLed ? '可用' : '等待设备身份上报',
               ),
             ],
           );

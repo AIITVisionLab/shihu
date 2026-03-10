@@ -5,7 +5,7 @@ import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 
-/// 开发和测试环境使用的受控登录替身实现。
+/// 开发和测试环境使用的联调登录替身实现。
 class MockAuthRepository implements AuthRepository {
   /// 创建替身认证仓储。
   const MockAuthRepository({
@@ -15,10 +15,10 @@ class MockAuthRepository implements AuthRepository {
   /// 模拟请求耗时。
   final Duration responseDelay;
 
-  /// 演示登录账号。
+  /// 联调登录账号。
   static const String demoAccount = 'demo';
 
-  /// 演示登录密码。
+  /// 联调登录密码。
   static const String demoPassword = 'demo123456';
 
   @override

@@ -6,6 +6,7 @@ import 'package:sickandflutter/core/config/env_config.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
+import 'package:sickandflutter/features/auth/remembered_account_repository.dart';
 import 'package:sickandflutter/features/history/history_repository.dart';
 import 'package:sickandflutter/features/settings/device_state_repository.dart';
 import 'package:sickandflutter/features/settings/service_health_repository.dart';
@@ -22,7 +23,7 @@ void main() {
     tester,
   ) async {
     tester.view
-      ..physicalSize = const Size(1400, 1800)
+      ..physicalSize = const Size(1400, 2800)
       ..devicePixelRatio = 1;
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -45,11 +46,14 @@ void main() {
           user: AuthUser(
             userId: 'user_demo',
             account: 'demo',
-            displayName: '演示账号',
+            displayName: '联调账号',
             roles: <String>['app_user'],
           ),
         ),
       ),
+    );
+    final rememberedAccountController = _TestRememberedAccountController(
+      initialRememberedAccount: 'ops_admin',
     );
 
     await tester.pumpWidget(
@@ -94,6 +98,9 @@ void main() {
             ),
           ),
           authControllerProvider.overrideWith(() => authController),
+          rememberedAccountControllerProvider.overrideWith(
+            () => rememberedAccountController,
+          ),
           historyControllerProvider.overrideWith(
             () =>
                 _TestHistoryController(initialRecords: const <HistoryRecord>[]),
@@ -110,20 +117,17 @@ void main() {
     expect(find.text('服务正常'), findsOneWidget);
     expect(find.text('模型就绪'), findsOneWidget);
     expect(find.text('shihu-detect-service'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('demo'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
     expect(find.text('demo'), findsOneWidget);
-    expect(find.text('受控演示登录'), findsOneWidget);
+    expect(find.text('联调登录'), findsOneWidget);
+    expect(find.text('记住的账号'), findsOneWidget);
+    expect(find.text('ops_admin'), findsOneWidget);
   });
 
   testWidgets('SettingsPage updates base url and resets settings', (
     tester,
   ) async {
     tester.view
-      ..physicalSize = const Size(1400, 1800)
+      ..physicalSize = const Size(1400, 2800)
       ..devicePixelRatio = 1;
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -141,6 +145,9 @@ void main() {
         baseUrl: 'http://10.0.2.2:8080',
         enableLog: true,
       ),
+    );
+    final rememberedAccountController = _TestRememberedAccountController(
+      initialRememberedAccount: null,
     );
 
     await tester.pumpWidget(
@@ -181,6 +188,9 @@ void main() {
           authControllerProvider.overrideWith(
             () => _TestAuthController(initialState: const AuthState()),
           ),
+          rememberedAccountControllerProvider.overrideWith(
+            () => rememberedAccountController,
+          ),
           historyControllerProvider.overrideWith(
             () =>
                 _TestHistoryController(initialRecords: const <HistoryRecord>[]),
@@ -204,12 +214,105 @@ void main() {
     ]);
     expect(find.text('http://192.168.1.10:8080'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('恢复默认设置'));
-    await tester.tap(find.text('恢复默认设置'));
+    final resetButton = find.widgetWithText(OutlinedButton, '恢复默认设置');
+    await tester.tap(resetButton);
     await tester.pumpAndSettle();
 
     expect(settingsController.resetCount, 1);
     expect(find.text(envConfig.baseUrl), findsOneWidget);
+  });
+
+  testWidgets('SettingsPage clears remembered account after confirmation', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(1400, 2800)
+      ..devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final rememberedAccountController = _TestRememberedAccountController(
+      initialRememberedAccount: 'ops_admin',
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          envConfigProvider.overrideWith(
+            (ref) => const EnvConfig(
+              flavor: BuildFlavor.development,
+              baseUrl: 'http://127.0.0.1:8080',
+              enableLog: true,
+            ),
+          ),
+          packageInfoProvider.overrideWith(
+            (ref) async => PackageInfo(
+              appName: '斛生',
+              packageName: 'com.example.sickandflutter',
+              version: '2.3.4',
+              buildNumber: '56',
+            ),
+          ),
+          settingsControllerProvider.overrideWith(
+            () => _TestSettingsController(
+              initialSettings: AppSettings.defaults(
+                buildFlavor: BuildFlavor.development,
+                baseUrl: 'http://127.0.0.1:8080',
+                enableLog: true,
+              ),
+            ),
+          ),
+          serviceHealthProvider.overrideWith(
+            (ref) async => const ServiceHealthInfo(
+              status: 'up',
+              serviceName: 'device-service',
+              serviceVersion: '1.0.0',
+              modelStatus: 'ready',
+              serverTime: '2026-03-08T10:00:00+08:00',
+            ),
+          ),
+          deviceStateProvider.overrideWith(
+            (ref) async => const DeviceStateInfo(
+              deviceId: 'dev_1',
+              deviceName: '石斛培育柜',
+              temperature: 24.5,
+              humidity: 82.0,
+              light: 1500,
+              mq2: 18,
+              errorCode: 0,
+              ledOn: true,
+              updatedAt: 1741399200000,
+            ),
+          ),
+          authControllerProvider.overrideWith(
+            () => _TestAuthController(initialState: const AuthState()),
+          ),
+          rememberedAccountControllerProvider.overrideWith(
+            () => rememberedAccountController,
+          ),
+          historyControllerProvider.overrideWith(
+            () =>
+                _TestHistoryController(initialRecords: const <HistoryRecord>[]),
+          ),
+        ],
+        child: const MaterialApp(home: SettingsPage()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final clearRememberedButton = find.widgetWithText(FilledButton, '清除记住账号');
+    await tester.tap(clearRememberedButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('清除记住的账号'), findsOneWidget);
+
+    await tester.tap(find.text('确认'));
+    await tester.pumpAndSettle();
+
+    expect(rememberedAccountController.clearCount, 1);
+    expect(find.text('当前未保存'), findsOneWidget);
   });
 }
 
@@ -273,5 +376,21 @@ class _TestHistoryController extends HistoryController {
   Future<void> clearAll() async {
     clearAllCount += 1;
     state = const AsyncData(<HistoryRecord>[]);
+  }
+}
+
+class _TestRememberedAccountController extends RememberedAccountController {
+  _TestRememberedAccountController({required this.initialRememberedAccount});
+
+  final String? initialRememberedAccount;
+  int clearCount = 0;
+
+  @override
+  Future<String?> build() async => initialRememberedAccount;
+
+  @override
+  Future<void> clear() async {
+    clearCount += 1;
+    state = const AsyncData(null);
   }
 }

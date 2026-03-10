@@ -26,7 +26,7 @@ class RealtimeControlsSection extends StatelessWidget {
 
     return CommonCard(
       title: '运行明细与远程控制',
-      subtitle: '设备状态来自 /api/status，LED 开关通过 /api/ops/led 提交。',
+      subtitle: '在同一视图中核对设备身份、运行状态与补光控制结果。',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -81,8 +81,8 @@ class RealtimeControlsSection extends StatelessWidget {
                       deviceState == null
                           ? '当前还没有设备状态，暂时无法下发控制命令。'
                           : !deviceState.canControlLed
-                          ? '后端要求 LED 指令必须携带非空 deviceId，当前先等待设备状态补齐后再开放控制。'
-                          : '后端返回 202 Accepted 后，前端会继续刷新并等待状态回写。',
+                          ? '当前设备身份尚未补齐，待状态完整回传后再开放控制。'
+                          : '指令提交后界面会继续刷新，并等待设备状态回写。',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],

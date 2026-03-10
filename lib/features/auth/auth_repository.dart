@@ -41,7 +41,7 @@ AppSettings _resolveSettings(Ref ref, EnvConfig envConfig) {
 
 /// 认证仓储统一入口。
 abstract class AuthRepository {
-  /// 当前仓储是否为 mock 模式。
+  /// 当前仓储是否为联调模式。
   bool get isMockMode;
 
   /// 当前登录模式。

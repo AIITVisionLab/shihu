@@ -24,8 +24,8 @@ class ServiceHealthRepository {
       if (normalized == 'ok') {
         return ServiceHealthInfo(
           status: 'up',
-          serviceName: 'iot-onenet',
-          serviceVersion: 'web',
+          serviceName: '设备运行服务',
+          serviceVersion: '标准部署',
           modelStatus: 'ready',
           serverTime: DateTime.now().toIso8601String(),
         );

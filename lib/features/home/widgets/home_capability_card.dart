@@ -9,27 +9,26 @@ class HomeCapabilityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const CommonCard(
-      title: '当前后端能力',
-      subtitle: '以下链路已经按真实服务收口，并由统一客户端直接承接。',
+      title: '当前可用能力',
+      subtitle: '以下链路已经稳定接入统一服务，可直接用于日常值守与排障。',
       child: Column(
         children: <Widget>[
           _CapabilityRow(
             icon: Icons.lock_outline_rounded,
             title: '认证会话',
-            description:
-                '通过 /api/login、/api/register、/api/check-login 和 /api/logout 维护 HttpSession + Cookie 登录态。',
+            description: '支持登录、账号开通、会话校验与安全退出，保证设备权限按账号闭环管理。',
           ),
           SizedBox(height: 14),
           _CapabilityRow(
             icon: Icons.monitor_heart_outlined,
             title: '设备监控',
-            description: '通过 /api/status 获取设备名称、温湿度、光照、MQ2、错误码、LED 状态和更新时间。',
+            description: '统一呈现设备名称、温湿度、光照、MQ2、告警等级、补光状态和最近更新时间。',
           ),
           SizedBox(height: 14),
           _CapabilityRow(
             icon: Icons.toggle_on_outlined,
             title: '运维控制',
-            description: '通过 /api/ops/led 提交补光命令，并在设置页通过 /api/health 做健康检查。',
+            description: '支持补光控制、状态回写等待与服务健康巡检，减少来回切页操作。',
           ),
         ],
       ),

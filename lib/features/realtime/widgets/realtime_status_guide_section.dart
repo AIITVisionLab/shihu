@@ -14,7 +14,7 @@ class RealtimeStatusGuideSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return CommonCard(
       title: '状态说明',
-      subtitle: '这一组说明与后端静态控制台保持一致，用于解释错误码展示语义。',
+      subtitle: '用于解释设备异常等级与错误码语义，帮助值守人员快速判断处理优先级。',
       child: Column(
         children: <Widget>[
           _GuideItem(
@@ -41,7 +41,7 @@ class RealtimeStatusGuideSection extends StatelessWidget {
           _GuideItem(
             icon: Icons.help_outline_rounded,
             title: '其他情况',
-            description: '当前前端按未知状态展示，用于覆盖后端尚未定义或未返回的错误码。',
+            description: '当前按未知状态展示，用于覆盖尚未定义或未返回的错误码。',
             isActive:
                 deviceState == null ||
                 deviceState?.alertLevel == DeviceAlertLevel.unknown,

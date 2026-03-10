@@ -51,7 +51,7 @@ class _RealtimeDetectPageState extends ConsumerState<RealtimeDetectPage> {
     return AppWorkspaceScaffold(
       destination: AppWorkspaceDestination.realtime,
       title: '实时监控主控台',
-      subtitle: '围绕真实设备状态、异常分级和补光控制构建的一体化运维界面。',
+      subtitle: '围绕设备状态、异常分级和补光控制构建的一体化值守界面。',
       currentUser: currentUser,
       child: RefreshIndicator(
         onRefresh: _controller.refreshNow,

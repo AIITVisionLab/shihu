@@ -42,7 +42,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('注册'), findsNothing);
-    expect(find.text('填充演示账号'), findsOneWidget);
+    expect(find.text('填充联调账号'), findsOneWidget);
   });
 }
 

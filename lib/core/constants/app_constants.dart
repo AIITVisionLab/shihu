@@ -35,7 +35,7 @@ class AppConstants {
 
   /// 默认基础服务地址。
   ///
-  /// 当前仓库默认对接已经部署的 `web` 后端，
+  /// 当前仓库默认对接已部署的在线设备服务，
   /// 避免开发环境误连到本机无关端口。
   static const String defaultBaseUrl = 'http://101.35.79.76:8082';
 

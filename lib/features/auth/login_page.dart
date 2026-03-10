@@ -11,7 +11,7 @@ import 'package:sickandflutter/features/auth/widgets/auth_entry_shell.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_form_card.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_overview_panel.dart';
 
-/// 登录页，承接后端登录、注册和会话恢复入口。
+/// 登录页，承接账号登录、开通和会话恢复入口。
 class LoginPage extends ConsumerStatefulWidget {
   /// 创建登录页。
   const LoginPage({super.key});
@@ -119,10 +119,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _restoreRememberedAccount() async {
-    final repository = await ref.read(
-      rememberedAccountRepositoryProvider.future,
+    final rememberedAccount = await ref.read(
+      rememberedAccountControllerProvider.future,
     );
-    final rememberedAccount = repository.readRememberedAccount();
     if (!mounted || rememberedAccount == null || rememberedAccount.isEmpty) {
       return;
     }
@@ -134,16 +133,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _persistRememberedAccount() async {
-    final repository = await ref.read(
-      rememberedAccountRepositoryProvider.future,
-    );
     final normalizedAccount = _accountController.text.trim();
     if (_rememberAccount && normalizedAccount.isNotEmpty) {
-      await repository.saveRememberedAccount(normalizedAccount);
+      await ref
+          .read(rememberedAccountControllerProvider.notifier)
+          .save(normalizedAccount);
       return;
     }
 
-    await repository.clearRememberedAccount();
+    await ref.read(rememberedAccountControllerProvider.notifier).clear();
   }
 
   void _fillDemoCredentials() {

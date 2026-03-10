@@ -12,13 +12,13 @@ class AuthOverviewPanel extends StatelessWidget {
     super.key,
   });
 
-  /// 当前是否为演示登录模式。
+  /// 当前是否为联调登录模式。
   final bool isMockMode;
 
   /// 当前是否支持真实注册。
   final bool supportsRegister;
 
-  /// 点击“填充演示账号”后的回调。
+  /// 点击“填充联调账号”后的回调。
   final VoidCallback onFillDemo;
 
   @override
@@ -137,7 +137,7 @@ class AuthOverviewPanel extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '登录成功后会直接进入实时监控主控台，并依据 `/api/check-login` 的结果决定是否恢复访问。',
+                      '登录成功后会直接进入实时监控主控台，并依据当前会话状态决定是否自动恢复访问。',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         height: 1.6,
                         color: colorScheme.onSurfaceVariant,

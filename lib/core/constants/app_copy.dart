@@ -29,7 +29,7 @@ class AppCopy {
 
   /// 首页主说明。
   static const String homeOverview =
-      '当前版本围绕账号认证、环境监测、风险预警、远程执行和运维自检构建统一工作闭环；只有真实后端已经支撑的链路会作为主功能开放。';
+      '当前版本围绕账号认证、环境监测、风险预警、远程执行和运维自检构建统一工作闭环，所有主入口都对准当前版本可直接使用的业务能力。';
 
   /// 首页入口“系统总览”标题。
   static const String homePreviewTitle = '系统总览';
@@ -49,7 +49,7 @@ class AppCopy {
 
   /// 首页入口“实时监测”副标题。
   static const String homeRealtimeSubtitle =
-      '持续轮询 /api/status，展示设备环境、异常等级和 LED 控制入口。';
+      '持续同步设备环境、异常等级和补光控制状态，作为值守与处置的核心入口。';
 
   /// 首页入口“历史记录”标题。
   static const String homeHistoryTitle = '识别历史';
@@ -61,20 +61,20 @@ class AppCopy {
   static const String homeSettingsTitle = '运维设置';
 
   /// 首页入口“设置”副标题。
-  static const String homeSettingsSubtitle = '管理服务地址、健康检查、登录会话和本地数据。';
+  static const String homeSettingsSubtitle = '管理服务地址、健康检查、登录会话和本机数据。';
 
   /// 首页扩展位区标题。
   static const String homeExtensionTitle = '后续扩展能力';
 
   /// 首页扩展位区说明。
   static const String homeExtensionSubtitle =
-      '以下入口保留给独立识别服务并入后的能力扩展，当前不会作为真实后端主链路开放。';
+      '以下入口保留给独立识别服务并入后的能力扩展，当前不会作为主工作台能力开放。';
 
   /// 首页扩展位状态标签。
   static const String homeExtensionBadge = '待独立识别服务接入';
 
-  /// 首页能力标签：多端一致体验。
-  static const String homeMaterialPill = '多端一致体验';
+  /// 首页能力标签：统一工作台。
+  static const String homeMaterialPill = '统一工作台';
 
   /// 首页能力标签：Riverpod。
   static const String homeRiverpodPill = '状态分层';
@@ -90,7 +90,7 @@ class AppCopy {
       '登录或注册后可进入设备监控主控台，查看设备状态、提交补光指令，并在运维设置中完成健康检查与环境排查。';
 
   /// 登录页能力标签：自动恢复。
-  static const String authRestoreChip = '登录态自动恢复';
+  static const String authRestoreChip = '会话自动恢复';
 
   /// 登录页能力标签：401 回退。
   static const String authUnauthorizedChip = '状态失效自动回退';
@@ -101,24 +101,24 @@ class AppCopy {
   /// 登录页能力标签：真实接口注册。
   static const String authRegisterChip = '账号在线开通';
 
-  /// 演示登录模式标题。
-  static const String authMockModeTitle = '当前为演示登录模式';
+  /// 联调登录模式标题。
+  static const String authMockModeTitle = '当前为联调登录模式';
 
-  /// 演示账号说明。
-  static const String authMockAccountHint = '演示账号：demo\n演示密码：demo123456';
+  /// 联调账号说明。
+  static const String authMockAccountHint = '联调账号：demo\n联调密码：demo123456';
 
-  /// 演示账号显示名。
-  static const String authMockDisplayName = '演示账号';
+  /// 联调账号显示名。
+  static const String authMockDisplayName = '联调账号';
 
-  /// 填充演示账号按钮文案。
-  static const String authFillDemoAccount = '填充演示账号';
+  /// 填充联调账号按钮文案。
+  static const String authFillDemoAccount = '填充联调账号';
 
-  /// 真实模式注册面板标题。
-  static const String authRegisterPanelTitle = '真实后端模式支持注册';
+  /// 在线服务注册面板标题。
+  static const String authRegisterPanelTitle = '在线账号开通';
 
-  /// 真实模式注册面板说明。
+  /// 在线服务注册面板说明。
   static const String authRegisterPanelDescription =
-      '当前已对接 /api/register，可在同一张登录卡片内切换到注册模式完成账号创建。';
+      '当前账号可直接在线开通，开通完成后回到登录表单即可继续进入系统。';
 
   /// 登录卡片标题。
   static const String authLoginCardTitle = '平台登录';
@@ -141,8 +141,8 @@ class AppCopy {
   /// 真实接口模式密码占位。
   static const String authPasswordHint = '请输入密码';
 
-  /// 演示接口模式密码占位。
-  static const String authMockPasswordHint = '演示密码或自定义 6 位以上密码';
+  /// 联调接口模式密码占位。
+  static const String authMockPasswordHint = '联调密码或 6 位以上自定义密码';
 
   /// 确认密码输入框标签。
   static const String authConfirmPasswordLabel = '确认密码';
@@ -228,9 +228,9 @@ class AppCopy {
   /// 账号或密码不正确提示。
   static const String authCredentialInvalid = '账号或密码不正确，请检查后重试。';
 
-  /// 演示模式下不开放注册提示。
+  /// 联调模式下不开放注册提示。
   static const String authRegisterUnavailableInMock =
-      '当前为演示登录模式，注册入口仅在真实后端模式开放。';
+      '当前为联调登录模式，账号开通仅在在线服务模式开放。';
 
   /// 注册规则说明。
   static const String authRegisterRules = '用户名需为 3-32 位字母、数字或下划线，密码需为 6-32 位。';
@@ -354,7 +354,7 @@ class AppCopy {
   static String detectReadImageFailed(Object error) => '读取图片失败：$error';
 
   /// 启动初始化说明。
-  static const String splashBootstrapping = '正在初始化环境配置、本地状态和演示信息...';
+  static const String splashBootstrapping = '正在初始化环境配置、本地状态和账号信息...';
 
   /// 启动失败重试按钮。
   static const String splashRetry = '重试初始化';
@@ -414,7 +414,7 @@ class AppCopy {
   static const String settingsHealthTitle = '服务健康检查';
 
   /// 本地数据标题。
-  static const String settingsLocalDataTitle = '本地数据';
+  static const String settingsLocalDataTitle = '本机数据';
 
   /// 登录会话标题。
   static const String settingsSessionTitle = '登录会话';
@@ -426,35 +426,35 @@ class AppCopy {
   static const String settingsLogoutTitle = '退出登录';
 
   /// 退出登录确认提示。
-  static const String settingsLogoutMessage =
-      '退出后需要重新登录才能继续访问设备监控、远程控制和识别扩展入口，是否继续？';
+  static const String settingsLogoutMessage = '退出后需要重新登录才能继续访问设备监控和运维功能，是否继续？';
 
   /// 确认退出登录按钮。
   static const String settingsLogoutConfirm = '确认退出';
 
-  /// 清空历史记录标题。
-  static const String settingsClearHistoryTitle = '清空历史记录';
+  /// 清理识别历史标题。
+  static const String settingsClearHistoryTitle = '清理识别历史';
 
-  /// 清空历史记录确认提示。
-  static const String settingsClearHistoryMessage = '该操作不可恢复，是否继续？';
+  /// 清理识别历史确认提示。
+  static const String settingsClearHistoryMessage =
+      '该操作会删除本机已保存的历史识别记录，且不可恢复，是否继续？';
 
-  /// 历史记录已清空提示。
-  static const String settingsHistoryCleared = '历史记录已清空。';
+  /// 识别历史已清理提示。
+  static const String settingsHistoryCleared = '识别历史已清理。';
 
-  /// 清空历史记录按钮。
-  static const String settingsClearHistory = '清空历史记录';
+  /// 清理识别历史按钮。
+  static const String settingsClearHistory = '清理识别历史';
 
   /// 恢复默认设置按钮。
   static const String settingsResetDefaults = '恢复默认设置';
 
   /// 修改服务地址标题。
-  static const String settingsEditBaseUrlTitle = '修改 Base URL';
+  static const String settingsEditBaseUrlTitle = '修改服务地址';
 
   /// 修改按钮。
   static const String settingsEdit = '修改';
 
-  /// Base URL 字段标题。
-  static const String settingsBaseUrl = 'Base URL';
+  /// 服务地址字段标题。
+  static const String settingsBaseUrl = '服务地址';
 
   /// 连接超时字段标题。
   static const String settingsConnectTimeout = '连接超时';
@@ -535,13 +535,14 @@ class AppCopy {
   static const String settingsServiceConfigReadonly = '正式环境默认隐藏高风险配置项。';
 
   /// 本地数据说明。
-  static const String settingsLocalDataSubtitle = '危险操作都必须显式确认，避免误删本地识别记录。';
+  static const String settingsLocalDataSubtitle =
+      '用于管理当前设备上的账号回填与本地配置，危险操作都需要显式确认。';
 
   /// 运行环境说明。
-  static const String settingsOverviewSubtitle = '优先确认当前环境、平台和版本，再进行接口联调与回归。';
+  static const String settingsOverviewSubtitle = '优先确认当前环境、平台和版本，再进行巡检和排障。';
 
   /// 健康检查说明。
-  static const String settingsHealthSubtitle = '用于联调和排障，可手动刷新当前服务状态。';
+  static const String settingsHealthSubtitle = '用于运行巡检与排障，可手动刷新当前服务状态。';
 
   /// 服务名称字段标题。
   static const String settingsServiceName = '服务名称';
@@ -551,4 +552,23 @@ class AppCopy {
 
   /// 服务时间字段标题。
   static const String settingsServiceTime = '服务时间';
+
+  /// 记住账号字段标题。
+  static const String settingsRememberedAccount = '记住的账号';
+
+  /// 未保存记住账号。
+  static const String settingsRememberedAccountMissing = '当前未保存';
+
+  /// 清除记住账号标题。
+  static const String settingsClearRememberedAccountTitle = '清除记住的账号';
+
+  /// 清除记住账号确认提示。
+  static const String settingsClearRememberedAccountMessage =
+      '清除后，登录页将不再自动回填账号，是否继续？';
+
+  /// 已清除记住账号提示。
+  static const String settingsRememberedAccountCleared = '已清除记住的账号。';
+
+  /// 清除记住账号按钮。
+  static const String settingsClearRememberedAccount = '清除记住账号';
 }

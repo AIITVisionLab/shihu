@@ -97,11 +97,9 @@ class AppWorkspaceScaffold extends StatelessWidget {
                 );
                 final content = Expanded(
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      isCompact ? 0 : 0,
-                      0,
-                      isCompact ? 0 : 20,
-                      isCompact ? 0 : 20,
+                    padding: EdgeInsets.only(
+                      right: isCompact ? 0 : 20,
+                      bottom: isCompact ? 0 : 20,
                     ),
                     child: Center(
                       child: ConstrainedBox(

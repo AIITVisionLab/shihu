@@ -54,10 +54,10 @@ extension BuildFlavorX on BuildFlavor {
 
 /// 登录模式枚举。
 enum AuthLoginMode {
-  /// 真实接口登录。
+  /// 在线服务登录。
   real,
 
-  /// 受控演示登录。
+  /// 联调登录。
   mock,
 }
 
@@ -65,9 +65,11 @@ enum AuthLoginMode {
 AuthLoginMode authLoginModeFromValue(String? value) {
   switch (value) {
     case 'mock':
+    case '联调登录':
     case '受控演示登录':
       return AuthLoginMode.mock;
     case 'real':
+    case '在线服务登录':
     case '真实接口登录':
     default:
       return AuthLoginMode.real;
@@ -90,9 +92,9 @@ extension AuthLoginModeX on AuthLoginMode {
   String get label {
     switch (this) {
       case AuthLoginMode.real:
-        return '真实接口登录';
+        return '在线服务登录';
       case AuthLoginMode.mock:
-        return '受控演示登录';
+        return '联调登录';
     }
   }
 }

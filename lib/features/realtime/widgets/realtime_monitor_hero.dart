@@ -88,7 +88,7 @@ class _HeroSummary extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
-            '后端设备状态主链路',
+            '设备运行主链路',
             style: theme.textTheme.labelLarge?.copyWith(
               color: colorScheme.onPrimary,
             ),
@@ -107,8 +107,8 @@ class _HeroSummary extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           deviceState == null
-              ? '当前页面会持续轮询 /api/status。若后端尚未收到设备上报，这里会先显示等待状态。'
-              : '当前页面会持续轮询 /api/status，并依据错误码把设备状态映射为正常、预警和告警视图。',
+              ? '当前页面会持续同步设备状态；若现场设备尚未上报，这里会先显示等待状态。'
+              : '当前页面会持续同步设备状态，并依据错误码把运行情况映射为正常、预警和告警视图。',
           style: theme.textTheme.titleMedium?.copyWith(
             color: colorScheme.onPrimary.withValues(alpha: 0.92),
             height: 1.6,
@@ -224,7 +224,7 @@ class _HeroStatusBanner extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            deviceState?.alertDescription ?? '尚未收到后端的设备状态上报，当前先保持等待视图。',
+            deviceState?.alertDescription ?? '尚未收到设备状态上报，当前先保持等待视图。',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: colorScheme.onPrimary.withValues(alpha: 0.92),
               height: 1.7,
@@ -238,7 +238,7 @@ class _HeroStatusBanner extends StatelessWidget {
           const SizedBox(height: 12),
           _StatusMiniRow(label: 'LED 状态', value: deviceState?.ledLabel ?? '--'),
           const SizedBox(height: 12),
-          const _StatusMiniRow(label: '状态来源', value: '/api/status'),
+          const _StatusMiniRow(label: '状态来源', value: '在线设备上报'),
         ],
       ),
     );

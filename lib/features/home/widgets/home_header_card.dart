@@ -165,7 +165,7 @@ class _HeaderScoreCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            '联调基线',
+            '运行基线',
             style: textTheme.labelLarge?.copyWith(
               color: const Color(0xFFE6EEE0),
             ),
@@ -180,18 +180,18 @@ class _HeaderScoreCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '登录、状态、健康检查、LED 控制已经全部切到真实后端链路。',
+            '账号、状态、健康检查与补光控制已经全部接入在线服务。',
             style: textTheme.bodyMedium?.copyWith(
               color: const Color(0xFFE1E9DC),
               height: 1.7,
             ),
           ),
           const SizedBox(height: 20),
-          const _ScoreRow(label: '会话恢复', value: '已接通'),
+          const _ScoreRow(label: '会话恢复', value: '可用'),
           const SizedBox(height: 10),
-          const _ScoreRow(label: '设备状态', value: '轮询中'),
+          const _ScoreRow(label: '设备状态', value: '同步中'),
           const SizedBox(height: 10),
-          const _ScoreRow(label: '远程控制', value: '已联调'),
+          const _ScoreRow(label: '远程控制', value: '在线'),
         ],
       ),
     );

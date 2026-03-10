@@ -32,7 +32,7 @@ class HomePage extends ConsumerWidget {
 
     return AppWorkspaceScaffold(
       destination: AppWorkspaceDestination.home,
-      title: '平台首页',
+      title: '工作台首页',
       subtitle: '汇总当前设备链路、关键入口和运行基线，作为值守与排障的统一起点。',
       currentUser: currentUser,
       child: ListView(
@@ -130,7 +130,7 @@ class _ActionSectionHeader extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '所有入口都直接落到真实可用页面，不再暴露后端没有支撑的能力。',
+            '所有入口都直接落到当前版本可直接使用的业务能力，不再暴露未接入模块。',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),

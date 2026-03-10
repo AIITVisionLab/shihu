@@ -50,10 +50,10 @@ class AuthFormCard extends StatelessWidget {
   /// 当前是否正在提交。
   final bool isSubmitting;
 
-  /// 当前是否为演示模式。
+  /// 当前是否为联调模式。
   final bool isMockMode;
 
-  /// 当前后端登录模式标签。
+  /// 当前登录模式标签。
   final String loginModeLabel;
 
   /// 当前表单模式。
@@ -250,7 +250,7 @@ class AuthFormCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                '当前为演示登录模式，仅开放登录体验；切换到真实后端模式后，同一张卡片会开放注册流程。',
+                '当前为联调登录模式，仅开放登录体验；接入在线服务后，同一张卡片会开放账号开通流程。',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   height: 1.6,
                   color: colorScheme.onSurfaceVariant,
@@ -280,8 +280,8 @@ class _FormHero extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final title = formMode.isRegister ? '创建新账号' : AppCopy.authLoginCardTitle;
     final description = formMode.isRegister
-        ? '注册成功后会返回登录模式，并沿用同一套认证链路进入实时监控主控台。'
-        : '登录成功后直接进入设备主控台，后续访问会优先基于服务端会话恢复。';
+        ? '账号开通成功后会返回登录模式，并沿用同一套认证链路进入实时监控主控台。'
+        : '登录成功后直接进入设备主控台，后续访问会优先恢复上一轮有效会话。';
 
     return Container(
       width: double.infinity,
@@ -314,7 +314,7 @@ class _FormHero extends StatelessWidget {
                 icon: isMockMode
                     ? Icons.science_outlined
                     : Icons.cloud_done_outlined,
-                label: isMockMode ? '演示模式' : '真实后端',
+                label: isMockMode ? '联调模式' : '在线服务',
               ),
               _StatusPill(
                 icon: Icons.info_outline_rounded,
@@ -473,7 +473,7 @@ class _RememberAccountTile extends StatelessWidget {
         value: rememberAccount,
         onChanged: isSubmitting ? null : (value) => onChanged(value ?? false),
         title: const Text('记住用户名'),
-        subtitle: Text(isMockMode ? '支持演示账号快速回填' : '下次打开登录页自动回填账号'),
+        subtitle: Text(isMockMode ? '支持联调账号快速回填' : '下次打开登录页自动回填账号'),
         controlAffinity: ListTileControlAffinity.leading,
       ),
     );

@@ -9,6 +9,7 @@ import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/core/utils/platform_utils.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
+import 'package:sickandflutter/features/auth/remembered_account_repository.dart';
 import 'package:sickandflutter/features/history/history_repository.dart';
 import 'package:sickandflutter/features/settings/device_state_repository.dart';
 import 'package:sickandflutter/features/settings/service_health_repository.dart';
@@ -35,6 +36,9 @@ class SettingsPage extends ConsumerWidget {
     final envConfig = ref.watch(envConfigProvider);
     final serviceHealthAsync = ref.watch(serviceHealthProvider);
     final deviceStateAsync = ref.watch(deviceStateProvider);
+    final rememberedAccountAsync = ref.watch(
+      rememberedAccountControllerProvider,
+    );
     final authState = ref.watch(authControllerProvider);
     final currentUser =
         authState.session?.user.displayName ??
@@ -44,7 +48,7 @@ class SettingsPage extends ConsumerWidget {
     return AppWorkspaceScaffold(
       destination: AppWorkspaceDestination.settings,
       title: AppCopy.settingsPageTitle,
-      subtitle: '查看运行环境、服务健康、设备状态与本地配置，集中处理日常排障动作。',
+      subtitle: '查看运行环境、服务健康、设备状态与本机配置，集中处理日常排障动作。',
       currentUser: currentUser,
       maxContentWidth: 940,
       child: settingsAsync.when(
@@ -163,6 +167,57 @@ class SettingsPage extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
               SettingsLocalDataCard(
+                rememberedAccount: rememberedAccountAsync.asData?.value,
+                onClearRememberedAccount: () async {
+                  final rememberedAccount =
+                      rememberedAccountAsync.asData?.value;
+                  if (rememberedAccount == null || rememberedAccount.isEmpty) {
+                    return;
+                  }
+
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: const Text(
+                        AppCopy.settingsClearRememberedAccountTitle,
+                      ),
+                      content: const Text(
+                        AppCopy.settingsClearRememberedAccountMessage,
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(false),
+                          child: const Text(AppCopy.cancel),
+                        ),
+                        FilledButton(
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(true),
+                          child: const Text(AppCopy.confirm),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirmed != true) {
+                    return;
+                  }
+
+                  await ref
+                      .read(rememberedAccountControllerProvider.notifier)
+                      .clear();
+                  if (!context.mounted) {
+                    return;
+                  }
+
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      const SnackBar(
+                        content: Text(AppCopy.settingsRememberedAccountCleared),
+                      ),
+                    );
+                },
                 onClearHistory: () async {
                   final confirmed = await showDialog<bool>(
                     context: context,

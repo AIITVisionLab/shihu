@@ -61,7 +61,7 @@ class AboutPage extends ConsumerWidget {
           OutlinedButton.icon(
             onPressed: () => context.goNamed(AppRoutes.home),
             icon: const Icon(Icons.dashboard_outlined),
-            label: const Text('平台首页'),
+            label: const Text('工作台首页'),
           ),
         FilledButton.icon(
           onPressed: () => context.goNamed(

@@ -19,8 +19,8 @@ void main() {
       final healthInfo = await repository.fetchHealth();
 
       expect(healthInfo.status, 'up');
-      expect(healthInfo.serviceName, 'iot-onenet');
-      expect(healthInfo.serviceVersion, 'web');
+      expect(healthInfo.serviceName, '设备运行服务');
+      expect(healthInfo.serviceVersion, '标准部署');
       expect(healthInfo.modelStatus, 'ready');
       expect(apiClient.capturedPath, '/api/health');
     },
