@@ -4,6 +4,7 @@
 
 - 阶段 1：`STM32F429 -> RK3568 -> OneNET`
 - 阶段 2：`K230 RTSP(H264) -> RK3568/go2rtc -> WebRTC/MSE/HLS -> 浏览器`
+- 阶段 3：`K230/STM32 -> agri-context-bridge -> OpenClaw agri-orchestrator -> 农业建议/问答`
 
 ## 目录结构
 
@@ -43,6 +44,16 @@ docs/      架构与协作文档
 - `POST /api/ai`
 - `GET /healthz`
 
+农业桥接服务独立提供：
+
+- `POST /api/agri/events/vision`
+- `POST /api/agri/events/modbus-snapshot`
+- `POST /api/agri/decisions/analyze`
+- `POST /api/agri/chat`
+- `GET /api/agri/reports/latest`
+- `GET /api/agri/reports/{reportId}`
+- `GET /api/agri/stream?sessionId=...`
+
 成功返回格式：
 
 ```json
@@ -61,6 +72,16 @@ docs/      架构与协作文档
 
 - `http://101.35.79.76:19081/api/edge/ai-detections`
 
+## OpenClaw 农业大脑
+
+- `agri-context-bridge` 是独立本地服务，默认监听 `127.0.0.1:18081`
+- 桥接服务负责归一化视觉/传感事件、存储 SQLite、组装上下文并调用 OpenClaw
+- OpenClaw 使用独立 agent：`agri-orchestrator`
+- 当前只做“建议、解释、报告、问答”，不做物理执行
+- 推荐动作统一带：
+  - `executeEnabled = false`
+  - `executionStatus = "disabled_by_policy"`
+
 ## 运行方式
 
 网关服务：
@@ -72,6 +93,15 @@ docs/      架构与协作文档
    - `sudo cp systemd/edgelink-gateway.service /etc/systemd/system/`
    - `sudo systemctl daemon-reload`
    - `sudo systemctl enable --now edgelink-gateway`
+
+农业桥接服务：
+
+1. 检查配置：`python3 src/agri_context_bridge.py --config config/agri-context-bridge.ini --check-config`
+2. 前台运行：`./scripts/run_agri_context_bridge.sh`
+3. systemd 运行：
+   - `sudo cp systemd/agri-context-bridge.service /etc/systemd/system/`
+   - `sudo systemctl daemon-reload`
+   - `sudo systemctl enable --now agri-context-bridge`
 
 视频服务：
 
@@ -92,6 +122,7 @@ docs/      架构与协作文档
 
 - Java 后端/前端视频协作说明：`docs/java-video-collaboration.md`
 - Java 后端接收 AI 结果说明：`docs/java-ai-collaboration.md`
+- Java 后端 / APP 对接农业大脑：`docs/java-openclaw-agri-collaboration.md`
 - K230 与腾讯云协同配置：`docs/k230-tencent-cloud-cooperation.md`
 - 视频阶段说明：`docs/video-v1.md`
 

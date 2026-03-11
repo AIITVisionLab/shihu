@@ -1,0 +1,4 @@
+config/agri-knowledge/raw/**/*.pdf
+config/agri-knowledge/raw/**/*.txt
+config/agri-knowledge/curated/extracted/**/*.pdf
+config/agri-knowledge/curated/extracted/**/*.txt

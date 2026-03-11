@@ -70,3 +70,103 @@ curl -sS -X POST http://127.0.0.1:8080/api/uplink \
 
 - K230 主码流必须为 `H264`
 - 如果音频与浏览器不兼容，先关闭音频，只验证视频链路
+
+## 阶段 3：OpenClaw 农业边缘大脑
+
+### 1. 配置检查
+
+```bash
+python3 src/agri_context_bridge.py --config config/agri-context-bridge.ini --check-config
+```
+
+预期：
+
+- 返回 `config ok`
+- 自动创建 SQLite 所在目录
+- `config/agri-profiles.json` 可被正常读取
+
+### 2. 视觉事件接入
+
+```bash
+curl -sS -X POST http://127.0.0.1:18081/api/agri/events/vision \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "event":"pest_detected",
+    "type":"spider_mite",
+    "confidence":0.85,
+    "deviceId":"k230-01",
+    "cropId":"shihu",
+    "zoneId":"default-greenhouse"
+  }'
+```
+
+预期：
+
+- 返回 `{"code":0,"msg":"accepted",...}`
+- `analysisTriggered = true`
+
+### 3. 传感快照接入
+
+```bash
+curl -sS -X POST http://127.0.0.1:18081/api/agri/events/modbus-snapshot \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "deviceId":"stm32f4",
+    "messageId":101,
+    "ts":1710000000123,
+    "type":"MODBUS_SNAPSHOT",
+    "payload":{
+      "cycleId":12,
+      "slave1":{"online":1,"valid":1,"lightAdc":1024},
+      "slave2":{"online":1,"valid":1,"temperature":32,"humidity":40},
+      "slave3":{"online":1,"valid":1,"mq2Ppm":350}
+    }
+  }'
+```
+
+预期：
+
+- 返回 `{"code":0,"msg":"accepted",...}`
+- 最新环境状态可从 `GET /api/agri/tools/latest-environment` 读到
+
+### 4. 主动分析
+
+```bash
+curl -sS -X POST http://127.0.0.1:18081/api/agri/decisions/analyze \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "sessionId":"agri-analysis:default-greenhouse",
+    "cropId":"shihu",
+    "zoneId":"default-greenhouse",
+    "query":"当前发现红蜘蛛迹象，请生成处理建议。"
+  }'
+```
+
+预期：
+
+- 返回结构化报告对象
+- `recommendedActions[*].executeEnabled = false`
+- `recommendedActions[*].executionStatus = "disabled_by_policy"`
+
+### 5. 交互式问答
+
+```bash
+curl -sS -X POST http://127.0.0.1:18081/api/agri/chat \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "sessionId":"app-user-001",
+    "query":"今天石斛长势怎么样？需要浇水吗？"
+  }'
+```
+
+预期：
+
+- 返回 `mode = "chat"` 的报告对象
+- `humanMessage` 为适合 APP 展示的自然语言
+- 数据不足时明确表达不确定性
+
+### 6. 安全验证
+
+- `POST /api/agri/actions/execute` 返回 `501`
+- OpenClaw `agri-orchestrator` 不允许写文件、改配置、执行系统命令
+- 决策报告中可以出现推荐动作，但不得直接执行

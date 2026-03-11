@@ -77,6 +77,16 @@ class AiForwardConfig:
 
 
 @dataclass
+class AgriForwardConfig:
+    enabled_sensor: bool = False
+    enabled_vision: bool = False
+    target_base_url: str = "http://127.0.0.1:18081"
+    timeout_s: float = 2.0
+    retry_interval_ms: int = 1000
+    only_non_empty_vision: bool = True
+
+
+@dataclass
 class VideoSourceSwitchConfig:
     enabled: bool = True
     device_id: str = "k230"
@@ -109,10 +119,17 @@ class GatewayState:
         self.last_command: Optional[CloudCommand] = None
         self.pending_publish = False
         self.pending_ai_forward: Optional[LatestAiResult] = None
+        self.pending_agri_sensor: Optional[LatestSnapshot] = None
+        self.pending_agri_vision: Optional[LatestAiResult] = None
         self.mqtt_connected = False
         self.ai_forward_enabled = False
+        self.agri_forward_enabled = False
         self.last_ai_forward_ok: Optional[bool] = None
         self.last_ai_forward_ms = 0
+        self.last_agri_sensor_forward_ok: Optional[bool] = None
+        self.last_agri_sensor_forward_ms = 0
+        self.last_agri_vision_forward_ok: Optional[bool] = None
+        self.last_agri_vision_forward_ms = 0
         self.current_k230_stream_ip = ""
         self.pending_k230_stream_ip = ""
         self.pending_k230_hit_count = 0
@@ -131,6 +148,8 @@ class GatewayApp:
         self._stop_event = threading.Event()
         self._ai_forward_event = threading.Event()
         self._ai_forward_thread: Optional[threading.Thread] = None
+        self._agri_forward_event = threading.Event()
+        self._agri_forward_thread: Optional[threading.Thread] = None
         self._video_switch_event = threading.Event()
         self._video_switch_thread: Optional[threading.Thread] = None
 
@@ -145,6 +164,7 @@ class GatewayApp:
         self.keepalive = config.getint("onenet", "keepalive", fallback=120)
         self.publish_qos = config.getint("onenet", "qos", fallback=0)
         self.ai_forward = self._load_ai_forward_config(config)
+        self.agri_forward = self._load_agri_forward_config(config)
         self.video_source_switch = self._load_video_source_switch_config(config)
 
         self.topic_post = f"$sys/{self.product_id}/{self.device_name}/thing/property/post"
@@ -153,6 +173,7 @@ class GatewayApp:
         self.topic_set_reply = f"$sys/{self.product_id}/{self.device_name}/thing/property/set_reply"
 
         self.state.ai_forward_enabled = self.ai_forward.enabled
+        self.state.agri_forward_enabled = self.agri_forward.enabled_sensor or self.agri_forward.enabled_vision
         self.state.current_k230_stream_ip = self._read_current_stream_ip()
 
     @staticmethod
@@ -183,6 +204,21 @@ class GatewayApp:
                 "video_source_switch", "min_switch_interval_ms", fallback=5000
             ),
             confirm_hits=config.getint("video_source_switch", "confirm_hits", fallback=2),
+        )
+
+    @staticmethod
+    def _load_agri_forward_config(config: configparser.ConfigParser) -> AgriForwardConfig:
+        return AgriForwardConfig(
+            enabled_sensor=config.getboolean("agri_forward", "enabled_sensor", fallback=False),
+            enabled_vision=config.getboolean("agri_forward", "enabled_vision", fallback=False),
+            target_base_url=config.get(
+                "agri_forward", "target_base_url", fallback="http://127.0.0.1:18081"
+            ).strip(),
+            timeout_s=config.getfloat("agri_forward", "timeout_s", fallback=2.0),
+            retry_interval_ms=config.getint("agri_forward", "retry_interval_ms", fallback=1000),
+            only_non_empty_vision=config.getboolean(
+                "agri_forward", "only_non_empty_vision", fallback=True
+            ),
         )
 
     def _build_mqtt_client(self) -> mqtt.Client:
@@ -272,18 +308,22 @@ class GatewayApp:
     def start(self) -> None:
         self._stop_event.clear()
         self._ai_forward_event.clear()
+        self._agri_forward_event.clear()
         self._video_switch_event.clear()
         self._mqtt_client.connect_async(self.broker, self.broker_port, keepalive=self.keepalive)
         self._mqtt_client.loop_start()
         self._start_http_server()
         if self.ai_forward.enabled:
             self._start_ai_forward_thread()
+        if self.agri_forward.enabled_sensor or self.agri_forward.enabled_vision:
+            self._start_agri_forward_thread()
         if self.video_source_switch.enabled:
             self._start_video_switch_thread()
 
     def stop(self) -> None:
         self._stop_event.set()
         self._ai_forward_event.set()
+        self._agri_forward_event.set()
         self._video_switch_event.set()
         if self._http_server is not None:
             self._http_server.shutdown()
@@ -292,6 +332,8 @@ class GatewayApp:
             self._http_thread.join(timeout=5)
         if self._ai_forward_thread is not None:
             self._ai_forward_thread.join(timeout=5)
+        if self._agri_forward_thread is not None:
+            self._agri_forward_thread.join(timeout=5)
         if self._video_switch_thread is not None:
             self._video_switch_thread.join(timeout=5)
         self._mqtt_client.loop_stop()
@@ -311,6 +353,24 @@ class GatewayApp:
             self.ai_forward.only_non_empty,
             self.ai_forward.retry_interval_ms,
             self.ai_forward.timeout_s,
+        )
+
+    def _start_agri_forward_thread(self) -> None:
+        if self._agri_forward_thread is not None and self._agri_forward_thread.is_alive():
+            return
+        self._agri_forward_thread = threading.Thread(
+            target=self._agri_forward_loop,
+            name="agri-forward",
+            daemon=True,
+        )
+        self._agri_forward_thread.start()
+        logging.info(
+            "agri forward enabled: sensor=%s vision=%s target=%s retry_interval_ms=%s timeout_s=%s",
+            self.agri_forward.enabled_sensor,
+            self.agri_forward.enabled_vision,
+            self.agri_forward.target_base_url,
+            self.agri_forward.retry_interval_ms,
+            self.agri_forward.timeout_s,
         )
 
     def _start_video_switch_thread(self) -> None:
@@ -338,6 +398,16 @@ class GatewayApp:
             if self._stop_event.is_set():
                 return
             self._forward_pending_ai_once()
+
+    def _agri_forward_loop(self) -> None:
+        timeout_s = max(self.agri_forward.retry_interval_ms, 100) / 1000.0
+        while not self._stop_event.is_set():
+            self._agri_forward_event.wait(timeout=timeout_s)
+            self._agri_forward_event.clear()
+            if self._stop_event.is_set():
+                return
+            self._forward_pending_agri_sensor_once()
+            self._forward_pending_agri_vision_once()
 
     def _forward_pending_ai_once(self) -> None:
         with self.state.lock:
@@ -386,6 +456,98 @@ class GatewayApp:
             status_code,
         )
 
+    def _post_json(self, target_url: str, payload: Dict[str, Any], timeout_s: float) -> int:
+        payload_text = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        request = Request(
+            target_url,
+            data=payload_text.encode("utf-8"),
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            method="POST",
+        )
+        with urlopen(request, timeout=timeout_s) as response:
+            status_code = getattr(response, "status", response.getcode())
+            response.read(1024)
+        if not 200 <= status_code < 300:
+            raise RuntimeError(f"unexpected status code: {status_code}")
+        return status_code
+
+    def _forward_pending_agri_sensor_once(self) -> None:
+        with self.state.lock:
+            pending = self.state.pending_agri_sensor
+        if pending is None or not pending.raw:
+            return
+
+        target_url = self.agri_forward.target_base_url.rstrip("/") + "/api/agri/events/modbus-snapshot"
+        message_id = pending.raw.get("messageId", "-")
+        try:
+            status_code = self._post_json(target_url, pending.raw, self.agri_forward.timeout_s)
+        except HTTPError as exc:
+            self._mark_agri_sensor_forward_failed(message_id, f"HTTP {exc.code}")
+            return
+        except URLError as exc:
+            self._mark_agri_sensor_forward_failed(message_id, str(exc.reason))
+            return
+        except Exception as exc:
+            self._mark_agri_sensor_forward_failed(message_id, str(exc))
+            return
+
+        with self.state.lock:
+            current = self.state.pending_agri_sensor
+            if current is not None and current.received_at_ms == pending.received_at_ms:
+                self.state.pending_agri_sensor = None
+            self.state.last_agri_sensor_forward_ok = True
+            self.state.last_agri_sensor_forward_ms = now_ms()
+        logging.info(
+            "agri sensor forwarded: target=%s messageId=%s status=%s",
+            target_url,
+            message_id,
+            status_code,
+        )
+
+    def _forward_pending_agri_vision_once(self) -> None:
+        with self.state.lock:
+            pending = self.state.pending_agri_vision
+        if pending is None or not pending.raw:
+            return
+
+        event_payload = self._build_agri_vision_event(pending.raw)
+        if event_payload is None:
+            with self.state.lock:
+                current = self.state.pending_agri_vision
+                if current is not None and current.received_at_ms == pending.received_at_ms:
+                    self.state.pending_agri_vision = None
+                self.state.last_agri_vision_forward_ok = True
+                self.state.last_agri_vision_forward_ms = now_ms()
+            return
+
+        target_url = self.agri_forward.target_base_url.rstrip("/") + "/api/agri/events/vision"
+        frame_id = pending.raw.get("frameId", "-")
+        try:
+            status_code = self._post_json(target_url, event_payload, self.agri_forward.timeout_s)
+        except HTTPError as exc:
+            self._mark_agri_vision_forward_failed(frame_id, f"HTTP {exc.code}")
+            return
+        except URLError as exc:
+            self._mark_agri_vision_forward_failed(frame_id, str(exc.reason))
+            return
+        except Exception as exc:
+            self._mark_agri_vision_forward_failed(frame_id, str(exc))
+            return
+
+        with self.state.lock:
+            current = self.state.pending_agri_vision
+            if current is not None and current.received_at_ms == pending.received_at_ms:
+                self.state.pending_agri_vision = None
+            self.state.last_agri_vision_forward_ok = True
+            self.state.last_agri_vision_forward_ms = now_ms()
+        logging.info(
+            "agri vision forwarded: target=%s frameId=%s detections=%s status=%s",
+            target_url,
+            frame_id,
+            len(pending.raw.get("detections", [])),
+            status_code,
+        )
+
     def _mark_ai_forward_failed(self, frame_id: Any, detection_count: int, error_text: str) -> None:
         with self.state.lock:
             self.state.last_ai_forward_ok = False
@@ -396,6 +558,61 @@ class GatewayApp:
             detection_count,
             error_text,
         )
+
+    def _mark_agri_sensor_forward_failed(self, message_id: Any, error_text: str) -> None:
+        with self.state.lock:
+            self.state.last_agri_sensor_forward_ok = False
+        logging.warning(
+            "agri sensor forward failed: target=%s messageId=%s error=%s",
+            self.agri_forward.target_base_url,
+            message_id,
+            error_text,
+        )
+
+    def _mark_agri_vision_forward_failed(self, frame_id: Any, error_text: str) -> None:
+        with self.state.lock:
+            self.state.last_agri_vision_forward_ok = False
+        logging.warning(
+            "agri vision forward failed: target=%s frameId=%s error=%s",
+            self.agri_forward.target_base_url,
+            frame_id,
+            error_text,
+        )
+
+    def _build_agri_vision_event(self, ai_body: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        detections = ai_body.get("detections")
+        if not isinstance(detections, list):
+            return None
+        if self.agri_forward.only_non_empty_vision and not detections:
+            return None
+
+        best: Dict[str, Any] = {}
+        best_confidence = -1.0
+        for item in detections:
+            if not isinstance(item, dict):
+                continue
+            confidence = item.get("confidence")
+            try:
+                numeric_confidence = float(confidence) if confidence is not None else 0.0
+            except (TypeError, ValueError):
+                numeric_confidence = 0.0
+            if numeric_confidence >= best_confidence:
+                best_confidence = numeric_confidence
+                best = item
+
+        event_type = str(best.get("className") or best.get("label") or "detected_object")
+        timestamp_ms = ai_body.get("timestampMs")
+        ts_value: Any = timestamp_ms if isinstance(timestamp_ms, (int, float)) else now_ms()
+        return {
+            "event": "pest_detected",
+            "type": event_type,
+            "confidence": max(best_confidence, 0.0),
+            "deviceId": ai_body.get("deviceId", "k230"),
+            "stream": ai_body.get("stream"),
+            "frameId": ai_body.get("frameId"),
+            "timestampMs": ts_value,
+            "rawDetections": detections,
+        }
 
     def _video_switch_loop(self) -> None:
         while not self._stop_event.is_set():
@@ -623,6 +840,19 @@ class GatewayApp:
                         ),
                         "lastAiForwardOk": self.server.app.state.last_ai_forward_ok,
                         "lastAiForwardMs": self.server.app.state.last_ai_forward_ms,
+                        "agriForwardEnabled": self.server.app.state.agri_forward_enabled,
+                        "agriSensorForwardPending": bool(
+                            self.server.app.state.pending_agri_sensor
+                            and self.server.app.state.pending_agri_sensor.raw
+                        ),
+                        "agriVisionForwardPending": bool(
+                            self.server.app.state.pending_agri_vision
+                            and self.server.app.state.pending_agri_vision.raw
+                        ),
+                        "lastAgriSensorForwardOk": self.server.app.state.last_agri_sensor_forward_ok,
+                        "lastAgriSensorForwardMs": self.server.app.state.last_agri_sensor_forward_ms,
+                        "lastAgriVisionForwardOk": self.server.app.state.last_agri_vision_forward_ok,
+                        "lastAgriVisionForwardMs": self.server.app.state.last_agri_vision_forward_ms,
                         "currentK230StreamIp": self.server.app.state.current_k230_stream_ip,
                         "pendingK230StreamIp": self.server.app.state.pending_k230_stream_ip,
                         "lastGo2rtcSwitchOk": self.server.app.state.last_go2rtc_switch_ok,
@@ -657,8 +887,12 @@ class GatewayApp:
             self.state.latest_snapshot = LatestSnapshot(raw=body, received_at_ms=now_ms())
             self._apply_snapshot_locked(payload)
             self.state.pending_publish = True
+            if self.agri_forward.enabled_sensor:
+                self.state.pending_agri_sensor = LatestSnapshot(raw=body, received_at_ms=now_ms())
 
         self._publish_pending_if_needed()
+        if self.agri_forward.enabled_sensor:
+            self._agri_forward_event.set()
         message_id = body.get("messageId", "-")
         logging.info("snapshot accepted: deviceId=%s messageId=%s", body.get("deviceId", "-"), message_id)
         return True, "accepted"
@@ -685,6 +919,11 @@ class GatewayApp:
                 else:
                     self.state.pending_ai_forward = LatestAiResult(raw=body, received_at_ms=received_at_ms)
                     queue_for_backend = True
+            if self.agri_forward.enabled_vision:
+                if self.agri_forward.only_non_empty_vision and not detections:
+                    pass
+                else:
+                    self.state.pending_agri_vision = LatestAiResult(raw=body, received_at_ms=received_at_ms)
 
         if queue_for_backend:
             logging.info(
@@ -699,6 +938,8 @@ class GatewayApp:
                 "ai result skipped because detections is empty: frameId=%s",
                 body.get("frameId", "-"),
             )
+        if self.agri_forward.enabled_vision and (detections or not self.agri_forward.only_non_empty_vision):
+            self._agri_forward_event.set()
 
         logging.info(
             "ai result accepted: deviceId=%s stream=%s frameId=%s detections=%s",
@@ -803,6 +1044,14 @@ class GatewayApp:
             parsed = urlparse(self.ai_forward.target_url)
             if parsed.scheme not in {"http", "https"} or not parsed.netloc:
                 raise ValueError(f"invalid ai_forward target_url: {self.ai_forward.target_url}")
+        if self.agri_forward.timeout_s <= 0:
+            raise ValueError("agri_forward timeout_s must be > 0")
+        if self.agri_forward.retry_interval_ms <= 0:
+            raise ValueError("agri_forward retry_interval_ms must be > 0")
+        if self.agri_forward.enabled_sensor or self.agri_forward.enabled_vision:
+            parsed = urlparse(self.agri_forward.target_base_url)
+            if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+                raise ValueError(f"invalid agri_forward target_base_url: {self.agri_forward.target_base_url}")
         if self.video_source_switch.stream_port <= 0:
             raise ValueError("video_source_switch stream_port must be > 0")
         if self.video_source_switch.confirm_hits <= 0:
@@ -819,7 +1068,7 @@ class GatewayApp:
                     "video_source_switch failed to parse current stream IP from go2rtc config"
                 )
         logging.info(
-            "config loaded: http=%s:%s broker=%s:%s device=%s video.enabled=%s ai_forward.enabled=%s video_source_switch.enabled=%s",
+            "config loaded: http=%s:%s broker=%s:%s device=%s video.enabled=%s ai_forward.enabled=%s agri_forward.sensor=%s agri_forward.vision=%s video_source_switch.enabled=%s",
             self.http_host,
             self.http_port,
             self.broker,
@@ -827,6 +1076,8 @@ class GatewayApp:
             self.device_name,
             self.config.getboolean("video", "enabled", fallback=False),
             self.ai_forward.enabled,
+            self.agri_forward.enabled_sensor,
+            self.agri_forward.enabled_vision,
             self.video_source_switch.enabled,
         )
 
@@ -836,7 +1087,7 @@ def load_config(config_path: str) -> configparser.ConfigParser:
     read_files = parser.read(config_path, encoding="utf-8")
     if not read_files:
         raise FileNotFoundError(f"config file not found: {config_path}")
-    for section in ("http", "onenet", "video", "ai_forward", "video_source_switch"):
+    for section in ("http", "onenet", "video", "ai_forward", "agri_forward", "video_source_switch"):
         if not parser.has_section(section):
             raise ValueError(f"missing config section: {section}")
     return parser

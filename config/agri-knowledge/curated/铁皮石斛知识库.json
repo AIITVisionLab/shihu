@@ -1,0 +1,226 @@
+{
+  "version": "2026-03-11",
+  "updatedAt": "2026-03-11T14:05:00+08:00",
+  "notes": [
+    "本知识库基于 raw 目录中的铁皮石斛文献第一批整理而成。",
+    "当前优先整理了能够稳定提取文本的文献；字体编码损坏严重的 PDF 暂未纳入结构化条目。",
+    "温室运行阈值和文献中的组培参数已分开存放，避免误把组培条件当成棚内控制目标。"
+  ],
+  "sources": [
+    {
+      "id": "paper_tissue_culture_progress_2015",
+      "title": "铁皮石斛组织培养研究进展",
+      "file": "raw/铁皮石斛组织培养研究进展.pdf",
+      "extractedText": "curated/extracted/铁皮石斛组织培养研究进展.txt",
+      "extractionQuality": "partial",
+      "usableFacts": [
+        "人工光型植物工厂中，组培苗适宜光照强度约 60~70 μmol/(m²·s)",
+        "92 μmol/(m²·s) 有利于多糖积累，但存在一定光抑制",
+        "组培快繁阶段 25℃ 有利于原球茎增殖",
+        "低温侧（文中提到约 23℃）更利于生根苗健壮生长"
+      ]
+    },
+    {
+      "id": "paper_substrate_selection_2015",
+      "title": "铁皮石斛组培苗移栽基质筛选试验",
+      "file": "raw/铁皮石斛组培苗移栽基质筛选试验.pdf",
+      "extractedText": "curated/extracted/铁皮石斛组培苗移栽基质筛选试验.txt",
+      "extractionQuality": "good",
+      "usableFacts": [
+        "松树皮:木屑=1:1 的移栽基质在 540 天后成活率最高，为 95.9%",
+        "该基质下平均分枝数 9.9、平均茎长 7.0 cm",
+        "松树皮:山核桃壳=1:1 的茎粗最大约 0.50 cm，但成活率最低，仅 73.5%"
+      ]
+    },
+    {
+      "id": "paper_additives_2014",
+      "title": "不同添加物及浓度对铁皮石斛组织培养的影响",
+      "file": "raw/不同添加物及浓度对铁皮石斛组织培养的影响.pdf",
+      "extractedText": "curated/extracted/不同添加物及浓度对铁皮石斛组织培养的影响.txt",
+      "extractionQuality": "good",
+      "usableFacts": [
+        "组培增殖阶段，马铃薯和木瓜乳有利于芽增殖，其中马铃薯效果更稳定",
+        "1/2 MS + NAA 0.2 mg/L + 蔗糖 30 g/L + 活性炭 0.5 g/L + 马铃薯 200 g/L 更利于芽增殖",
+        "生根阶段香蕉效果最好",
+        "1/2 MS + NAA 0.5 mg/L + 蔗糖 30 g/L + 活性炭 0.5 g/L + 香蕉 100 g/L 更利于生根"
+      ]
+    },
+    {
+      "id": "paper_sop_guangxi",
+      "title": "广西铁皮石斛规范化生产标准操作规程",
+      "file": "raw/广西铁皮石斛规范化生产标准操作规程.pdf",
+      "extractedText": "curated/extracted/广西铁皮石斛规范化生产标准操作规程.txt",
+      "extractionQuality": "unusable",
+      "usableFacts": []
+    },
+    {
+      "id": "paper_cultivation_overview",
+      "title": "铁皮石斛组织培养与栽培技术研究进展",
+      "file": "raw/铁皮石斛组织培养与栽培技术研究进展.pdf",
+      "extractedText": "curated/extracted/铁皮石斛组织培养与栽培技术研究进展.txt",
+      "extractionQuality": "unusable",
+      "usableFacts": []
+    },
+    {
+      "id": "baike_huoshan_shihu_2025",
+      "title": "霍山石斛_百度百科",
+      "url": "https://baike.baidu.com/item/%E9%9C%8D%E5%B1%B1%E7%9F%B3%E6%96%9B/6626209",
+      "dateUpdate": "2025-08-26 22:53:12",
+      "extractionQuality": "good",
+      "usableFacts": [
+        "霍山石斛为兰科石斛属多年生草本植物，学名 Dendrobium huoshanense",
+        "别名包括米斛、龙头凤尾草",
+        "喜荫蔽，怕直射阳光，偏好温暖多雨、云雾较多环境",
+        "多生于避风、背阴的山沟峭壁等环境",
+        "花期 5—6 月，果期 7—8 月",
+        "茎可入药，常见用途为益胃生津、滋阴清热"
+      ]
+    }
+  ],
+  "crops": {
+    "shihu": {
+      "name": "铁皮石斛",
+      "latinName": "Dendrobium officinale",
+      "aliases": ["石斛", "铁皮石斛", "Dendrobium officinale"],
+      "operationalTargets": {
+        "temperatureC": {
+          "min": 20,
+          "max": 30,
+          "source": "project_baseline"
+        },
+        "humidityPercent": {
+          "min": 55,
+          "max": 80,
+          "source": "project_baseline"
+        },
+        "light": {
+          "description": "温室运行以稳定散射光为主，避免暴晒",
+          "source": "project_baseline"
+        }
+      },
+      "knowledgeHighlights": [
+        {
+          "category": "温室运行",
+          "title": "当前项目采用的运行目标",
+          "detail": "棚内建议温度维持在 20~30℃、湿度维持在 55%~80%，以稳定散射光为主。",
+          "source": "project_baseline",
+          "applicability": "greenhouse_operation"
+        },
+        {
+          "category": "组培光照",
+          "title": "组培苗人工光照强度",
+          "detail": "文献指出组培苗在人工光型植物工厂中适宜光照强度约为 60~70 μmol/(m²·s)，92 μmol/(m²·s) 虽有利于多糖积累，但会出现一定光抑制。",
+          "source": "paper_tissue_culture_progress_2015",
+          "applicability": "tissue_culture"
+        },
+        {
+          "category": "组培温度",
+          "title": "组培快繁温度偏好",
+          "detail": "文献指出 25℃ 更利于原球茎增殖，较低温度侧更利于生根苗健壮生长。",
+          "source": "paper_tissue_culture_progress_2015",
+          "applicability": "tissue_culture"
+        },
+        {
+          "category": "移栽基质",
+          "title": "组培苗移栽基质建议",
+          "detail": "松树皮:木屑=1:1 在 540 天后成活率最高，为 95.9%，平均分枝数 9.9、平均茎长 7.0 cm，适合作为优先移栽基质。",
+          "source": "paper_substrate_selection_2015",
+          "applicability": "transplanting"
+        },
+        {
+          "category": "移栽基质风险",
+          "title": "高茎粗但低成活率的基质组合",
+          "detail": "松树皮:山核桃壳=1:1 虽然平均茎粗可达约 0.50 cm，但成活率最低，仅 73.5%，不宜作为优先方案。",
+          "source": "paper_substrate_selection_2015",
+          "applicability": "transplanting"
+        },
+        {
+          "category": "组培增殖",
+          "title": "芽增殖添加物建议",
+          "detail": "马铃薯和木瓜乳有利于芽增殖，其中 1/2 MS + NAA 0.2 mg/L + 蔗糖 30 g/L + 活性炭 0.5 g/L + 马铃薯 200 g/L 效果最好。",
+          "source": "paper_additives_2014",
+          "applicability": "tissue_culture"
+        },
+        {
+          "category": "组培生根",
+          "title": "生根添加物建议",
+          "detail": "香蕉更有利于诱导生根，其中 1/2 MS + NAA 0.5 mg/L + 蔗糖 30 g/L + 活性炭 0.5 g/L + 香蕉 100 g/L 效果最好。",
+          "source": "paper_additives_2014",
+          "applicability": "tissue_culture"
+        }
+      ],
+      "queryGuidance": {
+        "greenhouseQuestions": [
+          "优先结合传感器实时温湿度与 operationalTargets 进行判断",
+          "若用户询问温室管理建议，可引用 operationalTargets 和 greenhouse_operation 条目",
+          "不要把 tissue_culture 条目直接当成棚内控制阈值"
+        ],
+        "nurseryQuestions": [
+          "涉及组培、炼苗、移栽、基质、生根时，可引用 tissue_culture 或 transplanting 条目"
+        ]
+      }
+    },
+    "huoshan-shihu": {
+      "name": "霍山石斛",
+      "latinName": "Dendrobium huoshanense",
+      "aliases": ["霍山石斛", "米斛", "龙头凤尾草"],
+      "operationalTargets": {
+        "temperatureC": {
+          "min": 20,
+          "max": 30,
+          "source": "project_baseline"
+        },
+        "humidityPercent": {
+          "min": 55,
+          "max": 80,
+          "source": "project_baseline"
+        },
+        "light": {
+          "description": "默认按霍山石斛进行温室分析时，采用温暖、阴蔽、稳定散射光的项目运行基线，避免直射暴晒。",
+          "source": "project_baseline"
+        }
+      },
+      "classification": {
+        "family": "兰科",
+        "genus": "石斛属",
+        "lifeForm": "多年生草本植物"
+      },
+      "knowledgeHighlights": [
+        {
+          "category": "物种背景",
+          "title": "霍山石斛基础信息",
+          "detail": "霍山石斛为兰科石斛属多年生草本植物，学名 Dendrobium huoshanense，常见别名包括米斛、龙头凤尾草。",
+          "source": "baike_huoshan_shihu_2025",
+          "applicability": "species_background"
+        },
+        {
+          "category": "生态习性",
+          "title": "霍山石斛生态偏好",
+          "detail": "霍山石斛喜荫蔽、怕直射阳光，偏好温暖多雨、云雾较多环境，多生于避风、背阴的山沟峭壁。",
+          "source": "baike_huoshan_shihu_2025",
+          "applicability": "habitat_preference"
+        },
+        {
+          "category": "物候期",
+          "title": "霍山石斛花果期",
+          "detail": "花期通常为 5—6 月，果期通常为 7—8 月。",
+          "source": "baike_huoshan_shihu_2025",
+          "applicability": "phenology"
+        },
+        {
+          "category": "药用信息",
+          "title": "霍山石斛药用概述",
+          "detail": "茎可入药，常见用途为益胃生津、滋阴清热。",
+          "source": "baike_huoshan_shihu_2025",
+          "applicability": "medicinal_use"
+        }
+      ],
+      "queryGuidance": {
+        "notes": [
+          "当前项目已将默认作物切换为霍山石斛，未显式指定 cropId 时，默认按霍山石斛解释问题。",
+          "霍山石斛的实时环境评估优先使用本条目中的项目运行基线和实时传感数据；若问题涉及铁皮石斛组培、移栽或论文细节，再切换引用 shihu 条目。"
+        ]
+      }
+    }
+  }
+}

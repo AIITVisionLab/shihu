@@ -1,0 +1,36 @@
+{
+  "crops": {
+    "shihu": {
+      "name": "石斛",
+      "aliases": ["dendrobium", "石斛兰"],
+      "growthGoals": [
+        "保持叶片厚实和色泽稳定",
+        "避免长期高温低湿导致的应激"
+      ],
+      "environmentTargets": {
+        "temperatureC": { "min": 20, "max": 30 },
+        "humidityPercent": { "min": 55, "max": 80 },
+        "lightAdcNotes": "保持稳定散射光，避免暴晒"
+      },
+      "riskHints": [
+        "高温低湿环境下红蜘蛛风险上升",
+        "环境异常时优先建议人工复核，不要直接执行控制"
+      ]
+    }
+  },
+  "greenhouses": {
+    "default-greenhouse": {
+      "name": "石斛示范棚",
+      "location": "RK3568 边缘节点默认棚区",
+      "devices": {
+        "top_vent_fan": "顶部通风风扇",
+        "humidifying_pump": "增湿水泵",
+        "shade_controller": "遮阴控制器"
+      },
+      "policies": {
+        "executeEnabled": false,
+        "controlPlane": "reserved-only"
+      }
+    }
+  }
+}
