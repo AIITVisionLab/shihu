@@ -107,12 +107,10 @@ class _ServiceHealthSection extends StatelessWidget {
                                 color: _serviceStatusColor(healthInfo.status),
                               ),
                               _StatusBadge(
-                                label: _modelStatusLabel(
-                                  healthInfo.modelStatus,
-                                ),
-                                color: _modelStatusColor(
-                                  healthInfo.modelStatus,
-                                ),
+                                label: healthInfo.freshnessLabel(),
+                                color: healthInfo.isRecentlyChecked()
+                                    ? const Color(0xFF2E7D32)
+                                    : const Color(0xFFB45309),
                               ),
                             ],
                           ),
@@ -132,8 +130,10 @@ class _ServiceHealthSection extends StatelessWidget {
                           ),
                           const SizedBox(width: 10),
                           _StatusBadge(
-                            label: _modelStatusLabel(healthInfo.modelStatus),
-                            color: _modelStatusColor(healthInfo.modelStatus),
+                            label: healthInfo.freshnessLabel(),
+                            color: healthInfo.isRecentlyChecked()
+                                ? const Color(0xFF2E7D32)
+                                : const Color(0xFFB45309),
                           ),
                           const Spacer(),
                           TextButton.icon(
@@ -147,18 +147,18 @@ class _ServiceHealthSection extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             SettingsSettingRow(
-              title: AppCopy.settingsServiceName,
-              value: healthInfo.serviceName,
+              title: AppCopy.settingsHealthResponse,
+              value: healthInfo.responseText,
             ),
             const SizedBox(height: 14),
             SettingsSettingRow(
-              title: AppCopy.settingsServiceVersion,
-              value: healthInfo.serviceVersion,
+              title: AppCopy.settingsHealthCheckedAt,
+              value: _formatServerTime(healthInfo.checkedAt),
             ),
             const SizedBox(height: 14),
             SettingsSettingRow(
-              title: AppCopy.settingsServiceTime,
-              value: _formatServerTime(healthInfo.serverTime),
+              title: '巡检节奏',
+              value: '设置页自动每 12 秒刷新一次，也可手动立即重查。',
             ),
           ],
         );
@@ -177,37 +177,11 @@ class _ServiceHealthSection extends StatelessWidget {
     }
   }
 
-  String _modelStatusLabel(String value) {
-    switch (value.trim().toLowerCase()) {
-      case 'ready':
-        return AppCopy.settingsModelReady;
-      case 'loading':
-        return AppCopy.settingsModelLoading;
-      case 'error':
-        return AppCopy.settingsModelError;
-      default:
-        return AppCopy.settingsModelUnknown;
-    }
-  }
-
   Color _serviceStatusColor(String value) {
     switch (value.trim().toLowerCase()) {
       case 'up':
         return const Color(0xFF2E7D32);
       case 'down':
-        return const Color(0xFFC62828);
-      default:
-        return const Color(0xFF6B7280);
-    }
-  }
-
-  Color _modelStatusColor(String value) {
-    switch (value.trim().toLowerCase()) {
-      case 'ready':
-        return const Color(0xFF2E7D32);
-      case 'loading':
-        return const Color(0xFFEF6C00);
-      case 'error':
         return const Color(0xFFC62828);
       default:
         return const Color(0xFF6B7280);

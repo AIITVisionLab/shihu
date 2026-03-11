@@ -21,8 +21,8 @@ class HomeDeviceSnapshotCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CommonCard(
-      title: '设备摘要',
-      subtitle: '首页直接展示当前设备上报快照，完整监控和控制请进入主控台。',
+      title: '实时快照',
+      subtitle: '这里保留当前设备的简要快照；如果需要操作，请直接进入主控台。',
       child: deviceStateAsync.when(
         loading: () => const Padding(
           padding: EdgeInsets.symmetric(vertical: 20),
@@ -31,61 +31,104 @@ class HomeDeviceSnapshotCard extends StatelessWidget {
         error: (error, stackTrace) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text('设备状态获取失败：$error'),
+            Text('监测数据获取失败：$error'),
             const SizedBox(height: 12),
             TextButton.icon(
               onPressed: onRefresh,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('重新拉取'),
+              label: const Text('重新同步'),
             ),
           ],
         ),
         data: (deviceState) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            Row(
               children: <Widget>[
-                Text(
-                  deviceState.deviceName.trim().isEmpty
-                      ? deviceState.deviceId
-                      : deviceState.deviceName,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                Expanded(
+                  child: Text(
+                    deviceState.deviceName.trim().isEmpty
+                        ? deviceState.deviceId
+                        : deviceState.deviceName,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
-                _SnapshotStatusChip(deviceState: deviceState),
+                TextButton.icon(
+                  onPressed: onRefresh,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('同步'),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            Text(
-              '最近上报：${_formatDateTime(deviceState.updatedAtTime)}',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 18),
             Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: 10,
+              runSpacing: 10,
               children: <Widget>[
-                _MetricPill(
-                  label:
-                      '温度 ${deviceState.formatMetric(deviceState.temperature, deviceState.temperatureUnit)}',
+                _StatusChip(
+                  label: deviceState.alertTitle,
+                  level: deviceState.alertLevel,
                 ),
-                _MetricPill(
-                  label:
-                      '湿度 ${deviceState.formatMetric(deviceState.humidity, deviceState.humidityUnit)}',
-                ),
-                _MetricPill(
-                  label:
-                      '光照 ${deviceState.formatMetric(deviceState.light, deviceState.lightUnit, fractionDigits: 0)}',
-                ),
-                _MetricPill(
-                  label:
-                      'MQ2 ${deviceState.formatMetric(deviceState.mq2, deviceState.mq2Unit)}',
-                ),
+                _FreshnessChip(deviceState: deviceState),
+                _BasicChip(label: 'LED ${deviceState.ledLabel}'),
               ],
+            ),
+            const SizedBox(height: 16),
+            _InfoRow(
+              label: '最近上报',
+              value: _formatDateTime(deviceState.updatedAtTime),
+            ),
+            const SizedBox(height: 10),
+            _InfoRow(label: '设备 ID', value: deviceState.deviceId),
+            const SizedBox(height: 16),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 620 ? 2 : 1;
+                final itemWidth =
+                    (constraints.maxWidth - ((columns - 1) * 12)) / columns;
+
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: <Widget>[
+                    _MetricTile(
+                      width: itemWidth,
+                      label: '温度',
+                      value: deviceState.formatMetric(
+                        deviceState.temperature,
+                        deviceState.temperatureUnit,
+                      ),
+                    ),
+                    _MetricTile(
+                      width: itemWidth,
+                      label: '湿度',
+                      value: deviceState.formatMetric(
+                        deviceState.humidity,
+                        deviceState.humidityUnit,
+                      ),
+                    ),
+                    _MetricTile(
+                      width: itemWidth,
+                      label: '光照',
+                      value: deviceState.formatMetric(
+                        deviceState.light,
+                        deviceState.lightUnit,
+                        fractionDigits: 0,
+                      ),
+                    ),
+                    _MetricTile(
+                      width: itemWidth,
+                      label: 'MQ2',
+                      value: deviceState.formatMetric(
+                        deviceState.mq2,
+                        deviceState.mq2Unit,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -94,47 +137,166 @@ class HomeDeviceSnapshotCard extends StatelessWidget {
   }
 }
 
-class _SnapshotStatusChip extends StatelessWidget {
-  const _SnapshotStatusChip({required this.deviceState});
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
 
-  final DeviceStateInfo deviceState;
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    final colors = _chipColors(deviceState.alertLevel);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: colors.$1,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        deviceState.alertTitle,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: colors.$2,
-          fontWeight: FontWeight.w700,
+    return Row(
+      children: <Widget>[
+        SizedBox(
+          width: 72,
+          child: Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Expanded(
+          child: SelectableText(
+            value,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetricTile extends StatelessWidget {
+  const _MetricTile({
+    required this.width,
+    required this.label,
+    required this.value,
+  });
+
+  final double width;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return SizedBox(
+      width: width,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.22),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              label,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _MetricPill extends StatelessWidget {
-  const _MetricPill({required this.label});
+class _BasicChip extends StatelessWidget {
+  const _BasicChip({required this.label});
 
   final String label;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F7FC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFDCE6F2)),
+        color: colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+      child: Text(label, style: Theme.of(context).textTheme.labelLarge),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.label, required this.level});
+
+  final String label;
+  final DeviceAlertLevel level;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = _chipColors(level);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: colors.$1,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: colors.$2,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _FreshnessChip extends StatelessWidget {
+  const _FreshnessChip({required this.deviceState});
+
+  final DeviceStateInfo deviceState;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFresh = deviceState.isFresh();
+    final backgroundColor = isFresh
+        ? const Color(0xFFE6F3F1)
+        : const Color(0xFFFFF0E2);
+    final foregroundColor = isFresh
+        ? const Color(0xFF176255)
+        : const Color(0xFFB45309);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        deviceState.freshnessLabel(),
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: foregroundColor,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
     );
   }
 }
@@ -142,13 +304,13 @@ class _MetricPill extends StatelessWidget {
 (Color, Color) _chipColors(DeviceAlertLevel level) {
   switch (level) {
     case DeviceAlertLevel.safe:
-      return (const Color(0xFFE8F7EB), const Color(0xFF166534));
+      return (const Color(0xFFE6F3F1), const Color(0xFF176255));
     case DeviceAlertLevel.warning:
-      return (const Color(0xFFFFF4E5), const Color(0xFFB45309));
+      return (const Color(0xFFFFF0E2), const Color(0xFFB45309));
     case DeviceAlertLevel.danger:
-      return (const Color(0xFFFEEBEC), const Color(0xFFB91C1C));
+      return (const Color(0xFFFBE6E5), const Color(0xFFB42318));
     case DeviceAlertLevel.unknown:
-      return (const Color(0xFFE5ECF5), const Color(0xFF475569));
+      return (const Color(0xFFE8ECF1), const Color(0xFF475467));
   }
 }
 

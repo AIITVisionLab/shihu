@@ -9,10 +9,8 @@ class ServiceHealthInfo {
   /// 创建服务健康检查结果对象。
   const ServiceHealthInfo({
     required this.status,
-    required this.serviceName,
-    required this.serviceVersion,
-    required this.modelStatus,
-    required this.serverTime,
+    required this.responseText,
+    required this.checkedAt,
   });
 
   /// 从 JSON 构建服务健康检查结果对象。
@@ -23,21 +21,54 @@ class ServiceHealthInfo {
   @JsonKey(fromJson: parseStringValue)
   final String status;
 
-  /// 服务名称。
+  /// 健康接口原始返回文本。
   @JsonKey(fromJson: parseStringValue)
-  final String serviceName;
+  final String responseText;
 
-  /// 服务版本。
+  /// 客户端完成检查的时间。
   @JsonKey(fromJson: parseStringValue)
-  final String serviceVersion;
+  final String checkedAt;
 
-  /// 模型状态。
-  @JsonKey(fromJson: parseStringValue)
-  final String modelStatus;
+  /// 客户端完成健康检查的本地时间。
+  DateTime? get checkedAtTime => DateTime.tryParse(checkedAt)?.toLocal();
 
-  /// 服务端时间。
-  @JsonKey(fromJson: parseStringValue)
-  final String serverTime;
+  /// 当前健康检查是否在有效刷新窗口内。
+  bool isRecentlyChecked({
+    DateTime? referenceTime,
+    Duration threshold = const Duration(seconds: 30),
+  }) {
+    final checkedAtTime = this.checkedAtTime;
+    if (checkedAtTime == null) {
+      return false;
+    }
+    final now = referenceTime ?? DateTime.now();
+    final difference = now.difference(checkedAtTime);
+    if (difference.isNegative) {
+      return true;
+    }
+    return difference <= threshold;
+  }
+
+  /// 面向值守页的最近巡检说明。
+  String freshnessLabel({
+    DateTime? referenceTime,
+    Duration threshold = const Duration(seconds: 30),
+  }) {
+    final checkedAtTime = this.checkedAtTime;
+    if (checkedAtTime == null) {
+      return '尚未完成巡检';
+    }
+
+    final now = referenceTime ?? DateTime.now();
+    final difference = now.difference(checkedAtTime);
+    if (difference.isNegative || difference <= threshold) {
+      return '巡检已更新';
+    }
+    if (difference.inMinutes >= 1) {
+      return '巡检已滞后 ${difference.inMinutes} 分钟';
+    }
+    return '巡检已滞后 ${difference.inSeconds} 秒';
+  }
 
   /// 序列化为 JSON。
   Map<String, dynamic> toJson() => _$ServiceHealthInfoToJson(this);

@@ -28,64 +28,69 @@ class CommonCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[
-            Colors.white.withValues(alpha: 0.92),
-            colorScheme.surfaceContainerLowest.withValues(alpha: 0.88),
-          ],
-        ),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.42),
-        ),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: const Color(0x120E1C12),
-            blurRadius: 36,
-            offset: const Offset(0, 18),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: padding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            if (title != null) ...<Widget>[
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer.withValues(alpha: 0.62),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  title!,
-                  style: textTheme.labelLarge?.copyWith(
-                    color: colorScheme.onPrimaryContainer,
-                  ),
-                ),
+    return Material(
+      color: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.96),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.42),
+            ),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: Color(0x0C172019),
+                blurRadius: 12,
+                offset: Offset(0, 6),
               ),
-              if (subtitle != null) ...<Widget>[
-                const SizedBox(height: 12),
-                Text(
-                  subtitle!,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 18),
             ],
-            child,
-          ],
+          ),
+          child: Padding(
+            padding: padding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                if (title != null) ...<Widget>[
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          title!,
+                          style: textTheme.labelLarge?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      if (subtitle != null) ...<Widget>[
+                        const SizedBox(height: 14),
+                        Text(
+                          subtitle!,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            height: 1.58,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                ],
+                child,
+              ],
+            ),
+          ),
         ),
       ),
     );

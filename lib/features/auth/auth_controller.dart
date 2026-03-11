@@ -29,15 +29,15 @@ class AuthController extends Notifier<AuthState> {
     return _bootstrapFuture ??= _restoreSession();
   }
 
-  /// 使用账号密码执行登录。
+  /// 使用用户名密码执行登录。
   Future<bool> login({
-    required String account,
+    required String username,
     required String password,
   }) async {
     await ensureInitialized();
 
-    final normalizedAccount = account.trim();
-    if (normalizedAccount.isEmpty || password.isEmpty) {
+    final normalizedUsername = username.trim();
+    if (normalizedUsername.isEmpty || password.isEmpty) {
       state = state.copyWith(errorMessage: AppCopy.authInputRequired);
       return false;
     }
@@ -51,7 +51,7 @@ class AuthController extends Notifier<AuthState> {
     try {
       final session = await ref
           .read(authRepositoryProvider)
-          .login(account: normalizedAccount, password: password);
+          .login(username: normalizedUsername, password: password);
       await _persistSession(session);
       state = state.copyWith(
         isBootstrapping: false,
@@ -68,32 +68,32 @@ class AuthController extends Notifier<AuthState> {
         errorMessage: error.message,
       );
       return false;
-    } catch (error) {
+    } catch (_) {
       state = state.copyWith(
         isBootstrapping: false,
         isSubmitting: false,
-        errorMessage: AppCopy.authLoginFailed(error),
+        errorMessage: AppCopy.authLoginFailedRetry,
       );
       return false;
     }
   }
 
-  /// 使用账号密码执行注册，不自动写入登录态。
+  /// 使用用户名密码执行注册，不自动写入登录态。
   Future<String?> register({
-    required String account,
+    required String username,
     required String password,
     required String confirmPassword,
   }) async {
     await ensureInitialized();
 
-    final normalizedAccount = account.trim();
-    if (normalizedAccount.isEmpty ||
+    final normalizedUsername = username.trim();
+    if (normalizedUsername.isEmpty ||
         password.isEmpty ||
         confirmPassword.isEmpty) {
       state = state.copyWith(errorMessage: AppCopy.authRegisterInputRequired);
       return null;
     }
-    if (!RegExp(r'^[a-zA-Z0-9_]{3,32}$').hasMatch(normalizedAccount)) {
+    if (!RegExp(r'^[a-zA-Z0-9_]{3,32}$').hasMatch(normalizedUsername)) {
       state = state.copyWith(errorMessage: AppCopy.authRegisterAccountInvalid);
       return null;
     }
@@ -121,7 +121,7 @@ class AuthController extends Notifier<AuthState> {
       final message = await ref
           .read(authRepositoryProvider)
           .register(
-            account: normalizedAccount,
+            username: normalizedUsername,
             password: password,
             confirmPassword: confirmPassword,
           );
@@ -139,11 +139,11 @@ class AuthController extends Notifier<AuthState> {
         errorMessage: error.message,
       );
       return null;
-    } catch (error) {
+    } catch (_) {
       state = state.copyWith(
         isBootstrapping: false,
         isSubmitting: false,
-        errorMessage: AppCopy.authRegisterFailed(error),
+        errorMessage: AppCopy.authRegisterFailedRetry,
       );
       return null;
     }
@@ -273,11 +273,11 @@ class AuthController extends Notifier<AuthState> {
         session: restoredSession,
         unauthorizedMessage: null,
       );
-    } catch (error) {
+    } catch (_) {
       state = state.copyWith(
         isBootstrapping: false,
         session: null,
-        errorMessage: AppCopy.authRestoreFailed(error),
+        errorMessage: AppCopy.authRestoreFailed(),
       );
     }
   }
@@ -317,8 +317,8 @@ class AuthController extends Notifier<AuthState> {
       );
     } on ApiException catch (error) {
       await _handleUnauthorizedInternal(error.message);
-    } catch (error) {
-      await _handleUnauthorizedInternal(AppCopy.authRefreshFailed(error));
+    } catch (_) {
+      await _handleUnauthorizedInternal(AppCopy.authRefreshFailed());
     }
   }
 }

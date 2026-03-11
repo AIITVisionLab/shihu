@@ -105,10 +105,13 @@ class DeviceStateRepository {
 final deviceStateRepositoryProvider =
     FutureProvider.autoDispose<DeviceStateRepository>((ref) async {
       ref.watch(envConfigProvider);
-      final settings = await ref.watch(settingsControllerProvider.future);
+      final settings = ref.watch(effectiveAppSettingsProvider);
+      final serviceEndpoints = ref.watch(resolvedServiceEndpointsProvider);
       final apiClientFactory = ref.watch(apiClientFactoryProvider);
       return DeviceStateRepository(
-        apiClient: apiClientFactory.create(settings: settings),
+        apiClient: apiClientFactory.createSessionClient(
+          settings: settings.copyWith(baseUrl: serviceEndpoints.deviceBaseUrl),
+        ),
       );
     });
 

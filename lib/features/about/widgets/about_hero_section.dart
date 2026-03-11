@@ -18,16 +18,16 @@ class AboutHeroSection extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: <Color>[
-            Color(0xFF13261C),
-            Color(0xFF204B39),
-            Color(0xFF9E7644),
+            Color(0xFF0F4A45),
+            Color(0xFF1F857B),
+            Color(0xFFB18156),
           ],
         ),
         boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x24161F19),
-            blurRadius: 48,
-            offset: Offset(0, 24),
+            color: Color(0x18172019),
+            blurRadius: 36,
+            offset: Offset(0, 22),
           ),
         ],
       ),
@@ -90,16 +90,16 @@ class _HeroLead extends StatelessWidget {
         Text(
           AboutContent.heroDescription,
           style: theme.textTheme.titleMedium?.copyWith(
-            color: const Color(0xFFF2F5EE),
-            height: 1.68,
+            color: const Color(0xFFF0F7F4),
+            height: 1.66,
           ),
         ),
         const SizedBox(height: 18),
         Text(
           AboutContent.heroFootnote,
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: const Color(0xFFE4EBDC),
-            height: 1.7,
+            color: const Color(0xFFDAECE6),
+            height: 1.68,
           ),
         ),
       ],
@@ -159,16 +159,16 @@ class _HeroStatCard extends StatelessWidget {
           Text(
             item.label,
             style: theme.textTheme.titleMedium?.copyWith(
-              color: const Color(0xFFF6F8F2),
-              fontWeight: FontWeight.w700,
+              color: const Color(0xFFF3FAF6),
+              fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             item.description,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFFE2E9DA),
-              height: 1.6,
+              color: const Color(0xFFDBECE5),
+              height: 1.58,
             ),
           ),
         ],

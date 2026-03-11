@@ -21,6 +21,7 @@ class RealtimeMetricsSection extends StatelessWidget {
           deviceState?.temperatureUnit ?? '°C',
         ),
         helperText: '来自设备温度上报',
+        accentColor: const Color(0xFFB95C3C),
       ),
       _MetricCard(
         icon: Icons.water_drop_rounded,
@@ -30,6 +31,7 @@ class RealtimeMetricsSection extends StatelessWidget {
           deviceState?.humidityUnit ?? '%',
         ),
         helperText: '来自设备湿度上报',
+        accentColor: const Color(0xFF2F7D82),
       ),
       _MetricCard(
         icon: Icons.light_mode_rounded,
@@ -40,6 +42,7 @@ class RealtimeMetricsSection extends StatelessWidget {
           fractionDigits: 0,
         ),
         helperText: '来自设备光照上报',
+        accentColor: const Color(0xFFBF8A29),
       ),
       _MetricCard(
         icon: Icons.sensors_rounded,
@@ -49,6 +52,7 @@ class RealtimeMetricsSection extends StatelessWidget {
           deviceState?.mq2Unit ?? 'ppm',
         ),
         helperText: '来自设备气体传感器上报',
+        accentColor: const Color(0xFF556D5D),
       ),
     ];
 
@@ -78,46 +82,70 @@ class _MetricCard extends StatelessWidget {
     required this.title,
     required this.value,
     required this.helperText,
+    required this.accentColor,
   });
 
   final IconData icon;
   final String title;
   final String? value;
   final String helperText;
+  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return CommonCard(
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: colorScheme.primary),
+          Row(
+            children: <Widget>[
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: accentColor),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  title,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 20),
           Text(
             value ?? '--',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(helperText, style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 6),
+          Text(
+            helperText,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );

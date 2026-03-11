@@ -30,8 +30,227 @@
 
   <title>斛生</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      color-scheme: light;
+      font-family:
+        "Noto Sans SC",
+        "PingFang SC",
+        "Microsoft YaHei",
+        sans-serif;
+      background: #f6f1e6;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: #f6f1e6;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    #boot-shell {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top left, rgba(133, 178, 143, 0.18), transparent 34%),
+        radial-gradient(circle at top right, rgba(151, 122, 88, 0.16), transparent 28%),
+        linear-gradient(135deg, #f7f0e5 0%, #efe5d3 100%);
+      transition: opacity 260ms ease, visibility 260ms ease;
+    }
+
+    #boot-shell[data-hidden="true"] {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .boot-panel {
+      width: min(620px, 100%);
+      padding: 32px;
+      border-radius: 34px;
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid rgba(120, 93, 60, 0.18);
+      box-shadow: 0 24px 70px rgba(43, 31, 20, 0.12);
+      backdrop-filter: blur(18px);
+    }
+
+    .boot-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #ead8bf;
+      color: #5d4426;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .boot-title {
+      margin: 18px 0 8px;
+      font-size: clamp(32px, 4vw, 42px);
+      line-height: 1.1;
+      color: #2b231a;
+      font-weight: 800;
+    }
+
+    .boot-copy {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.75;
+      color: #64584c;
+    }
+
+    .boot-progress {
+      position: relative;
+      overflow: hidden;
+      height: 8px;
+      margin-top: 24px;
+      border-radius: 999px;
+      background: rgba(127, 88, 52, 0.12);
+    }
+
+    .boot-progress::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 -35%;
+      width: 35%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #23493a 0%, #7f5834 100%);
+      animation: boot-progress 1.6s ease-in-out infinite;
+    }
+
+    .boot-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 18px;
+      font-size: 13px;
+      color: #7f7568;
+    }
+
+    @keyframes boot-progress {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(390%);
+      }
+    }
+  </style>
 </head>
 <body>
+  <div id="boot-shell" aria-hidden="true">
+    <div class="boot-panel">
+      <div class="boot-badge">启动中</div>
+      <h1 class="boot-title">斛生正在连接服务与界面模块</h1>
+      <p class="boot-copy" id="boot-shell-status">
+        正在准备应用资源。首次打开或刚更新版本时，加载时间会略长。
+      </p>
+      <div class="boot-progress"></div>
+      <div class="boot-meta">
+        <span>Flutter App</span>
+        <span>Web Runtime</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function installStartupErrorOverlay() {
+      let shown = false;
+
+      function ensureRoot() {
+        let root = document.getElementById('startup-error-root');
+        if (root) {
+          return root;
+        }
+
+        root = document.createElement('div');
+        root.id = 'startup-error-root';
+        root.style.position = 'fixed';
+        root.style.inset = '0';
+        root.style.zIndex = '99999';
+        root.style.display = 'grid';
+        root.style.placeItems = 'center';
+        root.style.padding = '24px';
+        root.style.background =
+          'linear-gradient(135deg, #f7f0e5 0%, #efe5d3 100%)';
+        root.style.fontFamily =
+          '"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
+        root.style.color = '#2d261d';
+        document.body.appendChild(root);
+        return root;
+      }
+
+      function renderError(title, detail) {
+        if (shown) {
+          return;
+        }
+        shown = true;
+
+        const bootShell = document.getElementById('boot-shell');
+        if (bootShell) {
+          bootShell.setAttribute('data-hidden', 'true');
+        }
+
+        const root = ensureRoot();
+        const safeDetail =
+          typeof detail === 'string' && detail.trim().length > 0
+            ? detail.trim()
+            : 'Unknown startup error';
+
+        root.innerHTML = `
+          <div style="width:min(760px,100%);padding:28px;border-radius:28px;background:rgba(255,255,255,.88);border:1px solid rgba(120,93,60,.18);box-shadow:0 24px 70px rgba(43,31,20,.12);">
+            <div style="display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border-radius:999px;background:#ead8bf;color:#5d4426;font-size:14px;font-weight:700;">启动失败</div>
+            <h1 style="margin:18px 0 10px;font-size:32px;line-height:1.15;">${title}</h1>
+            <p style="margin:0 0 18px;font-size:16px;line-height:1.7;color:#5f564c;">页面启动时发生错误，Flutter 没有成功渲染。请把下面的错误信息发给开发者。</p>
+            <pre style="margin:0;white-space:pre-wrap;word-break:break-word;padding:18px;border-radius:20px;background:#f7efe7;color:#7f3027;font-size:14px;line-height:1.6;">${safeDetail.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+          </div>
+        `;
+      }
+
+      window.__renderStartupError = renderError;
+      window.__hideBootShell = function hideBootShell() {
+        const bootShell = document.getElementById('boot-shell');
+        if (bootShell) {
+          bootShell.setAttribute('data-hidden', 'true');
+        }
+      };
+      window.__setBootShellStatus = function setBootShellStatus(message) {
+        const statusNode = document.getElementById('boot-shell-status');
+        if (
+          statusNode &&
+          typeof message === 'string' &&
+          message.trim().length > 0
+        ) {
+          statusNode.textContent = message.trim();
+        }
+      };
+
+      window.addEventListener('error', function(event) {
+        const message = event && event.error && event.error.stack
+          ? event.error.stack
+          : (event && event.message) || 'Unknown error';
+        renderError('应用启动失败', message);
+      });
+
+      window.addEventListener('unhandledrejection', function(event) {
+        const reason = event && event.reason;
+        const message = reason && reason.stack
+          ? reason.stack
+          : String(reason || 'Unhandled promise rejection');
+        renderError('应用启动失败', message);
+      });
+    })();
+  </script>
   <script>
     // 某些浏览器或自动化环境会返回字面值 "undefined"，
     // Flutter Web 在解析语言标签时会直接抛错并导致白屏。

@@ -73,11 +73,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(HomeEntryCard, '监控主控台'), findsOneWidget);
-    expect(find.widgetWithText(HomeEntryCard, '视频中心'), findsOneWidget);
-    expect(find.widgetWithText(HomeEntryCard, '系统总览'), findsOneWidget);
+    expect(find.widgetWithText(HomeEntryCard, '系统概览'), findsOneWidget);
     expect(find.widgetWithText(HomeEntryCard, '运维设置'), findsOneWidget);
     expect(find.text('版本 1.2.3'), findsOneWidget);
-    expect(find.text('石斛培育柜'), findsOneWidget);
+    expect(find.text('石斛培育柜'), findsWidgets);
   });
 
   testWidgets('HomePage entry cards navigate to named routes', (tester) async {
@@ -137,13 +136,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(HomeEntryCard, '视频中心'));
-    await tester.pumpAndSettle();
-    expect(find.text('video-page'), findsOneWidget);
-
-    router.goNamed(AppRoutes.home);
-    await tester.pumpAndSettle();
-
     await tester.tap(find.widgetWithText(HomeEntryCard, '监控主控台'));
     await tester.pumpAndSettle();
     expect(find.text('realtime-page'), findsOneWidget);
@@ -151,7 +143,7 @@ void main() {
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(HomeEntryCard, '系统总览'));
+    await tester.tap(find.widgetWithText(HomeEntryCard, '系统概览'));
     await tester.pumpAndSettle();
     expect(find.text('about-page'), findsOneWidget);
 
@@ -182,11 +174,6 @@ GoRouter _buildRouter() {
         path: AppRoutes.homePath,
         name: AppRoutes.home,
         builder: (context, state) => const HomePage(),
-      ),
-      GoRoute(
-        path: AppRoutes.videoPath,
-        name: AppRoutes.video,
-        builder: (context, state) => const Scaffold(body: Text('video-page')),
       ),
       GoRoute(
         path: AppRoutes.realtimeDetectPath,

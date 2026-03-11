@@ -29,17 +29,17 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<AuthSession> login({
-    required String account,
+    required String username,
     required String password,
   }) async {
     await Future<void>.delayed(responseDelay);
 
-    final normalizedAccount = account.trim();
+    final normalizedUsername = username.trim();
     final normalizedPassword = password.trim();
     final isDemoAccount =
-        normalizedAccount == demoAccount && normalizedPassword == demoPassword;
+        normalizedUsername == demoAccount && normalizedPassword == demoPassword;
     final isAllowedCustomAccount =
-        normalizedAccount.length >= 3 && normalizedPassword.length >= 6;
+        normalizedUsername.length >= 3 && normalizedPassword.length >= 6;
 
     if (!isDemoAccount && !isAllowedCustomAccount) {
       throw const ApiException(
@@ -50,9 +50,9 @@ class MockAuthRepository implements AuthRepository {
 
     final now = DateTime.now();
     final expiresAt = now.add(const Duration(hours: 8)).toIso8601String();
-    final displayName = normalizedAccount == demoAccount
+    final displayName = normalizedUsername == demoAccount
         ? AppCopy.authMockDisplayName
-        : AppCopy.authAdminDisplayName(normalizedAccount);
+        : AppCopy.authAdminDisplayName(normalizedUsername);
 
     return AuthSession(
       accessToken: 'mock_access_${now.microsecondsSinceEpoch}',
@@ -61,8 +61,8 @@ class MockAuthRepository implements AuthRepository {
       expiresAt: expiresAt,
       loginMode: loginMode,
       user: AuthUser(
-        userId: 'user_$normalizedAccount',
-        account: normalizedAccount,
+        userId: 'user_$normalizedUsername',
+        account: normalizedUsername,
         displayName: displayName,
         roles: const <String>['app_user'],
       ),
@@ -71,7 +71,7 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<String> register({
-    required String account,
+    required String username,
     required String password,
     required String confirmPassword,
   }) async {

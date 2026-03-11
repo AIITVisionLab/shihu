@@ -8,33 +8,33 @@ class HomeCapabilityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const CommonCard(
-      title: '当前可用能力',
-      subtitle: '以下链路已经稳定接入统一服务，可直接用于日常值守与排障。',
+    return CommonCard(
+      title: '值守范围',
+      subtitle: '当前版本只保留已经对接后端的后台能力，不展示未接通模块。',
       child: Column(
-        children: <Widget>[
-          _CapabilityRow(
-            icon: Icons.videocam_outlined,
-            title: '视频接入',
-            description: '通过 Java 视频服务统一下发流清单、播放地址、网关入口和 AI 转发状态，不在客户端代理媒体流。',
-          ),
-          SizedBox(height: 14),
+        children: const <Widget>[
           _CapabilityRow(
             icon: Icons.lock_outline_rounded,
-            title: '认证会话',
-            description: '支持登录、账号开通、会话校验与安全退出，保证设备权限按账号闭环管理。',
+            title: '账号值守',
+            description: '登录、注册、会话恢复和安全退出。',
           ),
           SizedBox(height: 14),
           _CapabilityRow(
             icon: Icons.monitor_heart_outlined,
-            title: '设备监控',
-            description: '统一呈现设备名称、温湿度、光照、MQ2、告警等级、补光状态和最近更新时间。',
+            title: '环境监测',
+            description: '查看温湿度、光照、MQ2、错误码和上报时间。',
           ),
           SizedBox(height: 14),
           _CapabilityRow(
             icon: Icons.toggle_on_outlined,
-            title: '运维控制',
-            description: '支持补光控制、状态回写等待与服务健康巡检，减少来回切页操作。',
+            title: '补光执行',
+            description: '在主控台和设置页下发 LED 控制并等待回写。',
+          ),
+          SizedBox(height: 14),
+          _CapabilityRow(
+            icon: Icons.rule_folder_outlined,
+            title: '运行巡检',
+            description: '检查服务健康、当前设置和本机记住账号。',
           ),
         ],
       ),
@@ -55,65 +55,67 @@ class _CapabilityRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.86),
-        borderRadius: BorderRadius.circular(24),
+        color: colorScheme.surfaceContainerLow.withValues(alpha: 0.46),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.34),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.24),
         ),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 340;
-          final iconBox = Container(
-            width: 48,
-            height: 48,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
               color: colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: colorScheme.primary),
-          );
-          final content = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                description,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          );
-
-          if (isCompact) {
-            return Column(
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[iconBox, const SizedBox(height: 14), content],
-            );
-          }
-
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              iconBox,
-              const SizedBox(width: 16),
-              Expanded(child: content),
-            ],
-          );
-        },
+              children: <Widget>[
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: colorScheme.secondaryContainer.withValues(alpha: 0.62),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '可用',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: colorScheme.onSecondaryContainer,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

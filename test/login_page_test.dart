@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sickandflutter/core/config/env_config.dart';
 import 'package:sickandflutter/core/storage/auth_storage.dart';
 import 'package:sickandflutter/core/storage/sensitive_storage.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
@@ -9,7 +10,9 @@ import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/features/auth/login_page.dart';
 import 'package:sickandflutter/features/auth/mock_auth_repository.dart';
+import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
+import 'package:sickandflutter/shared/models/app_settings.dart';
 
 void main() {
   testWidgets('LoginPage shows register mode in real auth mode', (
@@ -27,7 +30,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('确认密码'), findsOneWidget);
-    expect(find.text('用户名需为 3-32 位字母、数字或下划线，密码需为 6-32 位。'), findsOneWidget);
+    expect(find.text('账号需为 3-32 位字母、数字或下划线；密码需为 6-32 位。'), findsOneWidget);
   });
 
   testWidgets('LoginPage hides register mode in mock auth mode', (
@@ -42,11 +45,52 @@ void main() {
     await tester.pump();
 
     expect(find.text('注册'), findsNothing);
-    expect(find.text('填充联调账号'), findsOneWidget);
+    expect(find.text('填入演示账号'), findsOneWidget);
+  });
+
+  testWidgets('LoginPage can reset custom service config before login', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    const envConfig = EnvConfig(
+      flavor: BuildFlavor.development,
+      baseUrl: 'http://127.0.0.1:8080',
+      enableLog: true,
+    );
+    final settingsController = _TestSettingsController(
+      initialSettings: AppSettings.defaults(
+        buildFlavor: BuildFlavor.development,
+        baseUrl: 'http://192.168.1.20:8080',
+        enableLog: true,
+      ),
+    );
+
+    await tester.pumpWidget(
+      _buildPage(
+        authRepository: _FakeRealAuthRepository(),
+        envConfig: envConfig,
+        settingsController: settingsController,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('http://192.168.1.20:8080'), findsWidgets);
+    expect(find.text('恢复默认服务地址'), findsOneWidget);
+
+    await tester.tap(find.text('恢复默认服务地址'));
+    await tester.pumpAndSettle();
+
+    expect(settingsController.resetCount, 1);
+    expect(find.text('已恢复默认服务地址，请重新尝试登录。'), findsOneWidget);
+    expect(find.text('http://127.0.0.1:8080'), findsWidgets);
   });
 }
 
-Widget _buildPage({required AuthRepository authRepository}) {
+Widget _buildPage({
+  required AuthRepository authRepository,
+  EnvConfig? envConfig,
+  SettingsController? settingsController,
+}) {
   return ProviderScope(
     overrides: [
       authStorageProvider.overrideWith(
@@ -54,6 +98,9 @@ Widget _buildPage({required AuthRepository authRepository}) {
             AuthStorage(VolatileSensitiveStorage(values: <String, String>{})),
       ),
       authRepositoryProvider.overrideWith((ref) => authRepository),
+      if (envConfig != null) envConfigProvider.overrideWith((ref) => envConfig),
+      if (settingsController != null)
+        settingsControllerProvider.overrideWith(() => settingsController),
     ],
     child: const MaterialApp(home: LoginPage()),
   );
@@ -68,7 +115,7 @@ class _FakeRealAuthRepository implements AuthRepository {
 
   @override
   Future<AuthSession> login({
-    required String account,
+    required String username,
     required String password,
   }) async {
     return const AuthSession(
@@ -82,7 +129,7 @@ class _FakeRealAuthRepository implements AuthRepository {
 
   @override
   Future<String> register({
-    required String account,
+    required String username,
     required String password,
     required String confirmPassword,
   }) async {
@@ -92,5 +139,27 @@ class _FakeRealAuthRepository implements AuthRepository {
   @override
   Future<AuthSession> refreshSession({required AuthSession session}) async {
     return session;
+  }
+}
+
+class _TestSettingsController extends SettingsController {
+  _TestSettingsController({required this.initialSettings});
+
+  final AppSettings initialSettings;
+  int resetCount = 0;
+
+  @override
+  Future<AppSettings> build() async => initialSettings;
+
+  @override
+  Future<void> reset() async {
+    resetCount += 1;
+    state = AsyncData(
+      AppSettings.defaults(
+        buildFlavor: initialSettings.buildFlavor,
+        baseUrl: 'http://127.0.0.1:8080',
+        enableLog: initialSettings.enableLog,
+      ),
+    );
   }
 }

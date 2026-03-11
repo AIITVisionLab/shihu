@@ -19,9 +19,8 @@ void main() {
       final healthInfo = await repository.fetchHealth();
 
       expect(healthInfo.status, 'up');
-      expect(healthInfo.serviceName, '设备运行服务');
-      expect(healthInfo.serviceVersion, '标准部署');
-      expect(healthInfo.modelStatus, 'ready');
+      expect(healthInfo.responseText, 'ok');
+      expect(DateTime.tryParse(healthInfo.checkedAt), isNotNull);
       expect(apiClient.capturedPath, '/api/health');
     },
   );

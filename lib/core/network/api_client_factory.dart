@@ -63,4 +63,14 @@ class ApiClientFactory {
       onUnauthorized: onUnauthorized,
     );
   }
+
+  /// 生成依赖当前登录会话的业务客户端。
+  ///
+  /// 当前真实后端使用 `HttpSession + JSESSIONID`。
+  /// Web 端业务请求必须显式开启浏览器凭据透传，
+  /// 否则登录成功后对 `/api/status`、`/api/health`、`/api/ops/led`
+  /// 这类接口的访问会丢失会话 Cookie。
+  ApiClient createSessionClient({required AppSettings settings}) {
+    return create(settings: settings, includeBrowserCredentials: true);
+  }
 }

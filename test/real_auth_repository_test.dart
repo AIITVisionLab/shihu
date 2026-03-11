@@ -17,7 +17,7 @@ void main() {
     final repository = RealAuthRepository(apiClient: apiClient);
 
     final session = await repository.login(
-      account: ' demo ',
+      username: ' demo ',
       password: 'demo123456',
     );
 
@@ -97,7 +97,7 @@ void main() {
       final repository = RealAuthRepository(apiClient: apiClient);
 
       final message = await repository.register(
-        account: ' demo_user ',
+        username: ' demo_user ',
         password: 'demo123456',
         confirmPassword: 'demo123456',
       );

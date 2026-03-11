@@ -9,7 +9,6 @@ class SettingsLocalDataCard extends StatelessWidget {
   const SettingsLocalDataCard({
     required this.rememberedAccount,
     required this.onClearRememberedAccount,
-    required this.onClearHistory,
     required this.onResetSettings,
     super.key,
   });
@@ -19,9 +18,6 @@ class SettingsLocalDataCard extends StatelessWidget {
 
   /// 清除已记住账号回调。
   final Future<void> Function() onClearRememberedAccount;
-
-  /// 清空历史记录回调。
-  final Future<void> Function() onClearHistory;
 
   /// 恢复默认设置回调。
   final Future<void> Function() onResetSettings;
@@ -70,15 +66,6 @@ class SettingsLocalDataCard extends StatelessWidget {
                     await onClearRememberedAccount();
                   }
                 : null,
-          ),
-          const SizedBox(height: 12),
-          CommonButton(
-            label: '清理识别历史',
-            tone: CommonButtonTone.secondary,
-            icon: const Icon(Icons.auto_delete_outlined),
-            onPressed: () async {
-              await onClearHistory();
-            },
           ),
           const SizedBox(height: 12),
           CommonButton(

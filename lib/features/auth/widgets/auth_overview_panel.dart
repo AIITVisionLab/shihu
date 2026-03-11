@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
-import 'package:sickandflutter/shared/widgets/common_card.dart';
 
 /// 认证页说明面板，承接认证链路说明和当前可用能力。
 class AuthOverviewPanel extends StatelessWidget {
@@ -8,6 +7,8 @@ class AuthOverviewPanel extends StatelessWidget {
   const AuthOverviewPanel({
     required this.isMockMode,
     required this.supportsRegister,
+    required this.currentDeviceBaseUrl,
+    required this.isUsingCustomServiceConfig,
     required this.onFillDemo,
     super.key,
   });
@@ -18,143 +19,254 @@ class AuthOverviewPanel extends StatelessWidget {
   /// 当前是否支持真实注册。
   final bool supportsRegister;
 
+  /// 当前设备服务地址。
+  final String currentDeviceBaseUrl;
+
+  /// 当前是否使用了自定义服务配置。
+  final bool isUsingCustomServiceConfig;
+
   /// 点击“填充联调账号”后的回调。
   final VoidCallback onFillDemo;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    return CommonCard(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: <Color>[
-                  colorScheme.primaryContainer.withValues(alpha: 0.9),
-                  colorScheme.secondaryContainer.withValues(alpha: 0.92),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(28),
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.96),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+          boxShadow: const <BoxShadow>[
+            BoxShadow(
+              color: Color(0x0C172019),
+              blurRadius: 12,
+              offset: Offset(0, 6),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
               children: <Widget>[
-                Icon(
-                  Icons.hub_rounded,
-                  size: 36,
-                  color: colorScheme.onPrimaryContainer,
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  '设备监控认证工作台',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: colorScheme.onPrimaryContainer,
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    Icons.admin_panel_settings_outlined,
+                    color: colorScheme.primary,
                   ),
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  AppCopy.authLoginOverview,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    height: 1.65,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: <Widget>[
-                    _OverviewChip(
-                      icon: Icons.layers_outlined,
-                      label: AppCopy.authRestoreChip,
-                    ),
-                    _OverviewChip(
-                      icon: Icons.security_update_good_outlined,
-                      label: AppCopy.authUnauthorizedChip,
-                    ),
-                    _OverviewChip(
-                      icon: Icons.cookie_outlined,
-                      label: AppCopy.authTokenChip,
-                    ),
-                    if (supportsRegister)
-                      _OverviewChip(
-                        icon: Icons.person_add_alt_1_rounded,
-                        label: AppCopy.authRegisterChip,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        '登录说明',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        '这是后台软件的统一认证入口。',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
-          const _OverviewSection(
-            icon: Icons.device_hub_outlined,
-            title: '统一服务来源',
-            description:
-                '认证与设备能力统一映射到当前线上设备服务，链路围绕登录、注册、会话检查、设备状态、补光控制和健康检查展开。',
-          ),
-          const SizedBox(height: 16),
-          const _OverviewSection(
-            icon: Icons.design_services_outlined,
-            title: '软件工作台',
-            description:
-                '认证流程、状态反馈和工作台信息集中收敛在同一入口里，确保账号开通、登录恢复和失败提示都能在一页内闭环完成。',
-          ),
-          const SizedBox(height: 16),
-          _OverviewSection(
-            icon: isMockMode
-                ? Icons.science_outlined
-                : Icons.account_circle_outlined,
-            title: isMockMode
-                ? AppCopy.authMockModeTitle
-                : AppCopy.authRegisterPanelTitle,
-            description: isMockMode
-                ? AppCopy.authMockAccountHint
-                : AppCopy.authRegisterPanelDescription,
-            footer: isMockMode
-                ? Align(
-                    alignment: Alignment.centerLeft,
-                    child: FilledButton.tonalIcon(
-                      onPressed: onFillDemo,
-                      icon: const Icon(Icons.auto_fix_high_rounded),
-                      label: const Text(AppCopy.authFillDemoAccount),
-                    ),
-                  )
-                : Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '登录成功后会直接进入实时监控主控台，并依据当前会话状态决定是否自动恢复访问。',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        height: 1.6,
-                        color: colorScheme.onSurfaceVariant,
+            const SizedBox(height: 20),
+            _InfoGroup(
+              title: '当前接入',
+              items: <_InfoItemData>[
+                _InfoItemData(
+                  label: '认证方式',
+                  value: 'HttpSession + JSESSIONID',
+                  footnote: '与 `origin/web` 后端保持一致。',
+                ),
+                _InfoItemData(
+                  label: AppCopy.authDeviceServiceLabel,
+                  value: currentDeviceBaseUrl,
+                  footnote: isUsingCustomServiceConfig
+                      ? AppCopy.authCustomServiceConfigHint
+                      : AppCopy.authDefaultServiceConfigHint,
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            _InfoGroup(
+              title: '登录后行为',
+              items: const <_InfoItemData>[
+                _InfoItemData(
+                  label: '会话保持',
+                  value: '自动恢复',
+                  footnote: '重新打开应用时会先检查当前会话是否仍然有效。',
+                ),
+                _InfoItemData(
+                  label: '进入页面',
+                  value: '主控台',
+                  footnote: '登录成功后直接进入实时监控主控台。',
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            _InfoGroup(
+              title: isMockMode
+                  ? AppCopy.authMockModeTitle
+                  : AppCopy.authRegisterPanelTitle,
+              items: <_InfoItemData>[
+                _InfoItemData(
+                  label: isMockMode ? '模式说明' : '注册说明',
+                  value: isMockMode ? '演示环境' : '在线开通',
+                  footnote: isMockMode
+                      ? AppCopy.authMockAccountHint
+                      : AppCopy.authRegisterPanelDescription,
+                ),
+              ],
+              trailing: isMockMode
+                  ? Align(
+                      alignment: Alignment.centerLeft,
+                      child: FilledButton.tonalIcon(
+                        onPressed: onFillDemo,
+                        icon: const Icon(Icons.auto_fix_high_rounded),
+                        label: const Text(AppCopy.authFillDemoAccount),
                       ),
-                    ),
-                  ),
+                    )
+                  : _ModeTagRow(supportsRegister: supportsRegister),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoGroup extends StatelessWidget {
+  const _InfoGroup({required this.title, required this.items, this.trailing});
+
+  final String title;
+  final List<_InfoItemData> items;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow.withValues(alpha: 0.58),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.28),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            title,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
+          const SizedBox(height: 14),
+          ...items.map(
+            (item) => Padding(
+              padding: EdgeInsets.only(
+                bottom: item == items.last && trailing == null ? 0 : 14,
+              ),
+              child: _InfoItem(item: item),
+            ),
+          ),
+          ...(trailing == null ? const <Widget>[] : <Widget>[trailing!]),
         ],
       ),
     );
   }
 }
 
-class _OverviewChip extends StatelessWidget {
-  const _OverviewChip({required this.icon, required this.label});
+class _InfoItem extends StatelessWidget {
+  const _InfoItem({required this.item});
 
-  final IconData icon;
+  final _InfoItemData item;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          item.label,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 6),
+        SelectableText(
+          item.value,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          item.footnote,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ModeTagRow extends StatelessWidget {
+  const _ModeTagRow({required this.supportsRegister});
+
+  final bool supportsRegister;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: <Widget>[
+        _TagChip(label: AppCopy.authRestoreChip),
+        _TagChip(label: AppCopy.authUnauthorizedChip),
+        _TagChip(label: AppCopy.authSessionChip),
+        if (supportsRegister) _TagChip(label: AppCopy.authRegisterChip),
+      ],
+    );
+  }
+}
+
+class _TagChip extends StatelessWidget {
+  const _TagChip({required this.label});
+
   final String label;
 
   @override
@@ -162,96 +274,24 @@ class _OverviewChip extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(icon, size: 18, color: colorScheme.primary),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
+      child: Text(label, style: Theme.of(context).textTheme.labelLarge),
     );
   }
 }
 
-class _OverviewSection extends StatelessWidget {
-  const _OverviewSection({
-    required this.icon,
-    required this.title,
-    required this.description,
-    this.footer,
+class _InfoItemData {
+  const _InfoItemData({
+    required this.label,
+    required this.value,
+    required this.footnote,
   });
 
-  final IconData icon;
-  final String title;
-  final String description;
-  final Widget? footer;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.36),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: colorScheme.secondary),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  description,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.65,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                if (footer != null) ...<Widget>[
-                  const SizedBox(height: 14),
-                  footer!,
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  final String label;
+  final String value;
+  final String footnote;
 }

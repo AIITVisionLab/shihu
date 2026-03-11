@@ -10,18 +10,7 @@ void main() {
 
     final redirect = redirectForAuth(
       authState: authState,
-      matchedLocation: AppRoutes.detectPath,
-    );
-
-    expect(redirect, AppRoutes.loginPath);
-  });
-
-  test('redirectForAuth protects video hub for anonymous users', () {
-    const authState = AuthState(isBootstrapping: false);
-
-    final redirect = redirectForAuth(
-      authState: authState,
-      matchedLocation: AppRoutes.videoPath,
+      matchedLocation: AppRoutes.homePath,
     );
 
     expect(redirect, AppRoutes.loginPath);
@@ -70,7 +59,7 @@ void main() {
     expect(redirect, AppRoutes.realtimeDetectPath);
   });
 
-  test('redirectForAuth redirects removed detect route to home page', () {
+  test('redirectForAuth keeps authenticated protected page accessible', () {
     const authState = AuthState(
       isBootstrapping: false,
       session: AuthSession(
@@ -85,9 +74,9 @@ void main() {
 
     final redirect = redirectForAuth(
       authState: authState,
-      matchedLocation: AppRoutes.detectPath,
+      matchedLocation: AppRoutes.settingsPath,
     );
 
-    expect(redirect, AppRoutes.homePath);
+    expect(redirect, isNull);
   });
 }

@@ -58,7 +58,7 @@ void main() {
     await notifier.ensureInitialized();
 
     final loginSuccess = await notifier.login(
-      account: MockAuthRepository.demoAccount,
+      username: MockAuthRepository.demoAccount,
       password: MockAuthRepository.demoPassword,
     );
 
@@ -92,7 +92,7 @@ void main() {
       await notifier.ensureInitialized();
 
       final message = await notifier.register(
-        account: 'new_user',
+        username: 'new_user',
         password: 'demo123456',
         confirmPassword: 'demo123456',
       );
@@ -121,7 +121,7 @@ void main() {
     final notifier = container.read(authControllerProvider.notifier);
     await notifier.ensureInitialized();
     await notifier.login(
-      account: MockAuthRepository.demoAccount,
+      username: MockAuthRepository.demoAccount,
       password: MockAuthRepository.demoPassword,
     );
 
@@ -172,7 +172,7 @@ class _RefreshingAuthRepository implements AuthRepository {
 
   @override
   Future<AuthSession> login({
-    required String account,
+    required String username,
     required String password,
   }) {
     throw UnimplementedError();
@@ -180,7 +180,7 @@ class _RefreshingAuthRepository implements AuthRepository {
 
   @override
   Future<String> register({
-    required String account,
+    required String username,
     required String password,
     required String confirmPassword,
   }) {
@@ -212,7 +212,7 @@ class _RegisteringAuthRepository implements AuthRepository {
 
   @override
   Future<AuthSession> login({
-    required String account,
+    required String username,
     required String password,
   }) {
     throw UnimplementedError();
@@ -223,7 +223,7 @@ class _RegisteringAuthRepository implements AuthRepository {
 
   @override
   Future<String> register({
-    required String account,
+    required String username,
     required String password,
     required String confirmPassword,
   }) async {

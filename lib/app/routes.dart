@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/features/about/about_page.dart';
@@ -7,17 +8,17 @@ import 'package:sickandflutter/features/home/home_page.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_page.dart';
 import 'package:sickandflutter/features/settings/settings_page.dart';
 import 'package:sickandflutter/features/splash/splash_page.dart';
-import 'package:sickandflutter/features/video/video_hub_page.dart';
-import 'package:sickandflutter/features/video/video_stream_detail_page.dart';
 
 /// 全局路由配置入口。
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authControllerProvider);
+  final authRefreshListenable = _AuthRouterRefreshListenable(ref);
+  ref.onDispose(authRefreshListenable.dispose);
 
   return GoRouter(
     initialLocation: AppRoutes.splashPath,
+    refreshListenable: authRefreshListenable,
     redirect: (context, state) => redirectForAuth(
-      authState: authState,
+      authState: ref.read(authControllerProvider),
       matchedLocation: state.matchedLocation,
     ),
     routes: <RouteBase>[
@@ -42,18 +43,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RealtimeDetectPage(),
       ),
       GoRoute(
-        path: AppRoutes.videoPath,
-        name: AppRoutes.video,
-        builder: (context, state) => const VideoHubPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.videoStreamDetailPath,
-        name: AppRoutes.videoStreamDetail,
-        builder: (context, state) => VideoStreamDetailPage(
-          streamId: state.pathParameters['streamId'] ?? '',
-        ),
-      ),
-      GoRoute(
         path: AppRoutes.settingsPath,
         name: AppRoutes.settings,
         builder: (context, state) => const SettingsPage(),
@@ -67,6 +56,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
+/// 把 Riverpod 认证状态变化转成 `GoRouter` 可消费的刷新信号。
+class _AuthRouterRefreshListenable extends ChangeNotifier {
+  _AuthRouterRefreshListenable(this._ref) {
+    _subscription = _ref.listen<AuthState>(
+      authControllerProvider,
+      (_, _) => notifyListeners(),
+      fireImmediately: true,
+    );
+  }
+
+  final Ref _ref;
+  ProviderSubscription<AuthState>? _subscription;
+
+  @override
+  void dispose() {
+    _subscription?.close();
+    super.dispose();
+  }
+}
+
 /// 应用路由名和路径常量。
 final class AppRoutes {
   /// 启动页路由名。
@@ -78,23 +87,8 @@ final class AppRoutes {
   /// 首页路由名。
   static const String home = 'home';
 
-  /// 单图识别页路由名。
-  static const String detect = 'detect';
-
-  /// 实时识别页路由名。
+  /// 实时监控页路由名。
   static const String realtimeDetect = 'realtimeDetect';
-
-  /// 视频中心页路由名。
-  static const String video = 'video';
-
-  /// 单路视频流详情页路由名。
-  static const String videoStreamDetail = 'videoStreamDetail';
-
-  /// 结果页路由名。
-  static const String result = 'result';
-
-  /// 历史记录页路由名。
-  static const String history = 'history';
 
   /// 设置页路由名。
   static const String settings = 'settings';
@@ -111,23 +105,8 @@ final class AppRoutes {
   /// 首页路由路径。
   static const String homePath = '/home';
 
-  /// 单图识别页路由路径。
-  static const String detectPath = '/detect';
-
-  /// 实时识别页路由路径。
+  /// 实时监控页路由路径。
   static const String realtimeDetectPath = '/realtime-detect';
-
-  /// 视频中心页路由路径。
-  static const String videoPath = '/video';
-
-  /// 单路视频流详情页路由路径。
-  static const String videoStreamDetailPath = '/video/:streamId';
-
-  /// 结果页路由路径。
-  static const String resultPath = '/result';
-
-  /// 历史记录页路由路径。
-  static const String historyPath = '/history';
 
   /// 设置页路由路径。
   static const String settingsPath = '/settings';
@@ -146,11 +125,6 @@ String? redirectForAuth({
     AppRoutes.loginPath,
     AppRoutes.aboutPath,
   };
-  const unsupportedRuntimeLocations = <String>{
-    AppRoutes.detectPath,
-    AppRoutes.resultPath,
-    AppRoutes.historyPath,
-  };
 
   if (matchedLocation == AppRoutes.splashPath) {
     return null;
@@ -162,22 +136,12 @@ String? redirectForAuth({
 
   final isLogin = matchedLocation == AppRoutes.loginPath;
   final isPublic = publicLocations.contains(matchedLocation);
-  final isUnsupportedRuntimeLocation = unsupportedRuntimeLocations.contains(
-    matchedLocation,
-  );
 
   if (authState.isAuthenticated) {
     if (isLogin) {
       return AppRoutes.realtimeDetectPath;
     }
-    if (isUnsupportedRuntimeLocation) {
-      return AppRoutes.homePath;
-    }
     return null;
-  }
-
-  if (isUnsupportedRuntimeLocation) {
-    return AppRoutes.loginPath;
   }
 
   if (!isPublic) {

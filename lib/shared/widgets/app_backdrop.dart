@@ -10,19 +10,19 @@ class AppBackdrop extends StatelessWidget {
     this.baseGradient,
     this.orbs = const <BackdropOrbData>[
       BackdropOrbData(
-        alignment: Alignment(-1.1, -1.0),
-        size: 320,
-        color: Color(0x2B83C88C),
-      ),
-      BackdropOrbData(
-        alignment: Alignment(1.05, -0.3),
+        alignment: Alignment(-1.05, -0.95),
         size: 260,
-        color: Color(0x2AB98A50),
+        color: Color(0x0E26A497),
       ),
       BackdropOrbData(
-        alignment: Alignment(0.75, 1.1),
+        alignment: Alignment(1.08, -0.18),
         size: 220,
-        color: Color(0x1E4E7E6A),
+        color: Color(0x0DB68B63),
+      ),
+      BackdropOrbData(
+        alignment: Alignment(0.78, 1.02),
+        size: 200,
+        color: Color(0x0C5D7E92),
       ),
     ],
     this.showGrid = true,
@@ -47,27 +47,54 @@ class AppBackdrop extends StatelessWidget {
         gradient:
             baseGradient ??
             LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
               colors: <Color>[
                 colorScheme.surface,
                 colorScheme.surfaceContainerLowest,
-                colorScheme.surfaceContainerLow,
+                colorScheme.surface,
               ],
             ),
       ),
       child: Stack(
         children: <Widget>[
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: <Color>[
+                      colorScheme.surface.withValues(alpha: 0.01),
+                      colorScheme.primaryContainer.withValues(alpha: 0.02),
+                      colorScheme.secondaryContainer.withValues(alpha: 0.03),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
           if (showGrid)
             Positioned.fill(
               child: IgnorePointer(
                 child: CustomPaint(
                   painter: _BackdropGridPainter(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.12),
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.03),
                   ),
                 ),
               ),
             ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(
+                painter: _BackdropContourPainter(
+                  lineColor: colorScheme.primary.withValues(alpha: 0.018),
+                  accentColor: colorScheme.tertiary.withValues(alpha: 0.022),
+                ),
+              ),
+            ),
+          ),
           ...orbs.map(
             (orb) => Align(
               alignment: orb.alignment,
@@ -80,12 +107,33 @@ class AppBackdrop extends StatelessWidget {
                     boxShadow: <BoxShadow>[
                       BoxShadow(
                         color: orb.color,
-                        blurRadius: orb.size * 0.34,
-                        spreadRadius: 12,
+                        blurRadius: orb.size * 0.22,
+                        spreadRadius: 10,
                       ),
                     ],
                   ),
                 ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: -120,
+            top: -80,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.08,
+                      ),
+                      blurRadius: 84,
+                      spreadRadius: 24,
+                    ),
+                  ],
+                ),
+                child: const SizedBox(width: 220, height: 220),
               ),
             ),
           ),
@@ -123,8 +171,8 @@ class _BackdropGridPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 1;
-    const step = 28.0;
+      ..strokeWidth = 0.7;
+    const step = 64.0;
 
     for (double x = 0; x <= size.width; x += step) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
@@ -137,5 +185,61 @@ class _BackdropGridPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _BackdropGridPainter oldDelegate) {
     return oldDelegate.color != color;
+  }
+}
+
+class _BackdropContourPainter extends CustomPainter {
+  const _BackdropContourPainter({
+    required this.lineColor,
+    required this.accentColor,
+  });
+
+  final Color lineColor;
+  final Color accentColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final mainPaint = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    final accentPaint = Paint()
+      ..color = accentColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
+
+    for (var index = 0; index < 3; index += 1) {
+      final progress = index / 3;
+      final startY = size.height * (0.16 + progress * 0.2);
+      final path = Path()
+        ..moveTo(-40, startY)
+        ..cubicTo(
+          size.width * 0.24,
+          startY - 16 - (index * 3),
+          size.width * 0.58,
+          startY + 18 + (index * 6),
+          size.width + 60,
+          startY - 4 + (index * 8),
+        );
+      canvas.drawPath(path, mainPaint);
+    }
+
+    final verticalPath = Path()
+      ..moveTo(size.width * 0.76, -20)
+      ..cubicTo(
+        size.width * 0.84,
+        size.height * 0.18,
+        size.width * 0.7,
+        size.height * 0.56,
+        size.width * 0.8,
+        size.height + 40,
+      );
+    canvas.drawPath(verticalPath, accentPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _BackdropContourPainter oldDelegate) {
+    return oldDelegate.lineColor != lineColor ||
+        oldDelegate.accentColor != accentColor;
   }
 }

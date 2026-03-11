@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +15,7 @@ import 'package:sickandflutter/features/realtime/widgets/realtime_monitor_hero.d
 import 'package:sickandflutter/features/realtime/widgets/realtime_monitor_top_bar.dart';
 import 'package:sickandflutter/features/realtime/widgets/realtime_status_guide_section.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
+import 'package:sickandflutter/shared/widgets/reveal_on_mount.dart';
 
 /// 实时监控页，负责展示设备状态、轮询结果与远程控制入口。
 class RealtimeDetectPage extends ConsumerStatefulWidget {
@@ -58,56 +61,70 @@ class _RealtimeDetectPageState extends ConsumerState<RealtimeDetectPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
           children: <Widget>[
-            RealtimeMonitorTopBar(
-              currentUser: currentUser,
-              state: state,
-              onRefresh: _controller.refreshNow,
-              onToggleAutoRefresh: _controller.setAutoRefreshEnabled,
-              onLogout: _handleLogout,
+            RevealOnMount(
+              child: RealtimeMonitorTopBar(
+                currentUser: currentUser,
+                state: state,
+                onRefresh: _controller.refreshNow,
+                onToggleAutoRefresh: _controller.setAutoRefreshEnabled,
+                onLogout: _handleLogout,
+              ),
             ),
             const SizedBox(height: 20),
-            RealtimeMonitorHero(state: state),
+            RevealOnMount(
+              delay: const Duration(milliseconds: 80),
+              child: RealtimeMonitorHero(state: state),
+            ),
             const SizedBox(height: 20),
             if (!state.hasDeviceState && state.isRefreshing)
-              const CommonCard(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 32),
-                  child: Center(child: CircularProgressIndicator.adaptive()),
+              const RevealOnMount(
+                delay: Duration(milliseconds: 140),
+                child: CommonCard(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: Center(child: CircularProgressIndicator.adaptive()),
+                  ),
                 ),
               )
             else ...<Widget>[
-              RealtimeMetricsSection(deviceState: state.deviceState),
+              RevealOnMount(
+                delay: const Duration(milliseconds: 140),
+                child: RealtimeMetricsSection(deviceState: state.deviceState),
+              ),
               const SizedBox(height: 20),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final isWide = constraints.maxWidth >= 900;
-                  final controls = RealtimeControlsSection(
-                    state: state,
-                    onToggleLed: _handleToggleLed,
-                  );
-                  final guide = RealtimeStatusGuideSection(
-                    deviceState: state.deviceState,
-                  );
+              RevealOnMount(
+                delay: const Duration(milliseconds: 200),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth >= 900;
+                    final controls = RealtimeControlsSection(
+                      state: state,
+                      onToggleLed: _handleToggleLed,
+                    );
+                    final guide = RealtimeStatusGuideSection(
+                      deviceState: state.deviceState,
+                    );
 
-                  if (!isWide) {
-                    return Column(
+                    if (!isWide) {
+                      return Column(
+                        children: <Widget>[
+                          controls,
+                          const SizedBox(height: 20),
+                          guide,
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        controls,
-                        const SizedBox(height: 20),
-                        guide,
+                        Expanded(child: controls),
+                        const SizedBox(width: 20),
+                        Expanded(child: guide),
                       ],
                     );
-                  }
-
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Expanded(child: controls),
-                      const SizedBox(width: 20),
-                      Expanded(child: guide),
-                    ],
-                  );
-                },
+                  },
+                ),
               ),
             ],
           ],
@@ -119,6 +136,7 @@ class _RealtimeDetectPageState extends ConsumerState<RealtimeDetectPage> {
   Future<void> _handleToggleLed(bool ledOn) async {
     try {
       final message = await _controller.toggleLed(ledOn);
+      unawaited(_refreshAfterLedCommand());
       if (!mounted) {
         return;
       }
@@ -136,7 +154,36 @@ class _RealtimeDetectPageState extends ConsumerState<RealtimeDetectPage> {
     }
   }
 
+  Future<void> _refreshAfterLedCommand() async {
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (!mounted) {
+      return;
+    }
+    await _controller.refreshNow();
+  }
+
   Future<void> _handleLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('退出登录'),
+        content: const Text('退出后需要重新登录才能继续访问主控台和设置页，是否继续？'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('确认退出'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) {
+      return;
+    }
+
     await ref.read(authControllerProvider.notifier).logout();
     if (!mounted) {
       return;

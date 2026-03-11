@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:sickandflutter/core/config/service_endpoint_resolver.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/json_value_parsers.dart';
@@ -79,7 +80,8 @@ class AppSettings {
 }
 
 String _baseUrlFromJson(Object? value) {
-  return asString(value, fallback: AppConstants.defaultBaseUrl);
+  return ServiceEndpointResolver.normalizeBaseUrl(asString(value)) ??
+      AppConstants.defaultBaseUrl;
 }
 
 int _connectTimeoutFromJson(Object? value) {

@@ -97,7 +97,52 @@ class DeviceStateInfo {
     if (updatedAt <= 0) {
       return null;
     }
-    return DateTime.fromMillisecondsSinceEpoch(updatedAt);
+    return DateTime.fromMillisecondsSinceEpoch(updatedAt).toLocal();
+  }
+
+  /// 当前数据距参考时间已经过了多久。
+  Duration? ageSince([DateTime? referenceTime]) {
+    final updatedAtTime = this.updatedAtTime;
+    if (updatedAtTime == null) {
+      return null;
+    }
+
+    final now = referenceTime ?? DateTime.now();
+    final difference = now.difference(updatedAtTime);
+    if (difference.isNegative) {
+      return Duration.zero;
+    }
+    return difference;
+  }
+
+  /// 当前状态是否仍在新鲜窗口内。
+  bool isFresh({
+    DateTime? referenceTime,
+    Duration threshold = const Duration(seconds: 18),
+  }) {
+    final age = ageSince(referenceTime);
+    if (age == null) {
+      return false;
+    }
+    return age <= threshold;
+  }
+
+  /// 当前状态的值守新鲜度说明。
+  String freshnessLabel({
+    DateTime? referenceTime,
+    Duration threshold = const Duration(seconds: 18),
+  }) {
+    final age = ageSince(referenceTime);
+    if (age == null) {
+      return '未收到设备上报';
+    }
+    if (age <= threshold) {
+      return '数据已同步';
+    }
+    if (age.inMinutes >= 1) {
+      return '数据已滞后 ${age.inMinutes} 分钟';
+    }
+    return '数据已滞后 ${age.inSeconds} 秒';
   }
 
   /// 当前运行等级。

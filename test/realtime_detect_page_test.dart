@@ -55,9 +55,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('实时监控主控台'), findsOneWidget);
-    expect(find.text('平台总览'), findsOneWidget);
+    expect(find.text('监测总览'), findsOneWidget);
     expect(find.text('运维设置'), findsOneWidget);
-    expect(find.text('运行状态'), findsOneWidget);
+    expect(find.text('值守台'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('当前结论'),
+      300,
+      scrollable: find.byType(Scrollable),
+    );
+    expect(find.text('当前结论'), findsOneWidget);
     expect(find.text('系统运行正常'), findsWidgets);
     expect(find.text('石斛培育柜'), findsWidgets);
 

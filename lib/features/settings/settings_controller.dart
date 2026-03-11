@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
+import 'package:sickandflutter/core/config/service_endpoint_resolver.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/core/storage/local_storage.dart';
 import 'package:sickandflutter/core/utils/platform_utils.dart';
@@ -27,6 +28,32 @@ final settingsControllerProvider =
       SettingsController.new,
     );
 
+/// 当前仓库运行时实际生效的应用设置。
+///
+/// 当异步设置尚未读回时，先回退到当前环境默认值，避免各业务层重复写兜底逻辑。
+final effectiveAppSettingsProvider = Provider<AppSettings>((ref) {
+  final envConfig = ref.watch(envConfigProvider);
+  final settingsState = ref.watch(settingsControllerProvider);
+  return settingsState.asData?.value ??
+      AppSettings.defaults(
+        buildFlavor: envConfig.flavor,
+        baseUrl: envConfig.baseUrl,
+        enableLog: envConfig.enableLog,
+      );
+});
+
+/// 当前实际使用的设备服务端点。
+final resolvedServiceEndpointsProvider = Provider<ResolvedServiceEndpoints>((
+  ref,
+) {
+  final envConfig = ref.watch(envConfigProvider);
+  final settings = ref.watch(effectiveAppSettingsProvider);
+  return ServiceEndpointResolver.resolve(
+    configuredBaseUrl: settings.baseUrl,
+    fallbackBaseUrl: envConfig.baseUrl,
+  );
+});
+
 /// 管理本地设置的加载、更新和恢复默认值。
 class SettingsController extends AsyncNotifier<AppSettings> {
   @override
@@ -52,7 +79,9 @@ class SettingsController extends AsyncNotifier<AppSettings> {
   /// 更新服务基础地址并立即持久化。
   Future<void> updateBaseUrl(String baseUrl) async {
     final currentSettings = state.value ?? await future;
-    final updatedSettings = currentSettings.copyWith(baseUrl: baseUrl.trim());
+    final updatedSettings = currentSettings.copyWith(
+      baseUrl: _normalizeBaseUrlOrThrow(baseUrl, fieldLabel: '设备服务地址'),
+    );
     await _save(updatedSettings);
   }
 
@@ -71,5 +100,16 @@ class SettingsController extends AsyncNotifier<AppSettings> {
     final storage = await ref.read(localStorageProvider.future);
     await storage.writeJson(AppConstants.settingsStorageKey, settings.toJson());
     state = AsyncData(settings);
+  }
+
+  String _normalizeBaseUrlOrThrow(
+    String rawValue, {
+    required String fieldLabel,
+  }) {
+    final normalized = ServiceEndpointResolver.normalizeBaseUrl(rawValue);
+    if (normalized == null) {
+      throw FormatException('$fieldLabel格式不正确，请输入 http://host:port 这类完整地址。');
+    }
+    return normalized;
   }
 }

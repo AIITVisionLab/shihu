@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sickandflutter/shared/widgets/common_card.dart';
 
 /// 首页入口卡片。
-class HomeEntryCard extends StatelessWidget {
+class HomeEntryCard extends StatefulWidget {
   /// 创建首页入口卡片。
   const HomeEntryCard({
     required this.icon,
@@ -25,72 +24,93 @@ class HomeEntryCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+  State<HomeEntryCard> createState() => _HomeEntryCardState();
+}
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(28),
-        onTap: onTap,
-        child: CommonCard(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: <Color>[
-                      colorScheme.primaryContainer,
-                      colorScheme.secondaryContainer,
+class _HomeEntryCardState extends State<HomeEntryCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: _isHovered
+                  ? colorScheme.surfaceContainerLow
+                  : colorScheme.surfaceContainerLowest.withValues(alpha: 0.96),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: _isHovered
+                    ? colorScheme.primary.withValues(alpha: 0.26)
+                    : colorScheme.outlineVariant.withValues(alpha: 0.34),
+              ),
+              boxShadow: _isHovered
+                  ? const <BoxShadow>[
+                      BoxShadow(
+                        color: Color(0x0C172019),
+                        blurRadius: 12,
+                        offset: Offset(0, 6),
+                      ),
+                    ]
+                  : const <BoxShadow>[],
+            ),
+            child: Row(
+              children: <Widget>[
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(widget.icon, color: colorScheme.primary),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        widget.title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        widget.subtitle,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          height: 1.52,
+                        ),
+                      ),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: Icon(icon, color: colorScheme.primary),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.72,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
+                const SizedBox(width: 12),
+                Icon(
                   Icons.arrow_forward_rounded,
                   size: 20,
-                  color: colorScheme.onSurface,
+                  color: _isHovered
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

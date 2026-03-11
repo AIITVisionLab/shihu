@@ -1,0 +1,5 @@
+[      88ms] [WARNING] WebGL: CONTEXT_LOST_WEBGL: loseContext: context lost @ http://127.0.0.1:7358/:0
+[    2448ms] [WARNING] [.WebGL-0x2cf402ceb800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels @ http://127.0.0.1:7358/:0
+[    2486ms] [WARNING] [.WebGL-0x2cf402ceb800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels @ http://127.0.0.1:7358/:0
+[    2527ms] [WARNING] [.WebGL-0x2cf402ceb800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels @ http://127.0.0.1:7358/:0
+[    2558ms] [WARNING] [.WebGL-0x2cf402ceb800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat) @ http://127.0.0.1:7358/:0

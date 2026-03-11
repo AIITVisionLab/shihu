@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_form_mode.dart';
-import 'package:sickandflutter/shared/widgets/common_button.dart';
-import 'package:sickandflutter/shared/widgets/common_card.dart';
 
 /// 认证表单提示的视觉语义。
 enum AuthFeedbackTone {
@@ -17,29 +15,32 @@ enum AuthFeedbackTone {
 class AuthFormCard extends StatelessWidget {
   /// 创建认证表单卡片。
   const AuthFormCard({
-    required this.accountController,
+    required this.usernameController,
     required this.passwordController,
     required this.confirmPasswordController,
     required this.isSubmitting,
     required this.isMockMode,
-    required this.loginModeLabel,
     required this.formMode,
     required this.rememberAccount,
     required this.showPassword,
     required this.showConfirmPassword,
     required this.passwordStrength,
+    required this.currentDeviceBaseUrl,
+    required this.isUsingCustomServiceConfig,
+    required this.canResetServiceConfig,
     required this.onRememberAccountChanged,
     required this.onTogglePasswordVisibility,
     required this.onToggleConfirmPasswordVisibility,
     required this.onSelectMode,
     required this.onSubmit,
+    required this.onResetServiceConfig,
     this.helperMessage,
     this.helperTone,
     super.key,
   });
 
-  /// 账号输入控制器。
-  final TextEditingController accountController;
+  /// 用户名输入控制器。
+  final TextEditingController usernameController;
 
   /// 密码输入控制器。
   final TextEditingController passwordController;
@@ -54,9 +55,6 @@ class AuthFormCard extends StatelessWidget {
   final bool isMockMode;
 
   /// 当前登录模式标签。
-  final String loginModeLabel;
-
-  /// 当前表单模式。
   final AuthFormMode formMode;
 
   /// 是否记住用户名。
@@ -70,6 +68,15 @@ class AuthFormCard extends StatelessWidget {
 
   /// 密码强度等级。
   final int passwordStrength;
+
+  /// 当前设备服务地址。
+  final String currentDeviceBaseUrl;
+
+  /// 当前是否使用自定义服务配置。
+  final bool isUsingCustomServiceConfig;
+
+  /// 当前是否允许恢复默认服务配置。
+  final bool canResetServiceConfig;
 
   /// 表单辅助提示。
   final String? helperMessage;
@@ -92,6 +99,9 @@ class AuthFormCard extends StatelessWidget {
   /// 提交表单。
   final Future<void> Function() onSubmit;
 
+  /// 恢复默认服务配置。
+  final Future<void> Function() onResetServiceConfig;
+
   bool get _isRegisterMode => formMode.isRegister;
 
   @override
@@ -99,196 +109,252 @@ class AuthFormCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final helperToneOrDefault = helperTone ?? AuthFeedbackTone.error;
 
-    return CommonCard(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          _FormHero(
-            formMode: formMode,
-            isMockMode: isMockMode,
-            loginModeLabel: loginModeLabel,
-          ),
-          const SizedBox(height: 20),
-          if (!isMockMode) ...<Widget>[
-            _ModeSelector(
-              currentMode: formMode,
-              isEnabled: !isSubmitting,
-              onSelectMode: onSelectMode,
+    return Material(
+      color: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      borderRadius: BorderRadius.circular(24),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.96),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.4),
             ),
-            const SizedBox(height: 20),
-          ],
-          if (_isRegisterMode) ...<Widget>[
-            const _RegisterRulePanel(),
-            const SizedBox(height: 16),
-          ],
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
-            child: (helperMessage?.isNotEmpty ?? false)
-                ? Padding(
-                    key: ValueKey<String>('helper-$helperMessage'),
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _FeedbackBanner(
-                      message: helperMessage!,
-                      tone: helperToneOrDefault,
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          ),
-          _AuthTextField(
-            controller: accountController,
-            label: _isRegisterMode ? '用户名' : AppCopy.authAccountLabel,
-            hintText: _isRegisterMode ? '例如：admin_01' : AppCopy.authAccountHint,
-            prefixIcon: const Icon(Icons.person_outline_rounded),
-            enabled: !isSubmitting,
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: 16),
-          _AuthTextField(
-            controller: passwordController,
-            label: AppCopy.authPasswordLabel,
-            hintText: isMockMode
-                ? AppCopy.authMockPasswordHint
-                : AppCopy.authPasswordHint,
-            prefixIcon: const Icon(Icons.lock_outline_rounded),
-            enabled: !isSubmitting,
-            obscureText: !showPassword,
-            textInputAction: _isRegisterMode
-                ? TextInputAction.next
-                : TextInputAction.done,
-            suffixIcon: IconButton(
-              onPressed: isSubmitting ? null : onTogglePasswordVisibility,
-              icon: Icon(
-                showPassword
-                    ? Icons.visibility_off_outlined
-                    : Icons.visibility_outlined,
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: Color(0x0C172019),
+                blurRadius: 12,
+                offset: Offset(0, 6),
               ),
-            ),
-            onSubmitted: (_) async {
-              if (!_isRegisterMode) {
-                await onSubmit();
-              }
-            },
+            ],
           ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            child: _isRegisterMode
-                ? Column(
-                    children: <Widget>[
-                      const SizedBox(height: 12),
-                      _PasswordStrengthIndicator(level: passwordStrength),
-                      const SizedBox(height: 16),
-                      _AuthTextField(
-                        controller: confirmPasswordController,
-                        label: AppCopy.authConfirmPasswordLabel,
-                        hintText: AppCopy.authConfirmPasswordHint,
-                        prefixIcon: const Icon(Icons.verified_outlined),
-                        enabled: !isSubmitting,
-                        obscureText: !showConfirmPassword,
-                        textInputAction: TextInputAction.done,
-                        suffixIcon: IconButton(
-                          onPressed: isSubmitting
-                              ? null
-                              : onToggleConfirmPasswordVisibility,
-                          icon: Icon(
-                            showConfirmPassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              _FormHero(formMode: formMode, isMockMode: isMockMode),
+              const SizedBox(height: 20),
+              if (!isMockMode) ...<Widget>[
+                _ModeSelector(
+                  currentMode: formMode,
+                  isEnabled: !isSubmitting,
+                  onSelectMode: onSelectMode,
+                ),
+                const SizedBox(height: 20),
+              ],
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: (helperMessage?.isNotEmpty ?? false)
+                    ? Padding(
+                        key: ValueKey<String>('helper-$helperMessage'),
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _FeedbackBanner(
+                          message: helperMessage!,
+                          tone: helperToneOrDefault,
                         ),
-                        onSubmitted: (_) async {
-                          await onSubmit();
-                        },
-                      ),
-                    ],
-                  )
-                : _RememberAccountTile(
-                    rememberAccount: rememberAccount,
-                    isMockMode: isMockMode,
-                    isSubmitting: isSubmitting,
-                    onChanged: onRememberAccountChanged,
-                  ),
-          ),
-          const SizedBox(height: 20),
-          CommonButton(
-            label: isSubmitting
-                ? (_isRegisterMode
-                      ? AppCopy.authRegistering
-                      : AppCopy.authLoggingIn)
-                : (_isRegisterMode ? AppCopy.authRegister : AppCopy.authLogin),
-            isLoading: isSubmitting,
-            icon: Icon(
-              _isRegisterMode ? Icons.person_add_alt_1_rounded : Icons.login,
-            ),
-            onPressed: isSubmitting
-                ? null
-                : () async {
-                    await onSubmit();
-                  },
-          ),
-          const SizedBox(height: 12),
-          if (!isMockMode)
-            Center(
-              child: TextButton(
-                onPressed: isSubmitting
-                    ? null
-                    : () => onSelectMode(
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              if (!isMockMode) ...<Widget>[
+                _ServiceAccessPanel(
+                  currentDeviceBaseUrl: currentDeviceBaseUrl,
+                  isUsingCustomServiceConfig: isUsingCustomServiceConfig,
+                  canResetServiceConfig: canResetServiceConfig,
+                  onResetServiceConfig: onResetServiceConfig,
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (_isRegisterMode) ...<Widget>[
+                const _RegisterRulePanel(),
+                const SizedBox(height: 16),
+              ],
+              AutofillGroup(
+                child: Column(
+                  children: <Widget>[
+                    _AuthTextField(
+                      controller: usernameController,
+                      label: AppCopy.authUsernameLabel,
+                      hintText: AppCopy.authUsernameHint,
+                      prefixIcon: const Icon(Icons.person_outline_rounded),
+                      enabled: !isSubmitting,
+                      textInputAction: TextInputAction.next,
+                      keyboardType: TextInputType.text,
+                      autofillHints: const <String>[AutofillHints.username],
+                      autocorrect: false,
+                      enableSuggestions: false,
+                    ),
+                    const SizedBox(height: 16),
+                    _AuthTextField(
+                      controller: passwordController,
+                      label: AppCopy.authPasswordLabel,
+                      hintText: isMockMode
+                          ? AppCopy.authMockPasswordHint
+                          : AppCopy.authPasswordHint,
+                      prefixIcon: const Icon(Icons.lock_outline_rounded),
+                      enabled: !isSubmitting,
+                      obscureText: !showPassword,
+                      textInputAction: _isRegisterMode
+                          ? TextInputAction.next
+                          : TextInputAction.done,
+                      autofillHints: <String>[
                         _isRegisterMode
-                            ? AuthFormMode.login
-                            : AuthFormMode.register,
+                            ? AutofillHints.newPassword
+                            : AutofillHints.password,
+                      ],
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      suffixIcon: IconButton(
+                        onPressed: isSubmitting
+                            ? null
+                            : onTogglePasswordVisibility,
+                        icon: Icon(
+                          showPassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
                       ),
-                child: Text(_isRegisterMode ? '返回登录' : '前往注册'),
-              ),
-            )
-          else
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '当前为联调登录模式，仅开放登录体验；接入在线服务后，同一张卡片会开放账号开通流程。',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  height: 1.6,
-                  color: colorScheme.onSurfaceVariant,
+                      onSubmitted: (_) async {
+                        if (!_isRegisterMode) {
+                          await onSubmit();
+                        }
+                      },
+                    ),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutCubic,
+                      child: _isRegisterMode
+                          ? Column(
+                              children: <Widget>[
+                                const SizedBox(height: 12),
+                                _PasswordStrengthIndicator(
+                                  level: passwordStrength,
+                                ),
+                                const SizedBox(height: 16),
+                                _AuthTextField(
+                                  controller: confirmPasswordController,
+                                  label: AppCopy.authConfirmPasswordLabel,
+                                  hintText: AppCopy.authConfirmPasswordHint,
+                                  prefixIcon: const Icon(
+                                    Icons.verified_outlined,
+                                  ),
+                                  enabled: !isSubmitting,
+                                  obscureText: !showConfirmPassword,
+                                  textInputAction: TextInputAction.done,
+                                  autofillHints: const <String>[
+                                    AutofillHints.newPassword,
+                                  ],
+                                  autocorrect: false,
+                                  enableSuggestions: false,
+                                  suffixIcon: IconButton(
+                                    onPressed: isSubmitting
+                                        ? null
+                                        : onToggleConfirmPasswordVisibility,
+                                    icon: Icon(
+                                      showConfirmPassword
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
+                                    ),
+                                  ),
+                                  onSubmitted: (_) async {
+                                    await onSubmit();
+                                  },
+                                ),
+                              ],
+                            )
+                          : _RememberAccountTile(
+                              rememberAccount: rememberAccount,
+                              isMockMode: isMockMode,
+                              isSubmitting: isSubmitting,
+                              onChanged: onRememberAccountChanged,
+                            ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-        ],
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          await onSubmit();
+                        },
+                  icon: isSubmitting
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          _isRegisterMode
+                              ? Icons.person_add_alt_1_rounded
+                              : Icons.login_rounded,
+                        ),
+                  label: Text(
+                    isSubmitting
+                        ? (_isRegisterMode
+                              ? AppCopy.authRegistering
+                              : AppCopy.authLoggingIn)
+                        : (_isRegisterMode
+                              ? AppCopy.authRegister
+                              : AppCopy.authLogin),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (!isMockMode)
+                Center(
+                  child: TextButton(
+                    onPressed: isSubmitting
+                        ? null
+                        : () => onSelectMode(
+                            _isRegisterMode
+                                ? AuthFormMode.login
+                                : AuthFormMode.register,
+                          ),
+                    child: Text(_isRegisterMode ? '返回登录' : '前往注册'),
+                  ),
+                )
+              else
+                _MockHintCard(colorScheme: colorScheme),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
 class _FormHero extends StatelessWidget {
-  const _FormHero({
-    required this.formMode,
-    required this.isMockMode,
-    required this.loginModeLabel,
-  });
+  const _FormHero({required this.formMode, required this.isMockMode});
 
   final AuthFormMode formMode;
   final bool isMockMode;
-  final String loginModeLabel;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final title = formMode.isRegister ? '创建新账号' : AppCopy.authLoginCardTitle;
+    final loginSceneLabel = isMockMode ? '演示模式' : '在线服务';
     final description = formMode.isRegister
-        ? '账号开通成功后会返回登录模式，并沿用同一套认证链路进入实时监控主控台。'
-        : '登录成功后直接进入设备主控台，后续访问会优先恢复上一轮有效会话。';
+        ? '账号开通完成后会回到登录模式，继续沿用同一套账号密码登录链路。'
+        : '登录成功后直接进入石斛监测主控台，继续查看设备状态、告警等级和补光控制。';
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            colorScheme.secondaryContainer.withValues(alpha: 0.92),
+            colorScheme.primaryContainer.withValues(alpha: 0.76),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(30),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,11 +380,7 @@ class _FormHero extends StatelessWidget {
                 icon: isMockMode
                     ? Icons.science_outlined
                     : Icons.cloud_done_outlined,
-                label: isMockMode ? '联调模式' : '在线服务',
-              ),
-              _StatusPill(
-                icon: Icons.info_outline_rounded,
-                label: AppCopy.authCurrentMode(loginModeLabel),
+                label: loginSceneLabel,
               ),
             ],
           ),
@@ -327,8 +389,129 @@ class _FormHero extends StatelessWidget {
             description,
             style: theme.textTheme.bodyMedium?.copyWith(
               height: 1.6,
+              color: colorScheme.onSecondaryContainer.withValues(alpha: 0.82),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceAccessPanel extends StatelessWidget {
+  const _ServiceAccessPanel({
+    required this.currentDeviceBaseUrl,
+    required this.isUsingCustomServiceConfig,
+    required this.canResetServiceConfig,
+    required this.onResetServiceConfig,
+  });
+
+  final String currentDeviceBaseUrl;
+  final bool isUsingCustomServiceConfig;
+  final bool canResetServiceConfig;
+  final Future<void> Function() onResetServiceConfig;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.84),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.32),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(
+                    isUsingCustomServiceConfig
+                        ? Icons.tune_rounded
+                        : Icons.cloud_done_outlined,
+                    color: colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    AppCopy.authServicePanelTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              if (canResetServiceConfig)
+                TextButton.icon(
+                  onPressed: () async {
+                    await onResetServiceConfig();
+                  },
+                  icon: const Icon(Icons.restart_alt_rounded),
+                  label: const Text(AppCopy.authResetServiceConfig),
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _ServiceAddressLine(
+            label: AppCopy.authDeviceServiceLabel,
+            value: currentDeviceBaseUrl,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isUsingCustomServiceConfig
+                ? AppCopy.authCustomServiceConfigHint
+                : AppCopy.authDefaultServiceConfigHint,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              height: 1.6,
               color: colorScheme.onSurfaceVariant,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceAddressLine extends StatelessWidget {
+  const _ServiceAddressLine({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SelectableText(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(height: 1.5),
           ),
         ],
       ),
@@ -346,25 +529,11 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surface.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(icon, size: 16, color: colorScheme.primary),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
+    return Chip(
+      avatar: Icon(icon, size: 16, color: colorScheme.primary),
+      label: Text(label),
+      backgroundColor: colorScheme.surfaceContainerLowest,
+      side: BorderSide.none,
     );
   }
 }
@@ -415,6 +584,10 @@ class _AuthTextField extends StatelessWidget {
     this.suffixIcon,
     this.textInputAction,
     this.onSubmitted,
+    this.keyboardType,
+    this.autofillHints,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
   });
 
   final TextEditingController controller;
@@ -426,6 +599,10 @@ class _AuthTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
+  final TextInputType? keyboardType;
+  final Iterable<String>? autofillHints;
+  final bool autocorrect;
+  final bool enableSuggestions;
 
   @override
   Widget build(BuildContext context) {
@@ -435,6 +612,10 @@ class _AuthTextField extends StatelessWidget {
       obscureText: obscureText,
       textInputAction: textInputAction,
       onSubmitted: onSubmitted,
+      keyboardType: keyboardType,
+      autofillHints: autofillHints,
+      autocorrect: autocorrect,
+      enableSuggestions: enableSuggestions,
       decoration: InputDecoration(
         labelText: label,
         hintText: hintText,
@@ -465,15 +646,15 @@ class _RememberAccountTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 4),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(20),
+        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: CheckboxListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 8),
         value: rememberAccount,
         onChanged: isSubmitting ? null : (value) => onChanged(value ?? false),
-        title: const Text('记住用户名'),
-        subtitle: Text(isMockMode ? '支持联调账号快速回填' : '下次打开登录页自动回填账号'),
+        title: const Text('记住账号'),
+        subtitle: Text(isMockMode ? '支持演示账号快速回填' : '下次打开登录页自动回填账号'),
         controlAffinity: ListTileControlAffinity.leading,
       ),
     );
@@ -501,8 +682,8 @@ class _PasswordStrengthIndicator extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(20),
+        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -535,8 +716,8 @@ class _RegisterRulePanel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(18),
+        color: colorScheme.secondaryContainer.withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -582,7 +763,8 @@ class _FeedbackBanner extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: foregroundColor.withValues(alpha: 0.16)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -599,6 +781,31 @@ class _FeedbackBanner extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MockHintCard extends StatelessWidget {
+  const _MockHintCard({required this.colorScheme});
+
+  final ColorScheme colorScheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Text(
+        '当前为演示环境，仅用于体验登录流程；切换到在线服务后即可使用正式账号继续登录。',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          height: 1.6,
+          color: colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

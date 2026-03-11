@@ -121,7 +121,7 @@ final class AboutContent {
 
   /// 调控目标补充说明。
   static const String targetSummary =
-      '所有页面都围绕“看得见、判得出、能执行、可回看”展开，保证系统从说明层到主控层保持一致的业务语义。';
+      '所有页面都围绕“看得见、判得出、能执行、可核对”展开，保证系统从说明层到主控层保持一致的业务语义。';
 
   /// 顶部亮点卡片。
   static const List<AboutHeroStat> heroStats = <AboutHeroStat>[

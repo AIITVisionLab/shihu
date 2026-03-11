@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:sickandflutter/core/config/env_config.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/core/network/api_client.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
@@ -7,15 +8,30 @@ import 'package:sickandflutter/features/auth/auth_repository.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
+import 'package:sickandflutter/shared/models/app_settings.dart';
 import 'package:sickandflutter/shared/models/model_utils.dart';
 
 /// 真实认证接口实现。
 class RealAuthRepository implements AuthRepository {
   /// 创建真实认证仓储。
-  const RealAuthRepository({required ApiClient apiClient})
-    : _apiClient = apiClient;
+  const RealAuthRepository({
+    this.apiClient,
+    this.envConfig,
+    this.currentSettingsBuilder,
+  }) : assert(
+         apiClient != null ||
+             (envConfig != null && currentSettingsBuilder != null),
+         '真实认证仓储必须提供 apiClient，或同时提供 envConfig 和 currentSettingsBuilder。',
+       );
 
-  final ApiClient _apiClient;
+  /// 用于测试替身或固定地址场景的直接客户端。
+  final ApiClient? apiClient;
+
+  /// 当前环境配置。
+  final EnvConfig? envConfig;
+
+  /// 当前运行时生效设置读取器。
+  final AppSettings Function()? currentSettingsBuilder;
 
   @override
   bool get isMockMode => false;
@@ -25,14 +41,14 @@ class RealAuthRepository implements AuthRepository {
 
   @override
   Future<AuthSession> login({
-    required String account,
+    required String username,
     required String password,
   }) async {
-    final normalizedAccount = account.trim();
-    final response = await _apiClient.postJsonDetailed(
+    final normalizedUsername = username.trim();
+    final response = await _createClient().postJsonDetailed(
       '/api/login',
       data: <String, dynamic>{
-        'username': normalizedAccount,
+        'username': normalizedUsername,
         'password': password,
       },
     );
@@ -51,24 +67,24 @@ class RealAuthRepository implements AuthRepository {
       tokenType: 'Session',
       loginMode: loginMode,
       user: AuthUser(
-        userId: normalizedAccount,
-        account: normalizedAccount,
-        displayName: normalizedAccount,
+        userId: normalizedUsername,
+        account: normalizedUsername,
+        displayName: normalizedUsername,
       ),
     );
   }
 
   @override
   Future<String> register({
-    required String account,
+    required String username,
     required String password,
     required String confirmPassword,
   }) async {
-    final normalizedAccount = account.trim();
-    final payload = await _apiClient.postJson(
+    final normalizedUsername = username.trim();
+    final payload = await _createClient().postJson(
       '/api/register',
       data: <String, dynamic>{
-        'username': normalizedAccount,
+        'username': normalizedUsername,
         'password': password,
         'confirmPassword': confirmPassword,
       },
@@ -85,7 +101,9 @@ class RealAuthRepository implements AuthRepository {
 
   @override
   Future<AuthSession> refreshSession({required AuthSession session}) async {
-    final response = await _apiClient.getJson('/api/check-login');
+    final response = await _createClient(
+      sessionCookie: session.hasSessionCookie ? session.sessionCookie : null,
+    ).getJson('/api/check-login');
     if (response['loggedIn'] == true) {
       final refreshedAccount = asString(
         response['username'],
@@ -109,10 +127,9 @@ class RealAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout({required AuthSession session}) async {
-    final raw = await _apiClient.postJson(
-      '/api/logout',
-      data: <String, dynamic>{},
-    );
+    final raw = await _createClient(
+      sessionCookie: session.hasSessionCookie ? session.sessionCookie : null,
+    ).postJson('/api/logout', data: <String, dynamic>{});
     _throwWhenRequestFailed(
       raw,
       fallbackFailureMessage: AppCopy.authLogoutFailed,
@@ -175,5 +192,19 @@ class RealAuthRepository implements AuthRepository {
     }
 
     return null;
+  }
+
+  ApiClient _createClient({String? sessionCookie}) {
+    final fixedApiClient = apiClient;
+    if (fixedApiClient != null) {
+      return fixedApiClient;
+    }
+
+    return ApiClient(
+      settings: currentSettingsBuilder!(),
+      envConfig: envConfig!,
+      cookieHeader: sessionCookie,
+      includeBrowserCredentials: true,
+    );
   }
 }

@@ -4,7 +4,7 @@ import 'package:sickandflutter/app/app_workspace_destination.dart';
 import 'package:sickandflutter/app/widgets/app_workspace_scaffold.dart';
 
 void main() {
-  testWidgets('AppWorkspaceScaffold renders rail navigation on wide layout', (
+  testWidgets('AppWorkspaceScaffold renders top navigation on wide layout', (
     tester,
   ) async {
     tester.view
@@ -29,10 +29,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.text('平台总览'), findsOneWidget);
-    expect(find.text('视频中心'), findsOneWidget);
-    expect(find.text('监控主控台'), findsOneWidget);
-    expect(find.text('系统总览'), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.text('监测总览'), findsOneWidget);
+    expect(find.text('主控台'), findsOneWidget);
+    expect(find.text('系统概览'), findsOneWidget);
     expect(find.text('运维设置'), findsOneWidget);
   });
 
@@ -61,11 +61,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(NavigationBar), findsOneWidget);
-      expect(find.text('平台总览'), findsOneWidget);
-      expect(find.text('视频中心'), findsOneWidget);
-      expect(find.text('监控主控台'), findsOneWidget);
-      expect(find.text('系统总览'), findsOneWidget);
-      expect(find.text('运维设置'), findsOneWidget);
+      expect(find.text('主控台'), findsOneWidget);
     },
   );
 }

@@ -3,16 +3,13 @@ import 'package:sickandflutter/app/routes.dart';
 
 /// 主工作台内的一级导航目的地。
 enum AppWorkspaceDestination {
-  /// 平台总览。
+  /// 监测总览。
   home,
-
-  /// 视频中心。
-  video,
 
   /// 实时监控主控台。
   realtime,
 
-  /// 系统总览。
+  /// 系统概览。
   about,
 
   /// 运维设置。
@@ -25,13 +22,11 @@ extension AppWorkspaceDestinationX on AppWorkspaceDestination {
   String get label {
     switch (this) {
       case AppWorkspaceDestination.home:
-        return '平台总览';
-      case AppWorkspaceDestination.video:
-        return '视频中心';
+        return '监测总览';
       case AppWorkspaceDestination.realtime:
-        return '监控主控台';
+        return '主控台';
       case AppWorkspaceDestination.about:
-        return '系统总览';
+        return '系统概览';
       case AppWorkspaceDestination.settings:
         return '运维设置';
     }
@@ -42,8 +37,6 @@ extension AppWorkspaceDestinationX on AppWorkspaceDestination {
     switch (this) {
       case AppWorkspaceDestination.home:
         return Icons.dashboard_outlined;
-      case AppWorkspaceDestination.video:
-        return Icons.videocam_outlined;
       case AppWorkspaceDestination.realtime:
         return Icons.monitor_heart_outlined;
       case AppWorkspaceDestination.about:
@@ -58,8 +51,6 @@ extension AppWorkspaceDestinationX on AppWorkspaceDestination {
     switch (this) {
       case AppWorkspaceDestination.home:
         return Icons.dashboard_rounded;
-      case AppWorkspaceDestination.video:
-        return Icons.videocam_rounded;
       case AppWorkspaceDestination.realtime:
         return Icons.monitor_heart_rounded;
       case AppWorkspaceDestination.about:
@@ -74,8 +65,6 @@ extension AppWorkspaceDestinationX on AppWorkspaceDestination {
     switch (this) {
       case AppWorkspaceDestination.home:
         return AppRoutes.home;
-      case AppWorkspaceDestination.video:
-        return AppRoutes.video;
       case AppWorkspaceDestination.realtime:
         return AppRoutes.realtimeDetect;
       case AppWorkspaceDestination.about:

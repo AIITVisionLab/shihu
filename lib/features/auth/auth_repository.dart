@@ -1,12 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
-import 'package:sickandflutter/core/network/api_client_factory.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/mock_auth_repository.dart';
 import 'package:sickandflutter/features/auth/real_auth_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
-import 'package:sickandflutter/shared/models/app_settings.dart';
 
 /// 登录仓储入口。
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -19,25 +17,15 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
     return const MockAuthRepository();
   }
 
-  final settings = _resolveSettings(ref, envConfig);
-  final apiClientFactory = ref.watch(apiClientFactoryProvider);
   return RealAuthRepository(
-    apiClient: apiClientFactory.create(
-      settings: settings,
-      includeBrowserCredentials: true,
-    ),
+    envConfig: envConfig,
+    currentSettingsBuilder: () {
+      final settings = ref.read(effectiveAppSettingsProvider);
+      final serviceEndpoints = ref.read(resolvedServiceEndpointsProvider);
+      return settings.copyWith(baseUrl: serviceEndpoints.deviceBaseUrl);
+    },
   );
 });
-
-AppSettings _resolveSettings(Ref ref, EnvConfig envConfig) {
-  final settingsState = ref.watch(settingsControllerProvider);
-  return settingsState.asData?.value ??
-      AppSettings.defaults(
-        buildFlavor: envConfig.flavor,
-        baseUrl: envConfig.baseUrl,
-        enableLog: envConfig.enableLog,
-      );
-}
 
 /// 认证仓储统一入口。
 abstract class AuthRepository {
@@ -47,15 +35,15 @@ abstract class AuthRepository {
   /// 当前登录模式。
   AuthLoginMode get loginMode;
 
-  /// 使用账号密码执行登录。
+  /// 使用用户名密码执行登录。
   Future<AuthSession> login({
-    required String account,
+    required String username,
     required String password,
   });
 
-  /// 使用账号、密码和确认密码执行注册。
+  /// 使用用户名、密码和确认密码执行注册。
   Future<String> register({
-    required String account,
+    required String username,
     required String password,
     required String confirmPassword,
   });

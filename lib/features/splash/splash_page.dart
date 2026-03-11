@@ -6,6 +6,7 @@ import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
+import 'package:sickandflutter/shared/widgets/app_backdrop.dart';
 
 /// 启动页，负责初始化本地设置和基础运行信息。
 class SplashPage extends ConsumerStatefulWidget {
@@ -56,90 +57,171 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: <Color>[Color(0xFFEEF7EB), Color(0xFFDDEED7)],
+      body: Stack(
+        children: <Widget>[
+          Positioned.fill(
+            child: AppBackdrop(
+              baseGradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: <Color>[
+                  colorScheme.surface,
+                  colorScheme.surfaceContainerLow,
+                  colorScheme.surfaceContainer,
+                ],
+              ),
+              orbs: const <BackdropOrbData>[
+                BackdropOrbData(
+                  alignment: Alignment(-1.0, -0.9),
+                  size: 320,
+                  color: Color(0x1885B28F),
+                ),
+                BackdropOrbData(
+                  alignment: Alignment(1.0, -0.35),
+                  size: 260,
+                  color: Color(0x15977A58),
+                ),
+                BackdropOrbData(
+                  alignment: Alignment(0.82, 1.0),
+                  size: 250,
+                  color: Color(0x12436C61),
+                ),
+              ],
+            ),
           ),
-        ),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Container(
-                    width: 108,
-                    height: 108,
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(38),
+                  child: Container(
+                    padding: const EdgeInsets.all(30),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(32),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: <Color>[
+                          colorScheme.surfaceContainerLowest.withValues(
+                            alpha: 0.98,
+                          ),
+                          colorScheme.surfaceContainerLow.withValues(
+                            alpha: 0.94,
+                          ),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.4,
+                        ),
+                      ),
                       boxShadow: const <BoxShadow>[
                         BoxShadow(
-                          color: Color(0x14000000),
-                          blurRadius: 24,
-                          offset: Offset(0, 10),
+                          color: Color(0x140E1712),
+                          blurRadius: 30,
+                          offset: Offset(0, 18),
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.spa_rounded,
-                      size: 56,
-                      color: Color(0xFF2E7D32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Container(
+                          width: 118,
+                          height: 118,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(36),
+                            boxShadow: <BoxShadow>[
+                              BoxShadow(
+                                color: colorScheme.primary.withValues(
+                                  alpha: 0.14,
+                                ),
+                                blurRadius: 30,
+                                offset: const Offset(0, 16),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.spa_rounded,
+                            size: 60,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                        const SizedBox(height: 22),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.secondaryContainer.withValues(
+                              alpha: 0.58,
+                            ),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            '环境初始化',
+                            style: textTheme.labelLarge?.copyWith(
+                              color: colorScheme.onSecondaryContainer,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          AppConstants.appName,
+                          style: textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          AppConstants.appTagline,
+                          textAlign: TextAlign.center,
+                          style: textTheme.titleMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        if (_errorMessage == null) ...<Widget>[
+                          const CircularProgressIndicator.adaptive(),
+                          const SizedBox(height: 18),
+                          Text(
+                            AppCopy.splashBootstrapping,
+                            style: textTheme.bodyLarge,
+                            textAlign: TextAlign.center,
+                          ),
+                        ] else ...<Widget>[
+                          Text(
+                            _errorMessage!,
+                            style: textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.error,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 20),
+                          FilledButton(
+                            onPressed: () {
+                              setState(() {
+                                _errorMessage = null;
+                              });
+                              _bootstrap();
+                            },
+                            child: const Text(AppCopy.splashRetry),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 28),
-                  Text(
-                    AppConstants.appName,
-                    style: textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    AppConstants.appTagline,
-                    textAlign: TextAlign.center,
-                    style: textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 28),
-                  if (_errorMessage == null) ...<Widget>[
-                    const CircularProgressIndicator(),
-                    const SizedBox(height: 16),
-                    Text(
-                      AppCopy.splashBootstrapping,
-                      style: textTheme.bodyLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                  ] else ...<Widget>[
-                    Text(
-                      _errorMessage!,
-                      style: textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    FilledButton(
-                      onPressed: () {
-                        setState(() {
-                          _errorMessage = null;
-                        });
-                        _bootstrap();
-                      },
-                      child: const Text(AppCopy.splashRetry),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -7,7 +7,6 @@ import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/features/auth/remembered_account_repository.dart';
-import 'package:sickandflutter/features/history/history_repository.dart';
 import 'package:sickandflutter/features/settings/device_state_repository.dart';
 import 'package:sickandflutter/features/settings/service_health_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
@@ -15,7 +14,6 @@ import 'package:sickandflutter/features/settings/settings_page.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
 import 'package:sickandflutter/shared/models/device_state_info.dart';
-import 'package:sickandflutter/shared/models/history_record.dart';
 import 'package:sickandflutter/shared/models/service_health_info.dart';
 
 void main() {
@@ -76,12 +74,12 @@ void main() {
           ),
           settingsControllerProvider.overrideWith(() => settingsController),
           serviceHealthProvider.overrideWith(
-            (ref) async => const ServiceHealthInfo(
+            (ref) async => ServiceHealthInfo(
               status: 'up',
-              serviceName: 'shihu-detect-service',
-              serviceVersion: '1.0.0',
-              modelStatus: 'ready',
-              serverTime: '2026-03-08T10:00:00+08:00',
+              responseText: 'ok',
+              checkedAt: DateTime.parse(
+                '2026-03-08T10:00:00+08:00',
+              ).toIso8601String(),
             ),
           ),
           deviceStateProvider.overrideWith(
@@ -101,10 +99,6 @@ void main() {
           rememberedAccountControllerProvider.overrideWith(
             () => rememberedAccountController,
           ),
-          historyControllerProvider.overrideWith(
-            () =>
-                _TestHistoryController(initialRecords: const <HistoryRecord>[]),
-          ),
         ],
         child: const MaterialApp(home: SettingsPage()),
       ),
@@ -115,8 +109,8 @@ void main() {
     expect(find.text('2.3.4+56'), findsOneWidget);
     expect(find.text('http://10.0.2.2:8080'), findsOneWidget);
     expect(find.text('服务正常'), findsOneWidget);
-    expect(find.text('模型就绪'), findsOneWidget);
-    expect(find.text('shihu-detect-service'), findsOneWidget);
+    expect(find.text('ok'), findsOneWidget);
+    expect(find.text('2026-03-08 10:00:00'), findsOneWidget);
     expect(find.text('demo'), findsOneWidget);
     expect(find.text('联调登录'), findsOneWidget);
     expect(find.text('记住的账号'), findsOneWidget);
@@ -164,12 +158,12 @@ void main() {
           ),
           settingsControllerProvider.overrideWith(() => settingsController),
           serviceHealthProvider.overrideWith(
-            (ref) async => const ServiceHealthInfo(
+            (ref) async => ServiceHealthInfo(
               status: 'up',
-              serviceName: 'shihu-detect-service',
-              serviceVersion: '1.0.0',
-              modelStatus: 'ready',
-              serverTime: '2026-03-08T10:00:00+08:00',
+              responseText: 'ok',
+              checkedAt: DateTime.parse(
+                '2026-03-08T10:00:00+08:00',
+              ).toIso8601String(),
             ),
           ),
           deviceStateProvider.overrideWith(
@@ -191,18 +185,15 @@ void main() {
           rememberedAccountControllerProvider.overrideWith(
             () => rememberedAccountController,
           ),
-          historyControllerProvider.overrideWith(
-            () =>
-                _TestHistoryController(initialRecords: const <HistoryRecord>[]),
-          ),
         ],
         child: const MaterialApp(home: SettingsPage()),
       ),
     );
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('修改'));
-    await tester.tap(find.text('修改'));
+    final editButtons = find.widgetWithText(TextButton, '修改');
+    await tester.ensureVisible(editButtons.first);
+    await tester.tap(editButtons.first);
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'http://192.168.1.10:8080');
@@ -216,6 +207,8 @@ void main() {
 
     final resetButton = find.widgetWithText(OutlinedButton, '恢复默认设置');
     await tester.tap(resetButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('确认'));
     await tester.pumpAndSettle();
 
     expect(settingsController.resetCount, 1);
@@ -265,12 +258,12 @@ void main() {
             ),
           ),
           serviceHealthProvider.overrideWith(
-            (ref) async => const ServiceHealthInfo(
+            (ref) async => ServiceHealthInfo(
               status: 'up',
-              serviceName: 'device-service',
-              serviceVersion: '1.0.0',
-              modelStatus: 'ready',
-              serverTime: '2026-03-08T10:00:00+08:00',
+              responseText: 'ok',
+              checkedAt: DateTime.parse(
+                '2026-03-08T10:00:00+08:00',
+              ).toIso8601String(),
             ),
           ),
           deviceStateProvider.overrideWith(
@@ -292,10 +285,6 @@ void main() {
           rememberedAccountControllerProvider.overrideWith(
             () => rememberedAccountController,
           ),
-          historyControllerProvider.overrideWith(
-            () =>
-                _TestHistoryController(initialRecords: const <HistoryRecord>[]),
-          ),
         ],
         child: const MaterialApp(home: SettingsPage()),
       ),
@@ -303,6 +292,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final clearRememberedButton = find.widgetWithText(FilledButton, '清除记住账号');
+    await tester.ensureVisible(clearRememberedButton);
     await tester.tap(clearRememberedButton);
     await tester.pumpAndSettle();
 
@@ -360,22 +350,6 @@ class _TestAuthController extends AuthController {
   Future<void> logout({bool notifyServer = true}) async {
     logoutCount += 1;
     state = const AuthState();
-  }
-}
-
-class _TestHistoryController extends HistoryController {
-  _TestHistoryController({required this.initialRecords});
-
-  final List<HistoryRecord> initialRecords;
-  int clearAllCount = 0;
-
-  @override
-  Future<List<HistoryRecord>> build() async => initialRecords;
-
-  @override
-  Future<void> clearAll() async {
-    clearAllCount += 1;
-    state = const AsyncData(<HistoryRecord>[]);
   }
 }
 

@@ -5,7 +5,7 @@ import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
 
 void main() {
-  test('ApiClientFactory keeps browser credentials opt-in', () {
+  test('ApiClientFactory distinguishes public and session clients', () {
     const baseUrl = 'http://127.0.0.1:8082';
     const factory = ApiClientFactory(
       envConfig: EnvConfig(
@@ -24,14 +24,11 @@ void main() {
       enableLog: true,
     );
     final publicClient = factory.create(settings: settings);
-    final authClient = factory.create(
-      settings: settings,
-      includeBrowserCredentials: true,
-    );
+    final sessionClient = factory.createSessionClient(settings: settings);
 
     expect(publicClient.includeBrowserCredentials, isFalse);
-    expect(authClient.includeBrowserCredentials, isTrue);
-    expect(authClient.cookieHeader, 'JSESSIONID=test-session');
+    expect(sessionClient.includeBrowserCredentials, isTrue);
+    expect(sessionClient.cookieHeader, 'JSESSIONID=test-session');
   });
 }
 
