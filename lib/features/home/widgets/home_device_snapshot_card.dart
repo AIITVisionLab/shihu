@@ -22,7 +22,7 @@ class HomeDeviceSnapshotCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return CommonCard(
       title: '实时快照',
-      subtitle: '这里保留当前设备的简要快照；如果需要操作，请直接进入主控台。',
+      subtitle: '这里只保留当前数据，处理动作放到值守台。',
       child: deviceStateAsync.when(
         loading: () => const Padding(
           padding: EdgeInsets.symmetric(vertical: 20),
@@ -43,89 +43,31 @@ class HomeDeviceSnapshotCard extends StatelessWidget {
         data: (deviceState) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    deviceState.deviceName.trim().isEmpty
-                        ? deviceState.deviceId
-                        : deviceState.deviceName,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: onRefresh,
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('同步'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: <Widget>[
-                _StatusChip(
-                  label: deviceState.alertTitle,
-                  level: deviceState.alertLevel,
-                ),
-                _FreshnessChip(deviceState: deviceState),
-                _BasicChip(label: 'LED ${deviceState.ledLabel}'),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _InfoRow(
-              label: '最近上报',
-              value: _formatDateTime(deviceState.updatedAtTime),
-            ),
-            const SizedBox(height: 10),
-            _InfoRow(label: '设备 ID', value: deviceState.deviceId),
-            const SizedBox(height: 16),
             LayoutBuilder(
               builder: (context, constraints) {
-                final columns = constraints.maxWidth >= 620 ? 2 : 1;
-                final itemWidth =
-                    (constraints.maxWidth - ((columns - 1) * 12)) / columns;
+                final summary = _SnapshotSummary(
+                  deviceState: deviceState,
+                  onRefresh: onRefresh,
+                );
+                final metrics = _SnapshotMetrics(deviceState: deviceState);
 
-                return Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
+                if (constraints.maxWidth < 860) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      summary,
+                      const SizedBox(height: 16),
+                      metrics,
+                    ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    _MetricTile(
-                      width: itemWidth,
-                      label: '温度',
-                      value: deviceState.formatMetric(
-                        deviceState.temperature,
-                        deviceState.temperatureUnit,
-                      ),
-                    ),
-                    _MetricTile(
-                      width: itemWidth,
-                      label: '湿度',
-                      value: deviceState.formatMetric(
-                        deviceState.humidity,
-                        deviceState.humidityUnit,
-                      ),
-                    ),
-                    _MetricTile(
-                      width: itemWidth,
-                      label: '光照',
-                      value: deviceState.formatMetric(
-                        deviceState.light,
-                        deviceState.lightUnit,
-                        fractionDigits: 0,
-                      ),
-                    ),
-                    _MetricTile(
-                      width: itemWidth,
-                      label: 'MQ2',
-                      value: deviceState.formatMetric(
-                        deviceState.mq2,
-                        deviceState.mq2Unit,
-                      ),
-                    ),
+                    Expanded(flex: 7, child: summary),
+                    const SizedBox(width: 16),
+                    Expanded(flex: 8, child: metrics),
                   ],
                 );
               },
@@ -137,8 +79,120 @@ class HomeDeviceSnapshotCard extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
+class _SnapshotSummary extends StatelessWidget {
+  const _SnapshotSummary({required this.deviceState, required this.onRefresh});
+
+  final DeviceStateInfo deviceState;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                deviceState.deviceName.trim().isEmpty
+                    ? deviceState.deviceId
+                    : deviceState.deviceName,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: onRefresh,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('同步'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: <Widget>[
+            _StatusChip(
+              label: deviceState.alertTitle,
+              level: deviceState.alertLevel,
+            ),
+            _FreshnessChip(deviceState: deviceState),
+            _BasicChip(label: 'LED ${deviceState.ledLabel}'),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _InfoBlock(
+          label: '最近上报',
+          value: _formatDateTime(deviceState.updatedAtTime),
+        ),
+      ],
+    );
+  }
+}
+
+class _SnapshotMetrics extends StatelessWidget {
+  const _SnapshotMetrics({required this.deviceState});
+
+  final DeviceStateInfo deviceState;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 420 ? 2 : 1;
+        final itemWidth =
+            (constraints.maxWidth - ((columns - 1) * 12)) / columns;
+
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: <Widget>[
+            _MetricTile(
+              width: itemWidth,
+              label: '温度',
+              value: deviceState.formatMetric(
+                deviceState.temperature,
+                deviceState.temperatureUnit,
+              ),
+            ),
+            _MetricTile(
+              width: itemWidth,
+              label: '湿度',
+              value: deviceState.formatMetric(
+                deviceState.humidity,
+                deviceState.humidityUnit,
+              ),
+            ),
+            _MetricTile(
+              width: itemWidth,
+              label: '光照',
+              value: deviceState.formatMetric(
+                deviceState.light,
+                deviceState.lightUnit,
+                fractionDigits: 0,
+              ),
+            ),
+            _MetricTile(
+              width: itemWidth,
+              label: 'MQ2',
+              value: deviceState.formatMetric(
+                deviceState.mq2,
+                deviceState.mq2Unit,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _InfoBlock extends StatelessWidget {
+  const _InfoBlock({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -148,26 +202,34 @@ class _InfoRow extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Row(
-      children: <Widget>[
-        SizedBox(
-          width: 72,
-          child: Text(
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.24),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
             label,
             style: theme.textTheme.labelLarge?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-        ),
-        Expanded(
-          child: SelectableText(
+          const SizedBox(height: 8),
+          SelectableText(
             value,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -193,10 +255,10 @@ class _MetricTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
+          color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.72),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.22),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.24),
           ),
         ),
         child: Column(

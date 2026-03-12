@@ -15,11 +15,47 @@ class SettingsAboutProjectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return CommonCard(
       title: AppCopy.settingsProjectTitle,
-      child: CommonButton(
-        label: AppCopy.viewAboutProject,
-        tone: CommonButtonTone.secondary,
-        icon: const Icon(Icons.info_outline),
-        onPressed: onOpenAbout,
+      subtitle: '需要确认平台定位、业务闭环或指标目标时，从这里进入系统概览。',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final summary = Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerLowest.withValues(alpha: 0.72),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            child: Text(
+              '聚焦环境监测、风险预警、远程调控和排障链路，不再把说明页做成宣传页。',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          );
+          final action = CommonButton(
+            label: AppCopy.viewAboutProject,
+            tone: CommonButtonTone.secondary,
+            icon: const Icon(Icons.info_outline),
+            onPressed: onOpenAbout,
+          );
+
+          if (constraints.maxWidth < 760) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[summary, const SizedBox(height: 14), action],
+            );
+          }
+
+          return Row(
+            children: <Widget>[
+              Expanded(child: summary),
+              const SizedBox(width: 16),
+              action,
+            ],
+          );
+        },
       ),
     );
   }

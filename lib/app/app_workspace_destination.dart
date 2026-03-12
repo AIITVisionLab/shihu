@@ -3,16 +3,16 @@ import 'package:sickandflutter/app/routes.dart';
 
 /// 主工作台内的一级导航目的地。
 enum AppWorkspaceDestination {
-  /// 监测总览。
+  /// 总览。
   home,
 
-  /// 实时监控主控台。
+  /// 值守台。
   realtime,
 
-  /// 系统概览。
+  /// 使用说明。
   about,
 
-  /// 运维设置。
+  /// 我的。
   settings,
 }
 
@@ -22,13 +22,13 @@ extension AppWorkspaceDestinationX on AppWorkspaceDestination {
   String get label {
     switch (this) {
       case AppWorkspaceDestination.home:
-        return '监测总览';
+        return '总览';
       case AppWorkspaceDestination.realtime:
-        return '主控台';
+        return '值守';
       case AppWorkspaceDestination.about:
-        return '系统概览';
+        return '说明';
       case AppWorkspaceDestination.settings:
-        return '运维设置';
+        return '我的';
     }
   }
 

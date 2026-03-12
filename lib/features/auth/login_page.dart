@@ -40,13 +40,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _usernameController = TextEditingController();
     _passwordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
-    _passwordController.addListener(_handlePasswordChanged);
     Future<void>.microtask(_restoreRememberedAccount);
   }
 
   @override
   void dispose() {
-    _passwordController.removeListener(_handlePasswordChanged);
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -64,6 +62,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ? AuthFormMode.login
         : _formMode;
     final isUsingCustomServiceConfig = settings.baseUrl != envConfig.baseUrl;
+    final keepAssistPanelForResetNotice =
+        _localHelperMessage == AppCopy.authResetServiceConfigSuccess;
+    final showAssistPanel =
+        authRepository.isMockMode ||
+        (envConfig.allowRiskySettings && isUsingCustomServiceConfig) ||
+        keepAssistPanelForResetNotice;
     final helperMessage =
         _localHelperMessage ??
         authState.unauthorizedMessage ??
@@ -78,13 +82,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       onBackPressed: authState.isSubmitting
           ? null
           : () => context.goNamed(AppRoutes.about),
-      overviewPanel: AuthOverviewPanel(
-        isMockMode: authRepository.isMockMode,
-        supportsRegister: !authRepository.isMockMode,
-        currentDeviceBaseUrl: serviceEndpoints.deviceBaseUrl,
-        isUsingCustomServiceConfig: isUsingCustomServiceConfig,
-        onFillDemo: _fillDemoCredentials,
-      ),
+      overviewPanel: showAssistPanel
+          ? AuthOverviewPanel(
+              isMockMode: authRepository.isMockMode,
+              currentDeviceBaseUrl: serviceEndpoints.deviceBaseUrl,
+              isUsingCustomServiceConfig: isUsingCustomServiceConfig,
+              canResetServiceConfig:
+                  envConfig.allowRiskySettings &&
+                  !authRepository.isMockMode &&
+                  isUsingCustomServiceConfig,
+              onFillDemo: _fillDemoCredentials,
+              onResetServiceConfig: _resetServiceConfig,
+            )
+          : null,
       formPanel: AuthFormCard(
         usernameController: _usernameController,
         passwordController: _passwordController,
@@ -97,13 +107,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         rememberAccount: _rememberAccount,
         showPassword: _showPassword,
         showConfirmPassword: _showConfirmPassword,
-        passwordStrength: _passwordStrengthLevel(_passwordController.text),
-        currentDeviceBaseUrl: serviceEndpoints.deviceBaseUrl,
-        isUsingCustomServiceConfig: isUsingCustomServiceConfig,
-        canResetServiceConfig:
-            envConfig.allowRiskySettings &&
-            !authRepository.isMockMode &&
-            isUsingCustomServiceConfig,
         onRememberAccountChanged: (value) {
           setState(() {
             _rememberAccount = value;
@@ -121,16 +124,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         },
         onSelectMode: _switchFormMode,
         onSubmit: _submit,
-        onResetServiceConfig: _resetServiceConfig,
       ),
     );
-  }
-
-  void _handlePasswordChanged() {
-    if (!mounted) {
-      return;
-    }
-    setState(() {});
   }
 
   Future<void> _restoreRememberedAccount() async {
@@ -250,21 +245,5 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       _localHelperMessage = null;
       _localHelperTone = null;
     });
-  }
-
-  int _passwordStrengthLevel(String value) {
-    var score = 0;
-    if (value.length >= 6) {
-      score += 1;
-    }
-    if ((RegExp(r'[A-Za-z]').hasMatch(value) &&
-            RegExp(r'\d').hasMatch(value)) ||
-        RegExp(r'[A-Z]').hasMatch(value)) {
-      score += 1;
-    }
-    if (RegExp(r'[^A-Za-z0-9_]').hasMatch(value) || value.length >= 10) {
-      score += 1;
-    }
-    return score.clamp(0, 3);
   }
 }

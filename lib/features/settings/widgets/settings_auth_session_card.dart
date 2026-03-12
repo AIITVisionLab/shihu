@@ -40,20 +40,8 @@ class SettingsAuthSessionCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 SettingsSettingRow(
-                  title: AppCopy.settingsDisplayName,
-                  value: session.user.displayName,
-                ),
-                const SizedBox(height: 14),
-                SettingsSettingRow(
                   title: AppCopy.settingsLoginMode,
                   value: session.loginMode.label,
-                ),
-                const SizedBox(height: 14),
-                SettingsSettingRow(
-                  title: AppCopy.settingsRole,
-                  value: session.user.roles.isEmpty
-                      ? '--'
-                      : session.user.roles.join(', '),
                 ),
                 const SizedBox(height: 14),
                 SettingsSettingRow(

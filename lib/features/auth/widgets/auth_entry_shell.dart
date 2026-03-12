@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/shared/widgets/app_backdrop.dart';
-import 'package:sickandflutter/shared/widgets/reveal_on_mount.dart';
 
-/// 认证入口页通用壳层，统一背景、页头和响应式双栏布局。
+/// 认证入口页通用壳层，统一背景、页头和响应式布局。
 class AuthEntryShell extends StatelessWidget {
   /// 创建认证入口页壳层。
   const AuthEntryShell({
-    required this.overviewPanel,
     required this.formPanel,
+    this.overviewPanel,
     this.onBackPressed,
     super.key,
   });
 
-  /// 左侧说明面板。
-  final Widget overviewPanel;
+  /// 辅助说明面板。
+  final Widget? overviewPanel;
 
-  /// 右侧表单面板。
+  /// 表单面板。
   final Widget formPanel;
 
   /// 返回系统总览回调。
@@ -24,38 +23,31 @@ class AuthEntryShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: const Color(0xFF050C15),
       body: Stack(
         children: <Widget>[
-          Positioned.fill(
+          const Positioned.fill(
             child: AppBackdrop(
               baseGradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: <Color>[
-                  colorScheme.surface,
-                  colorScheme.surfaceContainerLowest,
-                  colorScheme.surfaceContainerLow,
+                  Color(0xFF050C15),
+                  Color(0xFF09121F),
+                  Color(0xFF060D17),
                 ],
               ),
-              orbs: const <BackdropOrbData>[
+              orbs: <BackdropOrbData>[
                 BackdropOrbData(
                   alignment: Alignment(-1.0, -0.92),
-                  size: 340,
-                  color: Color(0x1626A497),
+                  size: 260,
+                  color: Color(0x124B9BFF),
                 ),
                 BackdropOrbData(
-                  alignment: Alignment(1.08, -0.24),
-                  size: 280,
-                  color: Color(0x14B68B63),
-                ),
-                BackdropOrbData(
-                  alignment: Alignment(0.88, 1.02),
-                  size: 240,
-                  color: Color(0x105D7E92),
+                  alignment: Alignment(1.02, -0.08),
+                  size: 220,
+                  color: Color(0x1045D0FF),
                 ),
               ],
             ),
@@ -63,57 +55,15 @@ class AuthEntryShell extends StatelessWidget {
           SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1320),
+                constraints: const BoxConstraints(maxWidth: 980),
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
                   children: <Widget>[
-                    RevealOnMount(
-                      child: _AuthEntryHeader(onBackPressed: onBackPressed),
-                    ),
-                    const SizedBox(height: 20),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isCompact = constraints.maxWidth < 980;
-
-                        if (isCompact) {
-                          return Column(
-                            children: <Widget>[
-                              RevealOnMount(
-                                delay: const Duration(milliseconds: 80),
-                                child: formPanel,
-                              ),
-                              const SizedBox(height: 20),
-                              RevealOnMount(
-                                delay: const Duration(milliseconds: 160),
-                                child: overviewPanel,
-                              ),
-                            ],
-                          );
-                        }
-
-                        return IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: <Widget>[
-                              Expanded(
-                                flex: 11,
-                                child: RevealOnMount(
-                                  delay: const Duration(milliseconds: 90),
-                                  child: overviewPanel,
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                flex: 9,
-                                child: RevealOnMount(
-                                  delay: const Duration(milliseconds: 160),
-                                  child: formPanel,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                    _AuthEntryHeader(onBackPressed: onBackPressed),
+                    const SizedBox(height: 28),
+                    _AuthWorkspaceFrame(
+                      formPanel: formPanel,
+                      overviewPanel: overviewPanel,
                     ),
                   ],
                 ),
@@ -126,6 +76,101 @@ class AuthEntryShell extends StatelessWidget {
   }
 }
 
+class _AuthWorkspaceFrame extends StatelessWidget {
+  const _AuthWorkspaceFrame({
+    required this.formPanel,
+    required this.overviewPanel,
+  });
+
+  final Widget formPanel;
+  final Widget? overviewPanel;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final panelMaxWidth = constraints.maxWidth >= 760
+            ? 468.0
+            : double.infinity;
+
+        return Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: panelMaxWidth),
+            child: Column(
+              children: <Widget>[
+                _FormStage(
+                  isCompact: constraints.maxWidth < 760,
+                  child: formPanel,
+                ),
+                if (overviewPanel != null) ...<Widget>[
+                  const SizedBox(height: 14),
+                  _OverviewStage(
+                    isCompact: constraints.maxWidth < 760,
+                    child: overviewPanel!,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _OverviewStage extends StatelessWidget {
+  const _OverviewStage({required this.child, this.isCompact = false});
+
+  final Widget child;
+  final bool isCompact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isCompact ? 14 : 16),
+      decoration: BoxDecoration(
+        color: const Color(0xD90D1724),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0x22314B68)),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _FormStage extends StatelessWidget {
+  const _FormStage({required this.child, this.isCompact = false});
+
+  final Widget child;
+  final bool isCompact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isCompact ? 22 : 28),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[Color(0xF30B1623), Color(0xF708101A)],
+        ),
+        border: Border.all(color: const Color(0x22314B68)),
+        boxShadow: const <BoxShadow>[
+          BoxShadow(
+            color: Color(0x54000000),
+            blurRadius: 36,
+            offset: Offset(0, 18),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
 class _AuthEntryHeader extends StatelessWidget {
   const _AuthEntryHeader({required this.onBackPressed});
 
@@ -134,133 +179,91 @@ class _AuthEntryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
-    return Material(
-      color: Colors.transparent,
-      surfaceTintColor: Colors.transparent,
-      borderRadius: BorderRadius.circular(30),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+    final brand = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Container(
+          width: 46,
+          height: 46,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            borderRadius: BorderRadius.circular(16),
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: <Color>[
-                colorScheme.surfaceContainerLowest.withValues(alpha: 0.98),
-                colorScheme.surface.withValues(alpha: 0.96),
-                colorScheme.surfaceContainerLow.withValues(alpha: 0.92),
-              ],
+              colors: <Color>[Color(0xFF69B4FF), Color(0xFF1A61C9)],
             ),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-            ),
-            boxShadow: const <BoxShadow>[
-              BoxShadow(
-                color: Color(0x0C172019),
-                blurRadius: 12,
-                offset: Offset(0, 6),
+          ),
+          child: const Icon(Icons.spa_rounded, color: Colors.white, size: 24),
+        ),
+        const SizedBox(width: 14),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                AppConstants.appName,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '登录后继续使用工作台',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: const Color(0xFFA1B0B9),
+                ),
               ),
             ],
           ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isCompact = constraints.maxWidth < 760;
-              final brand = Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Container(
-                    width: 54,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Icon(
-                      Icons.spa_rounded,
-                      color: colorScheme.onPrimaryContainer,
-                      size: 30,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Text(
-                          AppConstants.appName,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '石斛监测后台登录入口',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-              final actions = Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                alignment: WrapAlignment.end,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: <Widget>[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.secondaryContainer.withValues(
-                        alpha: 0.76,
-                      ),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      '登录与会话',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: colorScheme.onSecondaryContainer,
-                      ),
-                    ),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: onBackPressed,
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    label: const Text('返回系统概览'),
-                  ),
-                ],
-              );
-
-              if (isCompact) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    brand,
-                    const SizedBox(height: 16),
-                    actions,
-                  ],
-                );
-              }
-
-              return Row(
-                children: <Widget>[
-                  Expanded(child: brand),
-                  const SizedBox(width: 16),
-                  Flexible(child: actions),
-                ],
-              );
-            },
-          ),
         ),
+      ],
+    );
+
+    final action = onBackPressed == null
+        ? null
+        : OutlinedButton.icon(
+            onPressed: onBackPressed,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: const BorderSide(color: Color(0x22FFFFFF)),
+              backgroundColor: const Color(0x10FFFFFF),
+            ),
+            icon: const Icon(Icons.arrow_back_rounded),
+            label: const Text('返回'),
+          );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0x120C1825),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0x22314B68)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 720) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                brand,
+                if (action != null) ...<Widget>[
+                  const SizedBox(height: 14),
+                  action,
+                ],
+              ],
+            );
+          }
+
+          return Row(
+            children: <Widget>[
+              Expanded(child: brand),
+              ?action,
+            ],
+          );
+        },
       ),
     );
   }

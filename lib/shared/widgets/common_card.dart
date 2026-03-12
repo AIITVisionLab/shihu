@@ -25,74 +25,91 @@ class CommonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
-    return Material(
-      color: Colors.transparent,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
-        child: DecoratedBox(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact =
+            constraints.maxWidth > 0 && constraints.maxWidth < 560;
+        final effectivePadding = padding == const EdgeInsets.all(20)
+            ? EdgeInsets.all(isCompact ? 16 : 20)
+            : padding;
+
+        return DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
-            color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.96),
+            color: colorScheme.surfaceContainerLow.withValues(alpha: 0.98),
             border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.42),
+              color: colorScheme.outlineVariant.withValues(alpha: 0.92),
             ),
             boxShadow: const <BoxShadow>[
               BoxShadow(
-                color: Color(0x0C172019),
-                blurRadius: 12,
-                offset: Offset(0, 6),
+                color: Color(0x38000000),
+                blurRadius: 22,
+                offset: Offset(0, 12),
               ),
             ],
           ),
-          child: Padding(
-            padding: padding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                if (title != null) ...<Widget>[
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          title!,
-                          style: textTheme.labelLarge?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+          child: Stack(
+            children: <Widget>[
+              Positioned(
+                left: 18,
+                right: 18,
+                top: 0,
+                child: IgnorePointer(
+                  child: Container(
+                    height: 1,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: <Color>[
+                          colorScheme.primary.withValues(alpha: 0.0),
+                          colorScheme.primary.withValues(alpha: 0.62),
+                          colorScheme.tertiary.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: effectivePadding,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    if (title != null) ...<Widget>[
+                      Text(
+                        title!,
+                        style: textTheme.titleMedium?.copyWith(
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                       if (subtitle != null) ...<Widget>[
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 6),
                         Text(
                           subtitle!,
                           style: textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onSurfaceVariant,
-                            height: 1.58,
+                            height: 1.54,
                           ),
                         ),
                       ],
+                      SizedBox(height: subtitle != null ? 16 : 14),
                     ],
-                  ),
-                  const SizedBox(height: 20),
-                ],
-                child,
-              ],
-            ),
+                    child,
+                  ],
+                ),
+              ),
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -19,17 +19,80 @@ class AboutHeroStat {
   final String description;
 }
 
-/// 系统能力卡片数据。
-class AboutCapabilityItem {
-  /// 创建系统能力卡片数据。
-  const AboutCapabilityItem({
+/// 主路径轨道条目。
+class AboutWorkflowTrack {
+  /// 创建主路径轨道条目。
+  const AboutWorkflowTrack({
     required this.icon,
+    required this.step,
     required this.title,
-    required this.description,
+    required this.summary,
+    required this.entryHint,
+    required this.focusHint,
+    required this.actionHint,
   });
 
   /// 图标。
   final IconData icon;
+
+  /// 步骤序号。
+  final String step;
+
+  /// 路径名称。
+  final String title;
+
+  /// 一句话总结。
+  final String summary;
+
+  /// 什么时候进入。
+  final String entryHint;
+
+  /// 重点看什么。
+  final String focusHint;
+
+  /// 进去后做什么。
+  final String actionHint;
+}
+
+/// 后端协作说明条目。
+class AboutCollaborationTopic {
+  /// 创建协作说明条目。
+  const AboutCollaborationTopic({
+    required this.icon,
+    required this.badge,
+    required this.title,
+    required this.summary,
+    required this.interfaceValue,
+    required this.frontendAction,
+    required this.boundary,
+  });
+
+  /// 图标。
+  final IconData icon;
+
+  /// 顶部标签。
+  final String badge;
+
+  /// 标题。
+  final String title;
+
+  /// 一句话说明。
+  final String summary;
+
+  /// 最小接口或关键字段。
+  final String interfaceValue;
+
+  /// 前端侧动作。
+  final String frontendAction;
+
+  /// 关键边界。
+  final String boundary;
+}
+
+/// 页面底部范围说明条目。
+class AboutScopeRule {
+  /// 创建范围说明条目。
+  const AboutScopeRule({required this.title, required this.description});
 
   /// 标题。
   final String title;
@@ -38,202 +101,111 @@ class AboutCapabilityItem {
   final String description;
 }
 
-/// 栽培背景风险卡片数据。
-class AboutRiskItem {
-  /// 创建风险卡片数据。
-  const AboutRiskItem({
-    required this.title,
-    required this.description,
-    required this.tag,
-  });
-
-  /// 风险标题。
-  final String title;
-
-  /// 风险说明。
-  final String description;
-
-  /// 风险标签。
-  final String tag;
-}
-
-/// 调控目标条目数据。
-class AboutGoalMetric {
-  /// 创建调控目标条目数据。
-  const AboutGoalMetric({
-    required this.label,
-    required this.target,
-    required this.note,
-    required this.progress,
-  });
-
-  /// 指标名称。
-  final String label;
-
-  /// 目标值。
-  final String target;
-
-  /// 说明。
-  final String note;
-
-  /// 视觉强调值。
-  final double progress;
-}
-
-/// 闭环步骤数据。
-class AboutFlowStep {
-  /// 创建闭环步骤数据。
-  const AboutFlowStep({
-    required this.index,
-    required this.title,
-    required this.description,
-  });
-
-  /// 步骤序号。
-  final String index;
-
-  /// 步骤标题。
-  final String title;
-
-  /// 步骤说明。
-  final String description;
-}
-
 /// 系统总览页静态内容集合。
 final class AboutContent {
   /// 顶部主标题。
-  static const String heroTitle = '让培育现场从经验操作走向可视闭环';
+  static const String heroTitle = '三条主路径，两类协作边界，一页看清';
 
   /// 顶部主说明。
   static const String heroDescription =
-      '斛生围绕环境采集、风险判断、远程执行和运行回写组织统一工作流，让日常值守、排障和调控不再依赖分散页面和口头经验。';
+      '你平时只要按“总览 -> 值守 -> 我的”走。先看状态，再决定是否处理，页面不会把没接通的能力塞进主流程里。';
 
   /// 顶部补充说明。
-  static const String heroFootnote = '当前主功能只开放已接入服务的真实链路，保证进入页面即可直接使用。';
+  static const String heroFootnote =
+      '视频协作和 AI 协作会在说明页里讲清楚接入边界，但当前版本不额外放视频页或 AI 页，避免用户看到空壳入口。';
 
-  /// 栽培背景段落。
-  static const String researchIntro =
-      '石斛幼苗阶段对温度、湿度、光照和空气状态的波动十分敏感。真正影响成活率的往往不是某一次极端值，而是连续几天的轻微偏离与处置滞后。';
-
-  /// 栽培背景补充段落。
-  static const String researchSummary =
-      '因此软件重点不是堆叠展示页，而是把采集、判断、执行和回写放进同一个稳定工作台里，让值守人员在一次进入中完成查看、判断与处理。';
-
-  /// 调控目标补充说明。
-  static const String targetSummary =
-      '所有页面都围绕“看得见、判得出、能执行、可核对”展开，保证系统从说明层到主控层保持一致的业务语义。';
+  /// 协作区总说明。
+  static const String collaborationSummary =
+      '以下内容根据 `doc/java-video-collaboration.md` 和 `doc/java-ai-collaboration.md` 提炼，只说明后续怎么接，不代表当前前端已经内置这些页面。';
 
   /// 顶部亮点卡片。
   static const List<AboutHeroStat> heroStats = <AboutHeroStat>[
     AboutHeroStat(
-      value: '4 项',
-      label: '环境指标',
-      description: '温度、湿度、光照与 MQ2 持续采集并统一呈现。',
+      value: '3 条',
+      label: '主路径',
+      description: '总览、值守、我的。日常操作只沿这三条路径走。',
     ),
     AboutHeroStat(
-      value: '1 条',
-      label: '执行链路',
-      description: '补光控制提交后继续刷新等待状态回写。',
+      value: '2 类',
+      label: '协作边界',
+      description: '视频协作、AI 协作只讲接法，不做当前入口。',
     ),
     AboutHeroStat(
-      value: '24h',
-      label: '值守目标',
-      description: '围绕巡检、值守与排障形成连续工作闭环。',
+      value: '1 个',
+      label: '核心原则',
+      description: '先看状态，再决定是否处理，减少误操作和无效跳转。',
     ),
   ];
 
-  /// 系统能力条目。
-  static const List<AboutCapabilityItem> capabilities = <AboutCapabilityItem>[
-    AboutCapabilityItem(
-      icon: Icons.lock_outline_rounded,
-      title: '统一认证',
-      description: '账号登录、在线注册、会话恢复和退出统一收口，不再拆散到多个入口。',
+  /// 主路径轨道条目。
+  static const List<AboutWorkflowTrack> workflowTracks = <AboutWorkflowTrack>[
+    AboutWorkflowTrack(
+      icon: Icons.dashboard_rounded,
+      step: '01',
+      title: '总览',
+      summary: '每次进入系统先看这里，先确认设备有没有在线、数据是不是刚更新。',
+      entryHint: '刚登录或刚返回工作台时先进入。',
+      focusHint: '设备状态、最近同步时间、三个一级入口。',
+      actionHint: '正常就继续去值守；异常再决定是否需要人工处理。',
     ),
-    AboutCapabilityItem(
-      icon: Icons.monitor_heart_outlined,
-      title: '环境监测',
-      description: '设备名称、温湿度、光照、MQ2 与运行状态在同一视图内持续更新。',
+    AboutWorkflowTrack(
+      icon: Icons.monitor_heart_rounded,
+      step: '02',
+      title: '值守',
+      summary: '需要判断当前环境或处理补光时再进入，不把所有操作堆在首页。',
+      entryHint: '要看实时指标、错误码或切换 LED 时进入。',
+      focusHint: '主状态、温湿度/光照/MQ2、运行明细、LED 控制。',
+      actionHint: '先看异常等级，再处理补光，最后等待状态回写确认。',
     ),
-    AboutCapabilityItem(
-      icon: Icons.warning_amber_rounded,
-      title: '风险预警',
-      description: '异常码统一映射成运行等级和说明，帮助值守人员快速判断影响范围。',
-    ),
-    AboutCapabilityItem(
-      icon: Icons.toggle_on_outlined,
-      title: '远程执行',
-      description: '补光指令提交后保留反馈与回写等待状态，避免出现“点了没反应”的误判。',
-    ),
-  ];
-
-  /// 栽培背景风险条目。
-  static const List<AboutRiskItem> risks = <AboutRiskItem>[
-    AboutRiskItem(
-      title: '闷热高湿',
-      description: '持续高湿且通风不足时，幼苗容易出现软腐、根系压力增大和局部烂苗。',
-      tag: '需优先预警',
-    ),
-    AboutRiskItem(
-      title: '补光波动',
-      description: '光照不足或补光节律不稳定会拖慢生长节奏，影响叶色和新芽状态。',
-      tag: '需稳定节律',
-    ),
-    AboutRiskItem(
-      title: '气体异常',
-      description: '封闭环境下的气体累积会放大生理压力，异常往往先体现在整体状态而不是单株症状。',
-      tag: '需持续监测',
+    AboutWorkflowTrack(
+      icon: Icons.settings_rounded,
+      step: '03',
+      title: '我的',
+      summary: '把账号、设备信息和本机偏好收在一起，不混进实时操作链路。',
+      entryHint: '改账号、看当前设备或恢复默认设置时进入。',
+      focusHint: '当前账号、当前设备、记住账号和本机偏好。',
+      actionHint: '在这里做管理类动作，不在这里做实时值守处置。',
     ),
   ];
 
-  /// 调控目标条目。
-  static const List<AboutGoalMetric> goalMetrics = <AboutGoalMetric>[
-    AboutGoalMetric(
-      label: '温度',
-      target: '23°C - 27°C',
-      note: '保持稳定区间，降低连续波动带来的应激。',
-      progress: 0.72,
+  /// 后端协作说明条目。
+  static const List<AboutCollaborationTopic>
+  collaborationTopics = <AboutCollaborationTopic>[
+    AboutCollaborationTopic(
+      icon: Icons.videocam_outlined,
+      badge: '视频协作',
+      title: 'Java 后端只负责告诉前端去哪里播放',
+      summary: '最小接口是查询视频流信息，前端拿到 `playerUrl` 后直接访问公网 go2rtc/frp 播放地址。',
+      interfaceValue:
+          'GET /api/video/streams 或 GET /api/video/streams/{streamId}',
+      frontendAction: '读取 `playerUrl` 后直接播放，不让 Java 业务服务代理 WebRTC 媒体流。',
+      boundary: '不要让 Java 代理 8555 端口；不要把 K230 的内网 RTSP 地址直接暴露给前端。',
     ),
-    AboutGoalMetric(
-      label: '湿度',
-      target: '75% - 85%',
-      note: '兼顾保湿和通风，避免长时间闷湿。',
-      progress: 0.82,
-    ),
-    AboutGoalMetric(
-      label: '光照',
-      target: '1200 - 1800 lx',
-      note: '围绕稳定补光组织执行策略和巡检频率。',
-      progress: 0.66,
-    ),
-    AboutGoalMetric(
-      label: 'MQ2',
-      target: '≤ 20',
-      note: '异常抬升时尽快排查环境与设备状态。',
-      progress: 0.58,
+    AboutCollaborationTopic(
+      icon: Icons.memory_rounded,
+      badge: 'AI 协作',
+      title: 'Java 后端先接结果，再决定怎么给前端展示',
+      summary:
+          'RK3568 已能接收 K230 的 AI 结果，但只有 `ai_forward.enabled=true` 且 `detections` 非空时，才会继续上送到 Java。',
+      interfaceValue: 'POST /api/edge/ai-detections',
+      frontendAction: '当前前端不直接拉 AI JSON。若后端要展示 AI 结果，应先接收、存储，再定义自己的查询或推送接口。',
+      boundary: '默认建议关闭 AI 转发；前端这一轮不新增 AI 查询页，也不直接对接 RK3568 内存态结果。',
     ),
   ];
 
-  /// 闭环步骤。
-  static const List<AboutFlowStep> flowSteps = <AboutFlowStep>[
-    AboutFlowStep(
-      index: '01',
-      title: '采集',
-      description: '实时读取设备状态，统一承接环境数据和执行器状态。',
+  /// 范围说明条目。
+  static const List<AboutScopeRule> scopeRules = <AboutScopeRule>[
+    AboutScopeRule(
+      title: '当前可用',
+      description: '只保留总览、值守、我的三条主路径，不新增视频页和 AI 页。',
     ),
-    AboutFlowStep(
-      index: '02',
-      title: '判断',
-      description: '把异常码、更新时间和设备身份映射为可读的运行状态。',
+    AboutScopeRule(
+      title: '视频接入',
+      description: 'Java 后端返回 `playerUrl`，前端直接播，媒体流不走 Java 代理。',
     ),
-    AboutFlowStep(
-      index: '03',
-      title: '执行',
-      description: '在明确设备身份后提交补光操作，并阻断重复高风险操作。',
-    ),
-    AboutFlowStep(
-      index: '04',
-      title: '回写',
-      description: '继续刷新最新状态，确保界面展示和现场设备保持一致。',
+    AboutScopeRule(
+      title: 'AI 接入',
+      description: 'RK3568 先把非空检测结果上送 Java，再由 Java 定义前端可读接口。',
     ),
   ];
 }

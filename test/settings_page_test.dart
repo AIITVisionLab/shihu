@@ -8,16 +8,14 @@ import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/features/auth/remembered_account_repository.dart';
 import 'package:sickandflutter/features/settings/device_state_repository.dart';
-import 'package:sickandflutter/features/settings/service_health_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/features/settings/settings_page.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
 import 'package:sickandflutter/shared/models/device_state_info.dart';
-import 'package:sickandflutter/shared/models/service_health_info.dart';
 
 void main() {
-  testWidgets('SettingsPage renders environment, health and session info', (
+  testWidgets('SettingsPage renders device, account and local info', (
     tester,
   ) async {
     tester.view
@@ -73,15 +71,6 @@ void main() {
             ),
           ),
           settingsControllerProvider.overrideWith(() => settingsController),
-          serviceHealthProvider.overrideWith(
-            (ref) async => ServiceHealthInfo(
-              status: 'up',
-              responseText: 'ok',
-              checkedAt: DateTime.parse(
-                '2026-03-08T10:00:00+08:00',
-              ).toIso8601String(),
-            ),
-          ),
           deviceStateProvider.overrideWith(
             (ref) async => const DeviceStateInfo(
               deviceId: 'dev_1',
@@ -105,21 +94,18 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('开发环境'), findsOneWidget);
+    expect(find.text('当前设备'), findsOneWidget);
+    expect(find.text('石斛培育柜'), findsWidgets);
+    expect(find.text('系统运行正常'), findsOneWidget);
+    expect(find.text('2025-03-08 10:00'), findsOneWidget);
     expect(find.text('2.3.4+56'), findsOneWidget);
-    expect(find.text('http://10.0.2.2:8080'), findsOneWidget);
-    expect(find.text('服务正常'), findsOneWidget);
-    expect(find.text('ok'), findsOneWidget);
-    expect(find.text('2026-03-08 10:00:00'), findsOneWidget);
     expect(find.text('demo'), findsOneWidget);
     expect(find.text('联调登录'), findsOneWidget);
     expect(find.text('记住的账号'), findsOneWidget);
     expect(find.text('ops_admin'), findsOneWidget);
   });
 
-  testWidgets('SettingsPage updates base url and resets settings', (
-    tester,
-  ) async {
+  testWidgets('SettingsPage resets defaults', (tester) async {
     tester.view
       ..physicalSize = const Size(1400, 2800)
       ..devicePixelRatio = 1;
@@ -157,15 +143,6 @@ void main() {
             ),
           ),
           settingsControllerProvider.overrideWith(() => settingsController),
-          serviceHealthProvider.overrideWith(
-            (ref) async => ServiceHealthInfo(
-              status: 'up',
-              responseText: 'ok',
-              checkedAt: DateTime.parse(
-                '2026-03-08T10:00:00+08:00',
-              ).toIso8601String(),
-            ),
-          ),
           deviceStateProvider.overrideWith(
             (ref) async => const DeviceStateInfo(
               deviceId: 'dev_1',
@@ -191,28 +168,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final editButtons = find.widgetWithText(TextButton, '修改');
-    await tester.ensureVisible(editButtons.first);
-    await tester.tap(editButtons.first);
-    await tester.pumpAndSettle();
-
-    await tester.enterText(find.byType(TextField), 'http://192.168.1.10:8080');
-    await tester.tap(find.text('保存'));
-    await tester.pumpAndSettle();
-
-    expect(settingsController.updatedBaseUrls, <String>[
-      'http://192.168.1.10:8080',
-    ]);
-    expect(find.text('http://192.168.1.10:8080'), findsOneWidget);
-
-    final resetButton = find.widgetWithText(OutlinedButton, '恢复默认设置');
+    final resetButton = find.widgetWithText(OutlinedButton, '恢复默认');
     await tester.tap(resetButton);
     await tester.pumpAndSettle();
     await tester.tap(find.text('确认'));
     await tester.pumpAndSettle();
 
     expect(settingsController.resetCount, 1);
-    expect(find.text(envConfig.baseUrl), findsOneWidget);
+    expect(find.text('已恢复默认。'), findsOneWidget);
   });
 
   testWidgets('SettingsPage clears remembered account after confirmation', (
@@ -255,15 +218,6 @@ void main() {
                 baseUrl: 'http://127.0.0.1:8080',
                 enableLog: true,
               ),
-            ),
-          ),
-          serviceHealthProvider.overrideWith(
-            (ref) async => ServiceHealthInfo(
-              status: 'up',
-              responseText: 'ok',
-              checkedAt: DateTime.parse(
-                '2026-03-08T10:00:00+08:00',
-              ).toIso8601String(),
             ),
           ),
           deviceStateProvider.overrideWith(

@@ -35,60 +35,20 @@ class SettingsServiceConfigCard extends StatelessWidget {
       subtitle: envConfig.allowRiskySettings
           ? AppCopy.settingsServiceConfigEditable
           : AppCopy.settingsServiceConfigReadonly,
-      child: Column(
-        children: <Widget>[
-          _ConfigPanel(
-            icon: Icons.dns_rounded,
-            title: AppCopy.settingsDeviceBaseUrl,
-            value: serviceEndpoints.deviceBaseUrl,
-            supportingText: '这是当前前端实际命中的设备服务根地址。',
-            trailing: onEditBaseUrl == null
-                ? null
-                : TextButton.icon(
-                    onPressed: () async {
-                      await onEditBaseUrl?.call();
-                    },
-                    icon: const Icon(Icons.edit_outlined),
-                    label: const Text(AppCopy.settingsEdit),
-                  ),
-          ),
-          const SizedBox(height: 14),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isCompact = constraints.maxWidth < 620;
-              final connect = _ConfigPanel(
-                icon: Icons.timer_outlined,
-                title: AppCopy.settingsConnectTimeout,
-                value: '${settings.connectTimeoutMs} ms',
-                supportingText: '建立连接阶段的超时阈值。',
-              );
-              final receive = _ConfigPanel(
-                icon: Icons.downloading_rounded,
-                title: AppCopy.settingsReceiveTimeout,
-                value: '${settings.receiveTimeoutMs} ms',
-                supportingText: '等待服务响应体返回的超时阈值。',
-              );
-
-              if (isCompact) {
-                return Column(
-                  children: <Widget>[
-                    connect,
-                    const SizedBox(height: 12),
-                    receive,
-                  ],
-                );
-              }
-
-              return Row(
-                children: <Widget>[
-                  Expanded(child: connect),
-                  const SizedBox(width: 12),
-                  Expanded(child: receive),
-                ],
-              );
-            },
-          ),
-        ],
+      child: _ConfigPanel(
+        icon: Icons.dns_rounded,
+        title: AppCopy.settingsDeviceBaseUrl,
+        value: serviceEndpoints.deviceBaseUrl,
+        supportingText: '当前实际命中的设备服务地址。',
+        trailing: onEditBaseUrl == null
+            ? null
+            : TextButton.icon(
+                onPressed: () async {
+                  await onEditBaseUrl?.call();
+                },
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text(AppCopy.settingsEdit),
+              ),
       ),
     );
   }

@@ -42,75 +42,88 @@ class _HomeEntryCardState extends State<HomeEntryCard> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           onTap: widget.onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: _isHovered
-                  ? colorScheme.surfaceContainerLow
-                  : colorScheme.surfaceContainerLowest.withValues(alpha: 0.96),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: _isHovered
-                    ? colorScheme.primary.withValues(alpha: 0.26)
-                    : colorScheme.outlineVariant.withValues(alpha: 0.34),
-              ),
-              boxShadow: _isHovered
-                  ? const <BoxShadow>[
-                      BoxShadow(
-                        color: Color(0x0C172019),
-                        blurRadius: 12,
-                        offset: Offset(0, 6),
-                      ),
-                    ]
-                  : const <BoxShadow>[],
-            ),
-            child: Row(
-              children: <Widget>[
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(widget.icon, color: colorScheme.primary),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        widget.title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        widget.subtitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          height: 1.52,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 20,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 320;
+              final iconBoxSize = isCompact ? 44.0 : 48.0;
+              final cardPadding = isCompact ? 16.0 : 18.0;
+              final minHeight = isCompact ? 156.0 : 168.0;
+
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                constraints: BoxConstraints(minHeight: minHeight),
+                padding: EdgeInsets.all(cardPadding),
+                decoration: BoxDecoration(
                   color: _isHovered
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
+                      ? colorScheme.surfaceContainerHigh
+                      : colorScheme.surfaceContainerLow.withValues(alpha: 0.94),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: _isHovered
+                        ? colorScheme.primary
+                        : colorScheme.outlineVariant,
+                  ),
+                  boxShadow: _isHovered
+                      ? const <BoxShadow>[
+                          BoxShadow(
+                            color: Color(0x52000000),
+                            blurRadius: 24,
+                            offset: Offset(0, 14),
+                          ),
+                        ]
+                      : const <BoxShadow>[],
                 ),
-              ],
-            ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Container(
+                          width: iconBoxSize,
+                          height: iconBoxSize,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            widget.icon,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                        const Spacer(),
+                        Icon(
+                          Icons.arrow_outward_rounded,
+                          size: 18,
+                          color: _isHovered
+                              ? colorScheme.primary
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: isCompact ? 24 : 28),
+                    Text(
+                      widget.title,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.52,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),

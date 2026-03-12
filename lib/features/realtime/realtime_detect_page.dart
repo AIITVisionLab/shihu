@@ -53,8 +53,8 @@ class _RealtimeDetectPageState extends ConsumerState<RealtimeDetectPage> {
 
     return AppWorkspaceScaffold(
       destination: AppWorkspaceDestination.realtime,
-      title: '实时监控主控台',
-      subtitle: '围绕设备状态、异常分级和补光控制构建的一体化值守界面。',
+      title: '值守台',
+      subtitle: '查看实时状态，必要时处理补光。',
       currentUser: currentUser,
       child: RefreshIndicator(
         onRefresh: _controller.refreshNow,
@@ -63,7 +63,6 @@ class _RealtimeDetectPageState extends ConsumerState<RealtimeDetectPage> {
           children: <Widget>[
             RevealOnMount(
               child: RealtimeMonitorTopBar(
-                currentUser: currentUser,
                 state: state,
                 onRefresh: _controller.refreshNow,
                 onToggleAutoRefresh: _controller.setAutoRefreshEnabled,
@@ -167,7 +166,7 @@ class _RealtimeDetectPageState extends ConsumerState<RealtimeDetectPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('退出登录'),
-        content: const Text('退出后需要重新登录才能继续访问主控台和设置页，是否继续？'),
+        content: const Text('退出后需要重新登录才能继续使用，是否继续？'),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),

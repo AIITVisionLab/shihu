@@ -9,50 +9,78 @@ class AboutHeroSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(36),
-        gradient: const LinearGradient(
+        borderRadius: BorderRadius.circular(32),
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: <Color>[
-            Color(0xFF0F4A45),
-            Color(0xFF1F857B),
-            Color(0xFFB18156),
+            colorScheme.surfaceContainer.withValues(alpha: 0.98),
+            colorScheme.surfaceContainerLow.withValues(alpha: 0.98),
+            colorScheme.primaryContainer.withValues(alpha: 0.68),
           ],
+        ),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.95),
         ),
         boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x18172019),
-            blurRadius: 36,
-            offset: Offset(0, 22),
+            color: Color(0x5A020914),
+            blurRadius: 30,
+            offset: Offset(0, 18),
           ),
         ],
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 960;
-          final lead = _HeroLead(theme: theme);
-          final stats = _HeroStats(theme: theme);
+      child: Stack(
+        children: <Widget>[
+          Positioned(
+            right: -36,
+            top: -46,
+            child: IgnorePointer(
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: colorScheme.primary.withValues(alpha: 0.18),
+                      blurRadius: 72,
+                      spreadRadius: 10,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 980;
+              final lead = _HeroLead(theme: theme);
+              final stats = _HeroStats(theme: theme);
 
-          if (isCompact) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[lead, const SizedBox(height: 24), stats],
-            );
-          }
+              if (isCompact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[lead, const SizedBox(height: 22), stats],
+                );
+              }
 
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Expanded(flex: 10, child: lead),
-              const SizedBox(width: 24),
-              Expanded(flex: 5, child: stats),
-            ],
-          );
-        },
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(flex: 11, child: lead),
+                  const SizedBox(width: 20),
+                  Expanded(flex: 5, child: stats),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -65,24 +93,41 @@ class _HeroLead extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.9),
+            ),
+          ),
+          child: Text(
+            '工作说明',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
         Wrap(
           spacing: 10,
           runSpacing: 10,
-          children: const <Widget>[
-            _HeroPill(label: '设备监测'),
-            _HeroPill(label: '风险预警'),
-            _HeroPill(label: '远程调控'),
-            _HeroPill(label: '运维自检'),
-          ],
+          children: AboutContent.scopeRules
+              .map((item) => _HeroPill(label: item.title))
+              .toList(growable: false),
         ),
         const SizedBox(height: 22),
         Text(
           AboutContent.heroTitle,
           style: theme.textTheme.displaySmall?.copyWith(
-            color: Colors.white,
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -90,16 +135,27 @@ class _HeroLead extends StatelessWidget {
         Text(
           AboutContent.heroDescription,
           style: theme.textTheme.titleMedium?.copyWith(
-            color: const Color(0xFFF0F7F4),
-            height: 1.66,
+            color: colorScheme.onSurfaceVariant,
+            height: 1.64,
           ),
         ),
-        const SizedBox(height: 18),
-        Text(
-          AboutContent.heroFootnote,
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: const Color(0xFFDAECE6),
-            height: 1.68,
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.76),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.78),
+            ),
+          ),
+          child: Text(
+            AboutContent.heroFootnote,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurface,
+              height: 1.66,
+            ),
           ),
         ),
       ],
@@ -124,7 +180,7 @@ class _HeroStats extends StatelessWidget {
               child: _HeroStatCard(item: item, theme: theme),
             ),
           )
-          .toList(),
+          .toList(growable: false),
     );
   }
 }
@@ -137,13 +193,17 @@ class _HeroStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.82),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,7 +211,7 @@ class _HeroStatCard extends StatelessWidget {
           Text(
             item.value,
             style: theme.textTheme.headlineMedium?.copyWith(
-              color: Colors.white,
+              color: colorScheme.primary,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -159,15 +219,15 @@ class _HeroStatCard extends StatelessWidget {
           Text(
             item.label,
             style: theme.textTheme.titleMedium?.copyWith(
-              color: const Color(0xFFF3FAF6),
+              color: colorScheme.onSurface,
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             item.description,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFFDBECE5),
+              color: colorScheme.onSurfaceVariant,
               height: 1.58,
             ),
           ),
@@ -184,17 +244,23 @@ class _HeroPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
+        color: colorScheme.primaryContainer.withValues(alpha: 0.58),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.82),
+        ),
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: colorScheme.onPrimaryContainer,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );

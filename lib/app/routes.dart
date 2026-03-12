@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/features/about/about_page.dart';
@@ -28,33 +28,65 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SplashPage(),
       ),
       GoRoute(
-        path: AppRoutes.homePath,
-        name: AppRoutes.home,
-        builder: (context, state) => const HomePage(),
-      ),
-      GoRoute(
         path: AppRoutes.loginPath,
         name: AppRoutes.login,
         builder: (context, state) => const LoginPage(),
       ),
-      GoRoute(
-        path: AppRoutes.realtimeDetectPath,
-        name: AppRoutes.realtimeDetect,
-        builder: (context, state) => const RealtimeDetectPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.settingsPath,
-        name: AppRoutes.settings,
-        builder: (context, state) => const SettingsPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.aboutPath,
-        name: AppRoutes.about,
-        builder: (context, state) => const AboutPage(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            _WorkspaceShellHost(navigationShell: navigationShell),
+        branches: <StatefulShellBranch>[
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: AppRoutes.homePath,
+                name: AppRoutes.home,
+                builder: (context, state) => const HomePage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: AppRoutes.realtimeDetectPath,
+                name: AppRoutes.realtimeDetect,
+                builder: (context, state) => const RealtimeDetectPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: AppRoutes.aboutPath,
+                name: AppRoutes.about,
+                builder: (context, state) => const AboutPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: AppRoutes.settingsPath,
+                name: AppRoutes.settings,
+                builder: (context, state) => const SettingsPage(),
+              ),
+            ],
+          ),
+        ],
       ),
     ],
   );
 });
+
+/// 工作台一级导航的保活式壳层宿主。
+class _WorkspaceShellHost extends StatelessWidget {
+  const _WorkspaceShellHost({required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context) => navigationShell;
+}
 
 /// 把 Riverpod 认证状态变化转成 `GoRouter` 可消费的刷新信号。
 class _AuthRouterRefreshListenable extends ChangeNotifier {

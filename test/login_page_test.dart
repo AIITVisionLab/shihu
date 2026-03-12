@@ -45,6 +45,12 @@ void main() {
     await tester.pump();
 
     expect(find.text('注册'), findsNothing);
+    await tester.scrollUntilVisible(
+      find.text('填入演示账号'),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     expect(find.text('填入演示账号'), findsOneWidget);
   });
 
@@ -74,10 +80,22 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.text('http://192.168.1.20:8080'),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     expect(find.text('http://192.168.1.20:8080'), findsWidgets);
     expect(find.text('恢复默认服务地址'), findsOneWidget);
 
     await tester.tap(find.text('恢复默认服务地址'));
+    await tester.pumpAndSettle();
+    await tester.dragUntilVisible(
+      find.text('已恢复默认服务地址，请重新尝试登录。'),
+      find.byType(Scrollable).first,
+      const Offset(0, 240),
+    );
     await tester.pumpAndSettle();
 
     expect(settingsController.resetCount, 1);

@@ -14,39 +14,58 @@ class RealtimeStatusGuideSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return CommonCard(
       title: '状态说明',
-      subtitle: '用于解释设备异常等级与错误码语义，帮助值守人员快速判断处理优先级。',
-      child: Column(
-        children: <Widget>[
-          _GuideItem(
-            icon: Icons.verified_outlined,
-            title: '错误码 0',
-            description: '系统运行正常，设备状态处于安全区间，可继续观察实时数据。',
-            isActive: deviceState?.errorCode == 0,
-          ),
-          const SizedBox(height: 14),
-          _GuideItem(
-            icon: Icons.warning_amber_rounded,
-            title: '错误码 1',
-            description: '系统进入预警状态，建议人工复核当前设备环境和控制策略。',
-            isActive: deviceState?.errorCode == 1,
-          ),
-          const SizedBox(height: 14),
-          _GuideItem(
-            icon: Icons.gpp_bad_rounded,
-            title: '错误码 2',
-            description: '系统进入严重告警状态，应优先处理设备异常或环境风险。',
-            isActive: deviceState?.errorCode == 2,
-          ),
-          const SizedBox(height: 14),
-          _GuideItem(
-            icon: Icons.help_outline_rounded,
-            title: '其他情况',
-            description: '当前按未知状态展示，用于覆盖尚未定义或未返回的错误码。',
-            isActive:
-                deviceState == null ||
-                deviceState?.alertLevel == DeviceAlertLevel.unknown,
-          ),
-        ],
+      subtitle: '把错误码解释成可执行的处理优先级。',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = constraints.maxWidth >= 720 ? 2 : 1;
+          final itemWidth =
+              (constraints.maxWidth - ((columns - 1) * 14)) / columns;
+
+          return Wrap(
+            spacing: 14,
+            runSpacing: 14,
+            children: <Widget>[
+              SizedBox(
+                width: itemWidth,
+                child: _GuideItem(
+                  icon: Icons.verified_outlined,
+                  title: '错误码 0',
+                  description: '系统运行正常，可继续观察实时数据。',
+                  isActive: deviceState?.errorCode == 0,
+                ),
+              ),
+              SizedBox(
+                width: itemWidth,
+                child: _GuideItem(
+                  icon: Icons.warning_amber_rounded,
+                  title: '错误码 1',
+                  description: '系统进入预警状态，建议人工复核。',
+                  isActive: deviceState?.errorCode == 1,
+                ),
+              ),
+              SizedBox(
+                width: itemWidth,
+                child: _GuideItem(
+                  icon: Icons.gpp_bad_rounded,
+                  title: '错误码 2',
+                  description: '系统进入严重告警状态，应优先处理。',
+                  isActive: deviceState?.errorCode == 2,
+                ),
+              ),
+              SizedBox(
+                width: itemWidth,
+                child: _GuideItem(
+                  icon: Icons.help_outline_rounded,
+                  title: '其他情况',
+                  description: '按未知状态展示，等待进一步确认。',
+                  isActive:
+                      deviceState == null ||
+                      deviceState?.alertLevel == DeviceAlertLevel.unknown,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

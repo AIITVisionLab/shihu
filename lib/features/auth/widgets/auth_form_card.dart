@@ -24,16 +24,11 @@ class AuthFormCard extends StatelessWidget {
     required this.rememberAccount,
     required this.showPassword,
     required this.showConfirmPassword,
-    required this.passwordStrength,
-    required this.currentDeviceBaseUrl,
-    required this.isUsingCustomServiceConfig,
-    required this.canResetServiceConfig,
     required this.onRememberAccountChanged,
     required this.onTogglePasswordVisibility,
     required this.onToggleConfirmPasswordVisibility,
     required this.onSelectMode,
     required this.onSubmit,
-    required this.onResetServiceConfig,
     this.helperMessage,
     this.helperTone,
     super.key,
@@ -66,18 +61,6 @@ class AuthFormCard extends StatelessWidget {
   /// 是否显示确认密码明文。
   final bool showConfirmPassword;
 
-  /// 密码强度等级。
-  final int passwordStrength;
-
-  /// 当前设备服务地址。
-  final String currentDeviceBaseUrl;
-
-  /// 当前是否使用自定义服务配置。
-  final bool isUsingCustomServiceConfig;
-
-  /// 当前是否允许恢复默认服务配置。
-  final bool canResetServiceConfig;
-
   /// 表单辅助提示。
   final String? helperMessage;
 
@@ -99,76 +82,41 @@ class AuthFormCard extends StatelessWidget {
   /// 提交表单。
   final Future<void> Function() onSubmit;
 
-  /// 恢复默认服务配置。
-  final Future<void> Function() onResetServiceConfig;
-
   bool get _isRegisterMode => formMode.isRegister;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final baseTheme = Theme.of(context);
+    final formTheme = _buildFormTheme(baseTheme);
     final helperToneOrDefault = helperTone ?? AuthFeedbackTone.error;
 
-    return Material(
-      color: Colors.transparent,
-      surfaceTintColor: Colors.transparent,
-      borderRadius: BorderRadius.circular(24),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.96),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-            ),
-            boxShadow: const <BoxShadow>[
-              BoxShadow(
-                color: Color(0x0C172019),
-                blurRadius: 12,
-                offset: Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Column(
+    return Theme(
+      data: formTheme,
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final colorScheme = theme.colorScheme;
+
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               _FormHero(formMode: formMode, isMockMode: isMockMode),
-              const SizedBox(height: 20),
               if (!isMockMode) ...<Widget>[
+                const SizedBox(height: 24),
                 _ModeSelector(
                   currentMode: formMode,
                   isEnabled: !isSubmitting,
                   onSelectMode: onSelectMode,
                 ),
+              ],
+              if (helperMessage?.isNotEmpty ?? false) ...<Widget>[
                 const SizedBox(height: 20),
-              ],
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 220),
-                child: (helperMessage?.isNotEmpty ?? false)
-                    ? Padding(
-                        key: ValueKey<String>('helper-$helperMessage'),
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _FeedbackBanner(
-                          message: helperMessage!,
-                          tone: helperToneOrDefault,
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              if (!isMockMode) ...<Widget>[
-                _ServiceAccessPanel(
-                  currentDeviceBaseUrl: currentDeviceBaseUrl,
-                  isUsingCustomServiceConfig: isUsingCustomServiceConfig,
-                  canResetServiceConfig: canResetServiceConfig,
-                  onResetServiceConfig: onResetServiceConfig,
+                _FeedbackBanner(
+                  message: helperMessage!,
+                  tone: helperToneOrDefault,
                 ),
-                const SizedBox(height: 16),
               ],
-              if (_isRegisterMode) ...<Widget>[
-                const _RegisterRulePanel(),
-                const SizedBox(height: 16),
-              ],
+              const SizedBox(height: 24),
               AutofillGroup(
                 child: Column(
                   children: <Widget>[
@@ -220,59 +168,50 @@ class AuthFormCard extends StatelessWidget {
                         }
                       },
                     ),
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutCubic,
-                      child: _isRegisterMode
-                          ? Column(
-                              children: <Widget>[
-                                const SizedBox(height: 12),
-                                _PasswordStrengthIndicator(
-                                  level: passwordStrength,
-                                ),
-                                const SizedBox(height: 16),
-                                _AuthTextField(
-                                  controller: confirmPasswordController,
-                                  label: AppCopy.authConfirmPasswordLabel,
-                                  hintText: AppCopy.authConfirmPasswordHint,
-                                  prefixIcon: const Icon(
-                                    Icons.verified_outlined,
-                                  ),
-                                  enabled: !isSubmitting,
-                                  obscureText: !showConfirmPassword,
-                                  textInputAction: TextInputAction.done,
-                                  autofillHints: const <String>[
-                                    AutofillHints.newPassword,
-                                  ],
-                                  autocorrect: false,
-                                  enableSuggestions: false,
-                                  suffixIcon: IconButton(
-                                    onPressed: isSubmitting
-                                        ? null
-                                        : onToggleConfirmPasswordVisibility,
-                                    icon: Icon(
-                                      showConfirmPassword
-                                          ? Icons.visibility_off_outlined
-                                          : Icons.visibility_outlined,
-                                    ),
-                                  ),
-                                  onSubmitted: (_) async {
-                                    await onSubmit();
-                                  },
-                                ),
-                              ],
-                            )
-                          : _RememberAccountTile(
-                              rememberAccount: rememberAccount,
-                              isMockMode: isMockMode,
-                              isSubmitting: isSubmitting,
-                              onChanged: onRememberAccountChanged,
-                            ),
-                    ),
+                    if (_isRegisterMode) ...<Widget>[
+                      const SizedBox(height: 16),
+                      _AuthTextField(
+                        controller: confirmPasswordController,
+                        label: AppCopy.authConfirmPasswordLabel,
+                        hintText: AppCopy.authConfirmPasswordHint,
+                        prefixIcon: const Icon(Icons.verified_outlined),
+                        enabled: !isSubmitting,
+                        obscureText: !showConfirmPassword,
+                        textInputAction: TextInputAction.done,
+                        autofillHints: const <String>[
+                          AutofillHints.newPassword,
+                        ],
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        suffixIcon: IconButton(
+                          onPressed: isSubmitting
+                              ? null
+                              : onToggleConfirmPasswordVisibility,
+                          icon: Icon(
+                            showConfirmPassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                          ),
+                        ),
+                        onSubmitted: (_) async {
+                          await onSubmit();
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      const _RegisterRulePanel(),
+                    ] else ...<Widget>[
+                      const SizedBox(height: 12),
+                      _RememberAccountTile(
+                        rememberAccount: rememberAccount,
+                        isMockMode: isMockMode,
+                        isSubmitting: isSubmitting,
+                        onChanged: onRememberAccountChanged,
+                      ),
+                    ],
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
@@ -281,10 +220,18 @@ class AuthFormCard extends StatelessWidget {
                       : () async {
                           await onSubmit();
                         },
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(54),
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                  ),
                   icon: isSubmitting
-                      ? const SizedBox.square(
+                      ? SizedBox.square(
                           dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: colorScheme.onPrimary,
+                          ),
                         )
                       : Icon(
                           _isRegisterMode
@@ -302,7 +249,7 @@ class AuthFormCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               if (!isMockMode)
                 Center(
                   child: TextButton(
@@ -315,15 +262,99 @@ class AuthFormCard extends StatelessWidget {
                           ),
                     child: Text(_isRegisterMode ? '返回登录' : '前往注册'),
                   ),
-                )
-              else
-                _MockHintCard(colorScheme: colorScheme),
+                ),
             ],
-          ),
-        ),
+          );
+        },
       ),
     );
   }
+}
+
+ThemeData _buildFormTheme(ThemeData baseTheme) {
+  final scheme = baseTheme.colorScheme.copyWith(
+    primary: const Color(0xFF57A8FF),
+    onPrimary: const Color(0xFF031A31),
+    surface: const Color(0xFF0D1724),
+    onSurface: const Color(0xFFF0F5F7),
+    onSurfaceVariant: const Color(0xFF95A8BD),
+    surfaceContainerLowest: const Color(0xFF09111C),
+    surfaceContainerLow: const Color(0xFF0D1724),
+    surfaceContainer: const Color(0xFF111C2B),
+    surfaceContainerHighest: const Color(0xFF1A2A3D),
+    primaryContainer: const Color(0xFF0F2741),
+    onPrimaryContainer: const Color(0xFFD6E9FF),
+    secondaryContainer: const Color(0xFF112234),
+    onSecondaryContainer: const Color(0xFFE7EEF2),
+    tertiaryContainer: const Color(0xFF103145),
+    onTertiaryContainer: const Color(0xFFD7F0FF),
+    outlineVariant: const Color(0xFF263B52),
+    errorContainer: const Color(0xFF45211C),
+    onErrorContainer: const Color(0xFFFFDAD4),
+  );
+
+  return baseTheme.copyWith(
+    colorScheme: scheme,
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: const Color(0xFF0E1826),
+      hintStyle: baseTheme.textTheme.bodyMedium?.copyWith(
+        color: const Color(0xFF7D96AE),
+      ),
+      labelStyle: baseTheme.textTheme.bodyMedium?.copyWith(
+        color: const Color(0xFF95A8BD),
+        fontWeight: FontWeight.w700,
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: Color(0xFF263B52)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: Color(0xFF263B52)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: Color(0xFF57A8FF), width: 1.5),
+      ),
+      prefixIconColor: const Color(0xFF95A8BD),
+      suffixIconColor: const Color(0xFF95A8BD),
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: ButtonStyle(
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        ),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const Color(0xFF0F2741);
+          }
+          return const Color(0xFF0D1724);
+        }),
+        foregroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const Color(0xFFD6E9FF);
+          }
+          return const Color(0xFF95A8BD);
+        }),
+        side: const WidgetStatePropertyAll(
+          BorderSide(color: Color(0x00000000)),
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: const Color(0xFF85BEFF)),
+    ),
+    checkboxTheme: CheckboxThemeData(
+      fillColor: const WidgetStatePropertyAll(Color(0xFF57A8FF)),
+      side: const BorderSide(color: Color(0xFF3E5670)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+    ),
+  );
 }
 
 class _FormHero extends StatelessWidget {
@@ -336,204 +367,54 @@ class _FormHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final title = formMode.isRegister ? '创建新账号' : AppCopy.authLoginCardTitle;
-    final loginSceneLabel = isMockMode ? '演示模式' : '在线服务';
-    final description = formMode.isRegister
-        ? '账号开通完成后会回到登录模式，继续沿用同一套账号密码登录链路。'
-        : '登录成功后直接进入石斛监测主控台，继续查看设备状态、告警等级和补光控制。';
+    final title = formMode.isRegister ? '创建账号' : '欢迎回来';
+    final description = formMode.isRegister ? '填写最少信息即可开通。' : '输入账号和密码后继续。';
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[
-            colorScheme.secondaryContainer.withValues(alpha: 0.92),
-            colorScheme.primaryContainer.withValues(alpha: 0.76),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            crossAxisAlignment: WrapCrossAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: colorScheme.outlineVariant),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Icon(
-                formMode.isRegister
-                    ? Icons.person_add_alt_1_rounded
-                    : Icons.lock_person_outlined,
+                Icons.lock_outline_rounded,
+                size: 16,
                 color: colorScheme.primary,
               ),
+              const SizedBox(width: 8),
               Text(
-                title,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
+                isMockMode ? '演示环境' : '用户登录',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
                 ),
-              ),
-              _StatusPill(
-                icon: isMockMode
-                    ? Icons.science_outlined
-                    : Icons.cloud_done_outlined,
-                label: loginSceneLabel,
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            description,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              height: 1.6,
-              color: colorScheme.onSecondaryContainer.withValues(alpha: 0.82),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ServiceAccessPanel extends StatelessWidget {
-  const _ServiceAccessPanel({
-    required this.currentDeviceBaseUrl,
-    required this.isUsingCustomServiceConfig,
-    required this.canResetServiceConfig,
-    required this.onResetServiceConfig,
-  });
-
-  final String currentDeviceBaseUrl;
-  final bool isUsingCustomServiceConfig;
-  final bool canResetServiceConfig;
-  final Future<void> Function() onResetServiceConfig;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.84),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.32),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: <Widget>[
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Icon(
-                    isUsingCustomServiceConfig
-                        ? Icons.tune_rounded
-                        : Icons.cloud_done_outlined,
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    AppCopy.authServicePanelTitle,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-              if (canResetServiceConfig)
-                TextButton.icon(
-                  onPressed: () async {
-                    await onResetServiceConfig();
-                  },
-                  icon: const Icon(Icons.restart_alt_rounded),
-                  label: const Text(AppCopy.authResetServiceConfig),
-                ),
-            ],
+        const SizedBox(height: 16),
+        Text(
+          title,
+          style: theme.textTheme.headlineMedium?.copyWith(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.w800,
           ),
-          const SizedBox(height: 14),
-          _ServiceAddressLine(
-            label: AppCopy.authDeviceServiceLabel,
-            value: currentDeviceBaseUrl,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          description,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            height: 1.5,
           ),
-          const SizedBox(height: 12),
-          Text(
-            isUsingCustomServiceConfig
-                ? AppCopy.authCustomServiceConfigHint
-                : AppCopy.authDefaultServiceConfigHint,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              height: 1.6,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ServiceAddressLine extends StatelessWidget {
-  const _ServiceAddressLine({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SelectableText(
-            value,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(height: 1.5),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Chip(
-      avatar: Icon(icon, size: 16, color: colorScheme.primary),
-      label: Text(label),
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      side: BorderSide.none,
+        ),
+      ],
     );
   }
 }
@@ -551,24 +432,35 @@ class _ModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SegmentedButton<AuthFormMode>(
-      showSelectedIcon: false,
-      segments: const <ButtonSegment<AuthFormMode>>[
-        ButtonSegment<AuthFormMode>(
-          value: AuthFormMode.login,
-          label: Text(AppCopy.authLoginTab),
-          icon: Icon(Icons.login_rounded),
-        ),
-        ButtonSegment<AuthFormMode>(
-          value: AuthFormMode.register,
-          label: Text(AppCopy.authRegisterTab),
-          icon: Icon(Icons.person_add_alt_1_rounded),
-        ),
-      ],
-      selected: <AuthFormMode>{currentMode},
-      onSelectionChanged: isEnabled
-          ? (selection) => onSelectMode(selection.first)
-          : null,
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: SegmentedButton<AuthFormMode>(
+        showSelectedIcon: false,
+        segments: const <ButtonSegment<AuthFormMode>>[
+          ButtonSegment<AuthFormMode>(
+            value: AuthFormMode.login,
+            label: Text(AppCopy.authLoginTab),
+            icon: Icon(Icons.login_rounded),
+          ),
+          ButtonSegment<AuthFormMode>(
+            value: AuthFormMode.register,
+            label: Text(AppCopy.authRegisterTab),
+            icon: Icon(Icons.person_add_alt_1_rounded),
+          ),
+        ],
+        selected: <AuthFormMode>{currentMode},
+        onSelectionChanged: isEnabled
+            ? (selection) => onSelectMode(selection.first)
+            : null,
+      ),
     );
   }
 }
@@ -641,65 +533,54 @@ class _RememberAccountTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Container(
-      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(22),
+        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
-      child: CheckboxListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        value: rememberAccount,
-        onChanged: isSubmitting ? null : (value) => onChanged(value ?? false),
-        title: const Text('记住账号'),
-        subtitle: Text(isMockMode ? '支持演示账号快速回填' : '下次打开登录页自动回填账号'),
-        controlAffinity: ListTileControlAffinity.leading,
-      ),
-    );
-  }
-}
-
-class _PasswordStrengthIndicator extends StatelessWidget {
-  const _PasswordStrengthIndicator({required this.level});
-
-  final int level;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final values = <double>[0.0, 0.34, 0.67, 1.0];
-    final labels = <String>['密码强度：待输入', '密码强度：较弱', '密码强度：中等', '密码强度：较强'];
-    final colors = <Color>[
-      colorScheme.outlineVariant,
-      colorScheme.error,
-      colorScheme.tertiary,
-      colorScheme.primary,
-    ];
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              minHeight: 8,
-              value: values[level],
-              color: colors[level],
-              backgroundColor: colorScheme.surfaceContainerHigh,
-            ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: isSubmitting ? null : () => onChanged(!rememberAccount),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            children: <Widget>[
+              Checkbox(
+                value: rememberAccount,
+                onChanged: isSubmitting
+                    ? null
+                    : (value) => onChanged(value ?? false),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      '记住账号',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isMockMode ? '支持演示账号回填。' : '下次自动回填账号。',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(labels[level], style: Theme.of(context).textTheme.bodySmall),
-        ],
+        ),
       ),
     );
   }
@@ -710,14 +591,16 @@ class _RegisterRulePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.secondaryContainer.withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(22),
+        color: colorScheme.secondaryContainer.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -727,9 +610,9 @@ class _RegisterRulePanel extends StatelessWidget {
           Expanded(
             child: Text(
               AppCopy.authRegisterRules,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSecondaryContainer,
-                height: 1.6,
+                height: 1.55,
               ),
             ),
           ),
@@ -747,7 +630,8 @@ class _FeedbackBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final backgroundColor = tone == AuthFeedbackTone.success
         ? colorScheme.tertiaryContainer
         : colorScheme.errorContainer;
@@ -760,52 +644,27 @@ class _FeedbackBanner extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: foregroundColor.withValues(alpha: 0.16)),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: foregroundColor.withValues(alpha: 0.14)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Icon(icon, color: foregroundColor),
-          const SizedBox(width: 12),
+          Icon(icon, size: 18, color: foregroundColor),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 color: foregroundColor,
                 height: 1.55,
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _MockHintCard extends StatelessWidget {
-  const _MockHintCard({required this.colorScheme});
-
-  final ColorScheme colorScheme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Text(
-        '当前为演示环境，仅用于体验登录流程；切换到在线服务后即可使用正式账号继续登录。',
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          height: 1.6,
-          color: colorScheme.onSurfaceVariant,
-        ),
       ),
     );
   }

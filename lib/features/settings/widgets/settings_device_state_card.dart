@@ -346,14 +346,15 @@ class _DeviceOverviewPanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: <Widget>[
                     Icon(
                       Icons.lightbulb_outline_rounded,
                       color: colorScheme.primary,
                     ),
-                    const SizedBox(width: 10),
                     Text(
                       '补光控制',
                       style: theme.textTheme.titleMedium?.copyWith(
@@ -370,8 +371,10 @@ class _DeviceOverviewPanel extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: <Widget>[
                     Switch.adaptive(
                       value: ledOn,

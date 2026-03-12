@@ -51,7 +51,9 @@ class SettingsLocalDataCard extends StatelessWidget {
                   rememberedAccount?.trim().isNotEmpty == true
                       ? rememberedAccount!
                       : AppCopy.settingsRememberedAccountMissing,
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ],
             ),

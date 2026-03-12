@@ -12,20 +12,20 @@ class AppBackdrop extends StatelessWidget {
       BackdropOrbData(
         alignment: Alignment(-1.05, -0.95),
         size: 260,
-        color: Color(0x0E26A497),
+        color: Color(0x124B9BFF),
       ),
       BackdropOrbData(
         alignment: Alignment(1.08, -0.18),
         size: 220,
-        color: Color(0x0DB68B63),
+        color: Color(0x1045D0FF),
       ),
       BackdropOrbData(
         alignment: Alignment(0.78, 1.02),
         size: 200,
-        color: Color(0x0C5D7E92),
+        color: Color(0x0D2A77D7),
       ),
     ],
-    this.showGrid = true,
+    this.showGrid = false,
     super.key,
   });
 
@@ -67,30 +67,10 @@ class AppBackdrop extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: <Color>[
                       colorScheme.surface.withValues(alpha: 0.01),
-                      colorScheme.primaryContainer.withValues(alpha: 0.02),
-                      colorScheme.secondaryContainer.withValues(alpha: 0.03),
+                      colorScheme.primaryContainer.withValues(alpha: 0.05),
+                      colorScheme.tertiaryContainer.withValues(alpha: 0.04),
                     ],
                   ),
-                ),
-              ),
-            ),
-          ),
-          if (showGrid)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: _BackdropGridPainter(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.03),
-                  ),
-                ),
-              ),
-            ),
-          Positioned.fill(
-            child: IgnorePointer(
-              child: CustomPaint(
-                painter: _BackdropContourPainter(
-                  lineColor: colorScheme.primary.withValues(alpha: 0.018),
-                  accentColor: colorScheme.tertiary.withValues(alpha: 0.022),
                 ),
               ),
             ),
@@ -116,27 +96,16 @@ class AppBackdrop extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            right: -120,
-            top: -80,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                      color: colorScheme.primaryContainer.withValues(
-                        alpha: 0.08,
-                      ),
-                      blurRadius: 84,
-                      spreadRadius: 24,
-                    ),
-                  ],
+          if (showGrid)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: _BackdropGridPainter(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.025),
+                  ),
                 ),
-                child: const SizedBox(width: 220, height: 220),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -185,61 +154,5 @@ class _BackdropGridPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _BackdropGridPainter oldDelegate) {
     return oldDelegate.color != color;
-  }
-}
-
-class _BackdropContourPainter extends CustomPainter {
-  const _BackdropContourPainter({
-    required this.lineColor,
-    required this.accentColor,
-  });
-
-  final Color lineColor;
-  final Color accentColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final mainPaint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    final accentPaint = Paint()
-      ..color = accentColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
-
-    for (var index = 0; index < 3; index += 1) {
-      final progress = index / 3;
-      final startY = size.height * (0.16 + progress * 0.2);
-      final path = Path()
-        ..moveTo(-40, startY)
-        ..cubicTo(
-          size.width * 0.24,
-          startY - 16 - (index * 3),
-          size.width * 0.58,
-          startY + 18 + (index * 6),
-          size.width + 60,
-          startY - 4 + (index * 8),
-        );
-      canvas.drawPath(path, mainPaint);
-    }
-
-    final verticalPath = Path()
-      ..moveTo(size.width * 0.76, -20)
-      ..cubicTo(
-        size.width * 0.84,
-        size.height * 0.18,
-        size.width * 0.7,
-        size.height * 0.56,
-        size.width * 0.8,
-        size.height + 40,
-      );
-    canvas.drawPath(verticalPath, accentPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _BackdropContourPainter oldDelegate) {
-    return oldDelegate.lineColor != lineColor ||
-        oldDelegate.accentColor != accentColor;
   }
 }

@@ -6,8 +6,7 @@ import 'package:sickandflutter/shared/widgets/app_backdrop.dart';
 
 /// 主工作台统一壳层。
 ///
-/// 桌面端使用 `NavigationRail`，紧凑宽度下自动切换为 `NavigationBar`，
-/// 统一保持更像客户端而不是网页的后台工作台结构。
+/// 桌面端使用 `NavigationRail`，紧凑宽度下自动切换为 `NavigationBar`。
 class AppWorkspaceScaffold extends StatelessWidget {
   /// 创建主工作台壳层。
   const AppWorkspaceScaffold({
@@ -17,23 +16,23 @@ class AppWorkspaceScaffold extends StatelessWidget {
     required this.currentUser,
     required this.child,
     this.headerActions = const <Widget>[],
-    this.maxContentWidth = 1260,
+    this.maxContentWidth = 1100,
     this.backgroundGradient,
     this.backgroundOrbs = const <BackdropOrbData>[
       BackdropOrbData(
-        alignment: Alignment(-1.05, -0.95),
-        size: 360,
-        color: Color(0x1626A497),
+        alignment: Alignment(-1.0, -0.92),
+        size: 380,
+        color: Color(0x183C8EFF),
       ),
       BackdropOrbData(
-        alignment: Alignment(1.08, -0.18),
-        size: 260,
-        color: Color(0x14B68B63),
+        alignment: Alignment(1.06, -0.18),
+        size: 320,
+        color: Color(0x1443D3FF),
       ),
       BackdropOrbData(
-        alignment: Alignment(0.78, 1.02),
-        size: 240,
-        color: Color(0x105D7E92),
+        alignment: Alignment(0.86, 1.08),
+        size: 280,
+        color: Color(0x12205EC2),
       ),
     ],
     this.showGrid = false,
@@ -73,8 +72,7 @@ class AppWorkspaceScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final useRail = screenWidth >= 980;
-    final horizontalPadding = useRail ? 20.0 : 16.0;
+    final useRail = screenWidth >= 1180;
     final contentPane = _WorkspaceContentPane(
       title: title,
       subtitle: subtitle,
@@ -91,7 +89,7 @@ class AppWorkspaceScaffold extends StatelessWidget {
           : SafeArea(
               top: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
                 child: _WorkspaceBottomNavigation(destination: destination),
               ),
             ),
@@ -99,7 +97,17 @@ class AppWorkspaceScaffold extends StatelessWidget {
         children: <Widget>[
           Positioned.fill(
             child: AppBackdrop(
-              baseGradient: backgroundGradient,
+              baseGradient:
+                  backgroundGradient ??
+                  const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: <Color>[
+                      Color(0xFF081017),
+                      Color(0xFF0C131A),
+                      Color(0xFF0A1016),
+                    ],
+                  ),
               orbs: backgroundOrbs,
               showGrid: showGrid,
             ),
@@ -107,24 +115,19 @@ class AppWorkspaceScaffold extends StatelessWidget {
           SafeArea(
             bottom: !useRail,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                16,
-                horizontalPadding,
-                useRail ? 20 : 8,
-              ),
+              padding: EdgeInsets.fromLTRB(14, 14, 14, useRail ? 14 : 8),
               child: useRail
                   ? Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
                         SizedBox(
-                          width: 286,
+                          width: 212,
                           child: _WorkspaceRailPane(
                             destination: destination,
                             currentUser: currentUser,
                           ),
                         ),
-                        const SizedBox(width: 20),
+                        const SizedBox(width: 14),
                         Expanded(child: contentPane),
                       ],
                     )
@@ -164,7 +167,7 @@ class _WorkspaceContentPane extends StatelessWidget {
           currentUser: currentUser,
           actions: headerActions,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         Expanded(
           child: Center(
             child: ConstrainedBox(
@@ -199,71 +202,84 @@ class _WorkspaceRailPane extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: <Color>[
-            colorScheme.surfaceContainerLowest.withValues(alpha: 0.98),
-            colorScheme.surface.withValues(alpha: 0.96),
-            colorScheme.surfaceContainerLow.withValues(alpha: 0.9),
+            colorScheme.surfaceContainerLowest.withValues(alpha: 0.94),
+            colorScheme.surfaceContainerLow.withValues(alpha: 0.98),
           ],
         ),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: colorScheme.outlineVariant),
         boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x0C172019),
-            blurRadius: 12,
-            offset: Offset(0, 6),
+            color: Color(0x36000000),
+            blurRadius: 26,
+            offset: Offset(0, 14),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+        padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withValues(alpha: 0.52),
-                borderRadius: BorderRadius.circular(24),
+                color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.84),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.82),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Container(
-                    width: 52,
-                    height: 52,
+                    width: 50,
+                    height: 50,
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: <Color>[
+                          colorScheme.primary,
+                          colorScheme.primary.withValues(alpha: 0.66),
+                        ],
+                      ),
                     ),
                     child: Icon(
                       Icons.spa_rounded,
-                      color: colorScheme.primary,
-                      size: 30,
+                      color: colorScheme.onPrimary,
+                      size: 28,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Text(
                     AppConstants.appName,
                     style: theme.textTheme.headlineSmall?.copyWith(
+                      color: colorScheme.onSurface,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
-                    '跨平台石斛值守后台',
+                    '蓝图值守',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onPrimaryContainer.withValues(
-                        alpha: 0.8,
-                      ),
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  if (hasUser) ...<Widget>[
+                    const SizedBox(height: 14),
+                    _RailMetaChip(
+                      icon: Icons.person_outline_rounded,
+                      label: currentUser,
+                    ),
+                  ],
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Expanded(
               child: NavigationRail(
                 backgroundColor: Colors.transparent,
@@ -271,27 +287,9 @@ class _WorkspaceRailPane extends StatelessWidget {
                 selectedIndex: AppWorkspaceDestination.values.indexOf(
                   destination,
                 ),
-                minExtendedWidth: 230,
-                groupAlignment: -0.85,
-                leading: Container(
-                  margin: const EdgeInsets.only(left: 8, bottom: 18),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHigh.withValues(
-                      alpha: 0.7,
-                    ),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    '导航',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                ),
+                minExtendedWidth: 208,
+                groupAlignment: -0.88,
+                labelType: NavigationRailLabelType.none,
                 onDestinationSelected: (index) {
                   _navigate(context, AppWorkspaceDestination.values[index]);
                 },
@@ -304,35 +302,6 @@ class _WorkspaceRailPane extends StatelessWidget {
                       ),
                     )
                     .toList(growable: false),
-              ),
-            ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerLow.withValues(alpha: 0.72),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.28),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  _RailInfoChip(icon: Icons.grid_view_rounded, label: '统一工作台'),
-                  const SizedBox(height: 10),
-                  _RailInfoChip(
-                    icon: Icons.schedule_rounded,
-                    label: '本地时间 ${_formatHeaderTime(DateTime.now())}',
-                  ),
-                  if (hasUser) ...<Widget>[
-                    const SizedBox(height: 10),
-                    _RailInfoChip(
-                      icon: Icons.person_outline_rounded,
-                      label: currentUser,
-                    ),
-                  ],
-                ],
               ),
             ),
           ],
@@ -367,118 +336,97 @@ class _WorkspaceHeaderCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: <Color>[
-            colorScheme.surfaceContainerLowest.withValues(alpha: 0.98),
-            colorScheme.surface.withValues(alpha: 0.96),
-            colorScheme.surfaceContainerLow.withValues(alpha: 0.92),
+            colorScheme.surfaceContainerLow.withValues(alpha: 0.94),
+            colorScheme.surfaceContainer.withValues(alpha: 0.98),
           ],
         ),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.38),
-        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colorScheme.outlineVariant),
         boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x0C172019),
-            blurRadius: 12,
-            offset: Offset(0, 6),
+            color: Color(0x46000000),
+            blurRadius: 22,
+            offset: Offset(0, 12),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(22),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 15),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final isCompact = constraints.maxWidth < 780;
-            final meta = Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: <Widget>[
-                _HeaderChip(
-                  icon: Icons.spa_outlined,
-                  label: '${AppConstants.appName} 工作台',
-                  foregroundColor: colorScheme.onPrimaryContainer,
-                  backgroundColor: colorScheme.primaryContainer.withValues(
-                    alpha: 0.8,
-                  ),
-                ),
-                _HeaderChip(
-                  icon: Icons.verified_user_outlined,
-                  label: '桌面工作台',
-                  foregroundColor: colorScheme.onSecondaryContainer,
-                  backgroundColor: colorScheme.secondaryContainer.withValues(
-                    alpha: 0.84,
-                  ),
-                ),
-                _HeaderChip(
-                  icon: Icons.schedule_rounded,
-                  label: '本地时间 ${_formatHeaderTime(DateTime.now())}',
-                ),
-                if (hasUser)
-                  _HeaderChip(
-                    icon: Icons.person_outline_rounded,
-                    label: currentUser,
-                  ),
-              ],
-            );
+            final meta = hasUser && isCompact
+                ? Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: <Widget>[
+                      _HeaderChip(
+                        icon: Icons.person_outline_rounded,
+                        label: currentUser,
+                      ),
+                    ],
+                  )
+                : null;
             final titleBlock = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
                   title,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
+                  style: theme.textTheme.headlineMedium?.copyWith(
                     color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
                 Text(
                   subtitle,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: colorScheme.onSurfaceVariant,
-                    height: 1.58,
+                    height: 1.48,
                   ),
                 ),
               ],
             );
             final actionWrap = actions.isEmpty
                 ? const SizedBox.shrink()
-                : Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    alignment: WrapAlignment.end,
-                    children: actions,
-                  );
+                : Wrap(spacing: 10, runSpacing: 10, children: actions);
 
             if (isCompact) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  meta,
-                  const SizedBox(height: 18),
+                  if (meta != null) ...<Widget>[
+                    meta,
+                    const SizedBox(height: 14),
+                  ],
                   titleBlock,
                   if (actions.isNotEmpty) ...<Widget>[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
                     actionWrap,
                   ],
                 ],
               );
             }
 
-            return Column(
+            return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Expanded(child: meta),
-                    if (actions.isNotEmpty) ...<Widget>[
-                      const SizedBox(width: 16),
-                      Flexible(child: actionWrap),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      if (meta != null) ...<Widget>[
+                        meta,
+                        const SizedBox(height: 14),
+                      ],
+                      titleBlock,
                     ],
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 18),
-                titleBlock,
+                if (actions.isNotEmpty) ...<Widget>[
+                  const SizedBox(width: 16),
+                  Flexible(child: actionWrap),
+                ],
               ],
             );
           },
@@ -499,16 +447,14 @@ class _WorkspaceBottomNavigation extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.38),
-        ),
+        color: colorScheme.surfaceContainerLow.withValues(alpha: 0.98),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: colorScheme.outlineVariant),
         boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x0C172019),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+            color: Color(0x52000000),
+            blurRadius: 24,
+            offset: Offset(0, 14),
           ),
         ],
       ),
@@ -532,8 +478,8 @@ class _WorkspaceBottomNavigation extends StatelessWidget {
   }
 }
 
-class _RailInfoChip extends StatelessWidget {
-  const _RailInfoChip({required this.icon, required this.label});
+class _RailMetaChip extends StatelessWidget {
+  const _RailMetaChip({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
@@ -543,62 +489,58 @@ class _RailInfoChip extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Row(
-      children: <Widget>[
-        Icon(icon, size: 16, color: colorScheme.onSurfaceVariant),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurface,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 16, color: colorScheme.primary),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              label,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: colorScheme.onSurface,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
 class _HeaderChip extends StatelessWidget {
-  const _HeaderChip({
-    required this.icon,
-    required this.label,
-    this.foregroundColor,
-    this.backgroundColor,
-  });
+  const _HeaderChip({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
-  final Color? foregroundColor;
-  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final effectiveForeground = foregroundColor ?? colorScheme.onSurfaceVariant;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color:
-            backgroundColor ??
-            colorScheme.surfaceContainerHigh.withValues(alpha: 0.72),
+        color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.78),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.24),
-        ),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, size: 16, color: effectiveForeground),
+          Icon(icon, size: 16, color: colorScheme.primary),
           const SizedBox(width: 8),
           Text(
             label,
             style: theme.textTheme.labelLarge?.copyWith(
-              color: effectiveForeground,
+              color: colorScheme.onSurface,
             ),
           ),
         ],
@@ -608,11 +550,16 @@ class _HeaderChip extends StatelessWidget {
 }
 
 void _navigate(BuildContext context, AppWorkspaceDestination nextDestination) {
+  final shellState = StatefulNavigationShell.maybeOf(context);
+  final targetIndex = AppWorkspaceDestination.values.indexOf(nextDestination);
+
+  if (shellState != null) {
+    if (shellState.currentIndex == targetIndex) {
+      return;
+    }
+    shellState.goBranch(targetIndex);
+    return;
+  }
+
   context.goNamed(nextDestination.routeName);
-}
-
-String _formatHeaderTime(DateTime value) {
-  String twoDigits(int number) => number.toString().padLeft(2, '0');
-
-  return '${twoDigits(value.hour)}:${twoDigits(value.minute)}';
 }

@@ -92,73 +92,60 @@ class _ServiceHealthSection extends StatelessWidget {
           children: <Widget>[
             LayoutBuilder(
               builder: (context, constraints) {
-                final isCompact = constraints.maxWidth < 560;
+                final columns = constraints.maxWidth >= 540 ? 2 : 1;
+                final itemWidth =
+                    (constraints.maxWidth - ((columns - 1) * 12)) / columns;
 
-                return isCompact
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: <Widget>[
-                              _StatusBadge(
-                                label: _serviceStatusLabel(healthInfo.status),
-                                color: _serviceStatusColor(healthInfo.status),
-                              ),
-                              _StatusBadge(
-                                label: healthInfo.freshnessLabel(),
-                                color: healthInfo.isRecentlyChecked()
-                                    ? const Color(0xFF2E7D32)
-                                    : const Color(0xFFB45309),
-                              ),
-                            ],
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: <Widget>[
+                        _StatusBadge(
+                          label: _serviceStatusLabel(healthInfo.status),
+                          color: _serviceStatusColor(healthInfo.status),
+                        ),
+                        _StatusBadge(
+                          label: healthInfo.freshnessLabel(),
+                          color: healthInfo.isRecentlyChecked()
+                              ? const Color(0xFF2E7D32)
+                              : const Color(0xFFB45309),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: <Widget>[
+                        SizedBox(
+                          width: itemWidth,
+                          child: SettingsSettingRow(
+                            title: AppCopy.settingsHealthResponse,
+                            value: healthInfo.responseText,
                           ),
-                          const SizedBox(height: 12),
-                          TextButton.icon(
-                            onPressed: onRefresh,
-                            icon: const Icon(Icons.refresh_rounded),
-                            label: const Text(AppCopy.refresh),
+                        ),
+                        SizedBox(
+                          width: itemWidth,
+                          child: SettingsSettingRow(
+                            title: AppCopy.settingsHealthCheckedAt,
+                            value: _formatServerTime(healthInfo.checkedAt),
                           ),
-                        ],
-                      )
-                    : Row(
-                        children: <Widget>[
-                          _StatusBadge(
-                            label: _serviceStatusLabel(healthInfo.status),
-                            color: _serviceStatusColor(healthInfo.status),
-                          ),
-                          const SizedBox(width: 10),
-                          _StatusBadge(
-                            label: healthInfo.freshnessLabel(),
-                            color: healthInfo.isRecentlyChecked()
-                                ? const Color(0xFF2E7D32)
-                                : const Color(0xFFB45309),
-                          ),
-                          const Spacer(),
-                          TextButton.icon(
-                            onPressed: onRefresh,
-                            icon: const Icon(Icons.refresh_rounded),
-                            label: const Text(AppCopy.refresh),
-                          ),
-                        ],
-                      );
+                        ),
+                      ],
+                    ),
+                  ],
+                );
               },
             ),
             const SizedBox(height: 14),
-            SettingsSettingRow(
-              title: AppCopy.settingsHealthResponse,
-              value: healthInfo.responseText,
-            ),
-            const SizedBox(height: 14),
-            SettingsSettingRow(
-              title: AppCopy.settingsHealthCheckedAt,
-              value: _formatServerTime(healthInfo.checkedAt),
-            ),
-            const SizedBox(height: 14),
-            SettingsSettingRow(
-              title: '巡检节奏',
-              value: '设置页自动每 12 秒刷新一次，也可手动立即重查。',
+            CommonButton(
+              label: AppCopy.refresh,
+              tone: CommonButtonTone.secondary,
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: onRefresh,
             ),
           ],
         );

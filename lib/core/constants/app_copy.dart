@@ -22,7 +22,7 @@ class AppCopy {
   static const String reload = '重新加载';
 
   /// 通用系统总览入口文案。
-  static const String viewAboutProject = '查看系统概览';
+  static const String viewAboutProject = '查看使用说明';
 
   /// 首页模块标题。
   static const String homeCrossPlatformDemo = '监测值守中枢';
@@ -32,23 +32,22 @@ class AppCopy {
       '当前版本围绕账号认证、设备监控、LED 控制和运维自检构建统一工作闭环，所有主入口都对准后端当前真实可用的业务能力。';
 
   /// 首页入口“系统总览”标题。
-  static const String homePreviewTitle = '系统概览';
+  static const String homePreviewTitle = '使用说明';
 
   /// 首页入口“系统总览”副标题。
-  static const String homePreviewSubtitle = '查看平台边界、设备架构和监测目标。';
+  static const String homePreviewSubtitle = '快速了解页面怎么用。';
 
   /// 首页入口“实时监测”标题。
-  static const String homeRealtimeTitle = '监控主控台';
+  static const String homeRealtimeTitle = '值守台';
 
   /// 首页入口“实时监测”副标题。
-  static const String homeRealtimeSubtitle =
-      '持续同步设备环境、异常等级和补光控制状态，作为值守与处置的核心入口。';
+  static const String homeRealtimeSubtitle = '查看实时状态，必要时处理补光。';
 
   /// 首页入口“设置”标题。
-  static const String homeSettingsTitle = '运维设置';
+  static const String homeSettingsTitle = '我的';
 
   /// 首页入口“设置”副标题。
-  static const String homeSettingsSubtitle = '管理服务地址、健康检查、登录会话和本机数据。';
+  static const String homeSettingsSubtitle = '管理账号、设备和本机偏好。';
 
   /// 首页能力标签：统一工作台。
   static const String homeMaterialPill = '统一工作台';
@@ -230,10 +229,10 @@ class AppCopy {
   static String authAdminDisplayName(String account) => '$account 管理员';
 
   /// 实时主控台前往总览按钮。
-  static const String realtimeOpenOverview = '监测总览';
+  static const String realtimeOpenOverview = '总览';
 
   /// 实时主控台前往设置按钮。
-  static const String realtimeOpenSettings = '运维设置';
+  static const String realtimeOpenSettings = '我的';
 
   /// 启动初始化说明。
   static const String splashBootstrapping = '正在初始化环境配置、本地状态和账号信息...';
@@ -245,7 +244,7 @@ class AppCopy {
   static String splashInitFailed(Object error) => '初始化失败：$error';
 
   /// 系统总览页标题。
-  static const String aboutPageTitle = '系统概览';
+  static const String aboutPageTitle = '使用说明';
 
   /// 系统总览页平台定位标题。
   static const String aboutProjectTitle = '平台定位';
@@ -269,13 +268,13 @@ class AppCopy {
       '当前优先保证登录、设备状态轮询、补光控制和健康检查链路稳定，让进入页面后的主要动作都能直接落到真实设备服务。';
 
   /// 设置页标题。
-  static const String settingsPageTitle = '运维设置';
+  static const String settingsPageTitle = '我的';
 
   /// 设置页加载中提示。
   static const String settingsLoading = '正在加载设置...';
 
   /// 运行环境标题。
-  static const String settingsOverviewTitle = '值守环境';
+  static const String settingsOverviewTitle = '当前设备';
 
   /// 设置加载失败提示。
   static String settingsLoadFailed(Object error) => '设置加载失败：$error';
@@ -296,10 +295,10 @@ class AppCopy {
   static const String settingsHealthTitle = '服务健康检查';
 
   /// 本地数据标题。
-  static const String settingsLocalDataTitle = '本机数据';
+  static const String settingsLocalDataTitle = '本地偏好';
 
   /// 登录会话标题。
-  static const String settingsSessionTitle = '登录会话';
+  static const String settingsSessionTitle = '当前账号';
 
   /// 项目说明标题。
   static const String settingsProjectTitle = '系统概览';
@@ -308,23 +307,23 @@ class AppCopy {
   static const String settingsLogoutTitle = '退出登录';
 
   /// 退出登录确认提示。
-  static const String settingsLogoutMessage = '退出后需要重新登录才能继续访问设备监控和运维功能，是否继续？';
+  static const String settingsLogoutMessage = '退出后需要重新登录才能继续使用，是否继续？';
 
   /// 确认退出登录按钮。
   static const String settingsLogoutConfirm = '确认退出';
 
   /// 恢复默认设置按钮。
-  static const String settingsResetDefaults = '恢复默认设置';
+  static const String settingsResetDefaults = '恢复默认';
 
   /// 恢复默认设置确认标题。
-  static const String settingsResetDefaultsTitle = '恢复默认设置';
+  static const String settingsResetDefaultsTitle = '恢复默认';
 
   /// 恢复默认设置确认说明。
   static const String settingsResetDefaultsMessage =
-      '恢复后将立即回退到当前构建环境的默认服务地址和超时配置，是否继续？';
+      '恢复后会清空当前设备上的本机偏好并回到默认状态，是否继续？';
 
   /// 恢复默认设置完成提示。
-  static const String settingsResetDefaultsDone = '已恢复默认设置。';
+  static const String settingsResetDefaultsDone = '已恢复默认。';
 
   /// 修改设备服务地址标题。
   static const String settingsEditBaseUrlTitle = '修改设备服务地址';
@@ -411,7 +410,7 @@ class AppCopy {
   static const String settingsNoSession = '当前没有可用登录态。';
 
   /// 当前会话说明。
-  static const String settingsSessionSubtitle = '用于展示当前账号、登录模式和会话到期时间。';
+  static const String settingsSessionSubtitle = '查看当前登录账号，并在需要时退出。';
 
   /// 服务配置：开发/测试环境提示。
   static const String settingsServiceConfigEditable =
@@ -421,11 +420,10 @@ class AppCopy {
   static const String settingsServiceConfigReadonly = '正式环境默认隐藏高风险配置项。';
 
   /// 本地数据说明。
-  static const String settingsLocalDataSubtitle =
-      '用于管理当前设备上的账号回填与本地配置，危险操作都需要显式确认。';
+  static const String settingsLocalDataSubtitle = '这里只保留账号回填和恢复默认这两个本机操作。';
 
   /// 运行环境说明。
-  static const String settingsOverviewSubtitle = '优先确认当前环境、平台和版本，再进行巡检和排障。';
+  static const String settingsOverviewSubtitle = '这里只保留当前设备状态和最近同步。';
 
   /// 健康检查说明。
   static const String settingsHealthSubtitle =

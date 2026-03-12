@@ -15,7 +15,7 @@ import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/device_state_info.dart';
 
 void main() {
-  testWidgets('HomePage renders entry cards and version info', (tester) async {
+  testWidgets('HomePage renders entry cards and device status', (tester) async {
     tester.view
       ..physicalSize = const Size(1400, 1600)
       ..devicePixelRatio = 1;
@@ -72,11 +72,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(HomeEntryCard, '监控主控台'), findsOneWidget);
-    expect(find.widgetWithText(HomeEntryCard, '系统概览'), findsOneWidget);
-    expect(find.widgetWithText(HomeEntryCard, '运维设置'), findsOneWidget);
-    expect(find.text('版本 1.2.3'), findsOneWidget);
+    expect(find.widgetWithText(HomeEntryCard, '值守台'), findsOneWidget);
+    expect(find.widgetWithText(HomeEntryCard, '使用说明'), findsOneWidget);
+    expect(find.widgetWithText(HomeEntryCard, '我的'), findsOneWidget);
     expect(find.text('石斛培育柜'), findsWidgets);
+    expect(find.text('系统运行正常'), findsWidgets);
   });
 
   testWidgets('HomePage entry cards navigate to named routes', (tester) async {
@@ -136,22 +136,22 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(HomeEntryCard, '监控主控台'));
+    await tester.tap(find.widgetWithText(HomeEntryCard, '值守台'));
     await tester.pumpAndSettle();
     expect(find.text('realtime-page'), findsOneWidget);
 
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(HomeEntryCard, '系统概览'));
+    await tester.tap(find.widgetWithText(HomeEntryCard, '使用说明'));
     await tester.pumpAndSettle();
     expect(find.text('about-page'), findsOneWidget);
 
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.widgetWithText(HomeEntryCard, '运维设置'));
-    await tester.tap(find.widgetWithText(HomeEntryCard, '运维设置'));
+    await tester.ensureVisible(find.widgetWithText(HomeEntryCard, '我的'));
+    await tester.tap(find.widgetWithText(HomeEntryCard, '我的'));
     await tester.pumpAndSettle();
     expect(find.text('settings-page'), findsOneWidget);
   });

@@ -54,10 +54,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('实时监控主控台'), findsOneWidget);
-    expect(find.text('监测总览'), findsOneWidget);
-    expect(find.text('运维设置'), findsOneWidget);
     expect(find.text('值守台'), findsOneWidget);
+    expect(find.text('总览'), findsOneWidget);
+    expect(find.text('我的'), findsOneWidget);
+    expect(find.text('快速操作'), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.text('当前结论'),
