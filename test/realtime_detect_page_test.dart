@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sickandflutter/core/config/env_config.dart';
-import 'package:sickandflutter/core/network/api_client.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
+import 'package:sickandflutter/features/device/application/device_runtime_providers.dart';
+import 'package:sickandflutter/features/device/domain/device_runtime_repository.dart';
+import 'package:sickandflutter/features/device/domain/device_status.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_page.dart';
-import 'package:sickandflutter/features/settings/device_state_repository.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
-import 'package:sickandflutter/shared/models/app_settings.dart';
-import 'package:sickandflutter/shared/models/device_state_info.dart';
 
 void main() {
   testWidgets('RealtimeDetectPage renders monitoring sections', (tester) async {
-    final repository = _TestDeviceStateRepository(
-      state: const DeviceStateInfo(
+    tester.view
+      ..physicalSize = const Size(1400, 1600)
+      ..devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final repository = _TestDeviceRuntimeRepository(
+      state: const DeviceStatus(
         deviceId: 'dev_1',
         deviceName: '石斛培育柜',
         temperature: 24.5,
@@ -47,7 +53,9 @@ void main() {
               ),
             ),
           ),
-          deviceStateRepositoryProvider.overrideWith((ref) async => repository),
+          deviceRuntimeRepositoryProvider.overrideWith(
+            (ref) async => repository,
+          ),
         ],
         child: const MaterialApp(home: RealtimeDetectPage()),
       ),
@@ -57,12 +65,12 @@ void main() {
     expect(find.text('值守台'), findsOneWidget);
     expect(find.text('总览'), findsOneWidget);
     expect(find.text('我的'), findsOneWidget);
-    expect(find.text('快速操作'), findsOneWidget);
+    expect(find.text('值守节奏'), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.text('当前结论'),
       300,
-      scrollable: find.byType(Scrollable),
+      scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('当前结论'), findsOneWidget);
     expect(find.text('系统运行正常'), findsWidgets);
@@ -71,23 +79,26 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('温度'),
       300,
-      scrollable: find.byType(Scrollable),
+      scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('温度'), findsOneWidget);
 
     await tester.scrollUntilVisible(
-      find.text('运行明细与远程控制'),
+      find.text('设备与补光'),
       300,
-      scrollable: find.byType(Scrollable),
+      scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('运行明细与远程控制'), findsOneWidget);
+    expect(find.text('设备与补光'), findsOneWidget);
+    expect(find.text('设备 ID'), findsNothing);
+    expect(find.text('错误码'), findsNothing);
 
     await tester.scrollUntilVisible(
-      find.text('状态说明'),
+      find.text('处理建议'),
       300,
-      scrollable: find.byType(Scrollable),
+      scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('状态说明'), findsOneWidget);
+    expect(find.text('处理建议'), findsOneWidget);
+    expect(find.text('正常'), findsWidgets);
   });
 }
 
@@ -100,21 +111,20 @@ class _TestAuthController extends AuthController {
   AuthState build() => initialState;
 }
 
-class _TestDeviceStateRepository extends DeviceStateRepository {
-  _TestDeviceStateRepository({required this.state})
-    : super(
-        apiClient: ApiClient(
-          settings: AppSettings.defaults(buildFlavor: BuildFlavor.development),
-          envConfig: const EnvConfig(
-            flavor: BuildFlavor.development,
-            baseUrl: 'http://127.0.0.1:8082',
-            enableLog: true,
-          ),
-        ),
-      );
+class _TestDeviceRuntimeRepository implements DeviceRuntimeRepository {
+  _TestDeviceRuntimeRepository({required this.state});
 
-  final DeviceStateInfo state;
+  final DeviceStatus state;
 
   @override
-  Future<DeviceStateInfo> fetchState() async => state;
+  Future<DeviceStatus> fetchStatus() async => state;
+
+  @override
+  Future<Never> setLed({
+    required String deviceId,
+    required String deviceName,
+    required bool ledOn,
+  }) {
+    throw UnimplementedError();
+  }
 }

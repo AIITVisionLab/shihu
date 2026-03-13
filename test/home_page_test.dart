@@ -7,12 +7,12 @@ import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
+import 'package:sickandflutter/features/device/domain/device_status.dart';
+import 'package:sickandflutter/features/home/application/home_overview_device_status_provider.dart';
 import 'package:sickandflutter/features/home/home_page.dart';
 import 'package:sickandflutter/features/home/widgets/home_entry_card.dart';
-import 'package:sickandflutter/features/settings/device_state_repository.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
-import 'package:sickandflutter/shared/models/device_state_info.dart';
 
 void main() {
   testWidgets('HomePage renders entry cards and device status', (tester) async {
@@ -53,17 +53,19 @@ void main() {
               ),
             ),
           ),
-          deviceStateProvider.overrideWith(
-            (ref) async => const DeviceStateInfo(
-              deviceId: 'dev_1',
-              deviceName: '石斛培育柜',
-              temperature: 24.5,
-              humidity: 82.0,
-              light: 1500,
-              mq2: 18,
-              errorCode: 0,
-              ledOn: true,
-              updatedAt: 1741399200000,
+          homeOverviewDeviceStatusProvider.overrideWith(
+            (ref) => Stream.value(
+              const DeviceStatus(
+                deviceId: 'dev_1',
+                deviceName: '石斛培育柜',
+                temperature: 24.5,
+                humidity: 82.0,
+                light: 1500,
+                mq2: 18,
+                errorCode: 0,
+                ledOn: true,
+                updatedAt: 1741399200000,
+              ),
             ),
           ),
         ],
@@ -73,8 +75,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(HomeEntryCard, '值守台'), findsOneWidget);
-    expect(find.widgetWithText(HomeEntryCard, '使用说明'), findsOneWidget);
+    expect(find.widgetWithText(HomeEntryCard, '视频中心'), findsOneWidget);
     expect(find.widgetWithText(HomeEntryCard, '我的'), findsOneWidget);
+    expect(find.text('常用入口'), findsOneWidget);
+    expect(find.text('环境速览'), findsOneWidget);
     expect(find.text('石斛培育柜'), findsWidgets);
     expect(find.text('系统运行正常'), findsWidgets);
   });
@@ -117,17 +121,19 @@ void main() {
               ),
             ),
           ),
-          deviceStateProvider.overrideWith(
-            (ref) async => const DeviceStateInfo(
-              deviceId: 'dev_1',
-              deviceName: '石斛培育柜',
-              temperature: 24.5,
-              humidity: 82.0,
-              light: 1500,
-              mq2: 18,
-              errorCode: 0,
-              ledOn: true,
-              updatedAt: 1741399200000,
+          homeOverviewDeviceStatusProvider.overrideWith(
+            (ref) => Stream.value(
+              const DeviceStatus(
+                deviceId: 'dev_1',
+                deviceName: '石斛培育柜',
+                temperature: 24.5,
+                humidity: 82.0,
+                light: 1500,
+                mq2: 18,
+                errorCode: 0,
+                ledOn: true,
+                updatedAt: 1741399200000,
+              ),
             ),
           ),
         ],
@@ -143,9 +149,9 @@ void main() {
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(HomeEntryCard, '使用说明'));
+    await tester.tap(find.widgetWithText(HomeEntryCard, '视频中心'));
     await tester.pumpAndSettle();
-    expect(find.text('about-page'), findsOneWidget);
+    expect(find.text('video-page'), findsOneWidget);
 
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
@@ -182,9 +188,9 @@ GoRouter _buildRouter() {
             const Scaffold(body: Text('realtime-page')),
       ),
       GoRoute(
-        path: AppRoutes.aboutPath,
-        name: AppRoutes.about,
-        builder: (context, state) => const Scaffold(body: Text('about-page')),
+        path: AppRoutes.videoPath,
+        name: AppRoutes.video,
+        builder: (context, state) => const Scaffold(body: Text('video-page')),
       ),
       GoRoute(
         path: AppRoutes.settingsPath,

@@ -1,21 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sickandflutter/core/config/env_config.dart';
-import 'package:sickandflutter/core/network/api_client.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
+import 'package:sickandflutter/features/device/application/device_runtime_providers.dart';
+import 'package:sickandflutter/features/device/domain/device_runtime_repository.dart';
+import 'package:sickandflutter/features/device/domain/device_status.dart';
+import 'package:sickandflutter/features/device/domain/led_operation_receipt.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_controller.dart';
-import 'package:sickandflutter/features/settings/device_state_repository.dart';
-import 'package:sickandflutter/shared/models/app_enums.dart';
-import 'package:sickandflutter/shared/models/app_settings.dart';
-import 'package:sickandflutter/shared/models/device_state_info.dart';
 
 void main() {
   test(
     'RealtimeDetectController polls device state while auto refresh is on',
     () async {
-      final repository = _QueueDeviceStateRepository(
-        states: <DeviceStateInfo>[
-          const DeviceStateInfo(
+      final repository = _QueueDeviceRuntimeRepository(
+        states: <DeviceStatus>[
+          const DeviceStatus(
             deviceId: 'dev_1',
             deviceName: '石斛培育柜',
             temperature: 24.5,
@@ -26,7 +24,7 @@ void main() {
             ledOn: true,
             updatedAt: 1741399200000,
           ),
-          const DeviceStateInfo(
+          const DeviceStatus(
             deviceId: 'dev_1',
             deviceName: '石斛培育柜',
             temperature: 25.3,
@@ -41,7 +39,9 @@ void main() {
       );
       final container = ProviderContainer(
         overrides: [
-          deviceStateRepositoryProvider.overrideWith((ref) async => repository),
+          deviceRuntimeRepositoryProvider.overrideWith(
+            (ref) async => repository,
+          ),
           realtimeDetectPollingIntervalProvider.overrideWith(
             (ref) => const Duration(milliseconds: 20),
           ),
@@ -75,8 +75,8 @@ void main() {
   test(
     'RealtimeDetectController submits led command and refreshes state',
     () async {
-      final repository = _MutableDeviceStateRepository(
-        state: const DeviceStateInfo(
+      final repository = _MutableDeviceRuntimeRepository(
+        state: const DeviceStatus(
           deviceId: 'dev_1',
           deviceName: '石斛培育柜',
           temperature: 24.5,
@@ -90,7 +90,9 @@ void main() {
       );
       final container = ProviderContainer(
         overrides: [
-          deviceStateRepositoryProvider.overrideWith((ref) async => repository),
+          deviceRuntimeRepositoryProvider.overrideWith(
+            (ref) async => repository,
+          ),
         ],
       );
       addTearDown(container.dispose);
@@ -113,8 +115,8 @@ void main() {
   test(
     'RealtimeDetectController blocks led command when deviceId is missing',
     () async {
-      final repository = _MutableDeviceStateRepository(
-        state: const DeviceStateInfo(
+      final repository = _MutableDeviceRuntimeRepository(
+        state: const DeviceStatus(
           deviceId: '',
           deviceName: '石斛培育柜',
           temperature: 24.5,
@@ -128,7 +130,9 @@ void main() {
       );
       final container = ProviderContainer(
         overrides: [
-          deviceStateRepositoryProvider.overrideWith((ref) async => repository),
+          deviceRuntimeRepositoryProvider.overrideWith(
+            (ref) async => repository,
+          ),
         ],
       );
       addTearDown(container.dispose);
@@ -145,7 +149,7 @@ void main() {
           isA<ApiException>().having(
             (error) => error.message,
             'message',
-            '当前设备状态缺少 deviceId，暂时无法下发 LED 指令。',
+            '当前还不能调整补光，请先等待状态稳定。',
           ),
         ),
       );
@@ -154,50 +158,39 @@ void main() {
   );
 }
 
-class _QueueDeviceStateRepository extends DeviceStateRepository {
-  _QueueDeviceStateRepository({required List<DeviceStateInfo> states})
-    : _states = states,
-      super(
-        apiClient: ApiClient(
-          settings: AppSettings.defaults(buildFlavor: BuildFlavor.development),
-          envConfig: const EnvConfig(
-            flavor: BuildFlavor.development,
-            baseUrl: 'http://127.0.0.1:8082',
-            enableLog: true,
-          ),
-        ),
-      );
+class _QueueDeviceRuntimeRepository implements DeviceRuntimeRepository {
+  _QueueDeviceRuntimeRepository({required List<DeviceStatus> states})
+    : _states = states;
 
-  final List<DeviceStateInfo> _states;
+  final List<DeviceStatus> _states;
   int fetchCount = 0;
 
   @override
-  Future<DeviceStateInfo> fetchState() async {
+  Future<DeviceStatus> fetchStatus() async {
     final index = fetchCount < _states.length ? fetchCount : _states.length - 1;
     fetchCount += 1;
     return _states[index];
   }
+
+  @override
+  Future<Never> setLed({
+    required String deviceId,
+    required String deviceName,
+    required bool ledOn,
+  }) {
+    throw UnimplementedError();
+  }
 }
 
-class _MutableDeviceStateRepository extends DeviceStateRepository {
-  _MutableDeviceStateRepository({required DeviceStateInfo state})
-    : _state = state,
-      super(
-        apiClient: ApiClient(
-          settings: AppSettings.defaults(buildFlavor: BuildFlavor.development),
-          envConfig: const EnvConfig(
-            flavor: BuildFlavor.development,
-            baseUrl: 'http://127.0.0.1:8082',
-            enableLog: true,
-          ),
-        ),
-      );
+class _MutableDeviceRuntimeRepository implements DeviceRuntimeRepository {
+  _MutableDeviceRuntimeRepository({required DeviceStatus state})
+    : _state = state;
 
-  DeviceStateInfo _state;
+  DeviceStatus _state;
   bool? lastLedOn;
 
   @override
-  Future<DeviceStateInfo> fetchState() async => _state;
+  Future<DeviceStatus> fetchStatus() async => _state;
 
   @override
   Future<LedOperationReceipt> setLed({
@@ -206,7 +199,7 @@ class _MutableDeviceStateRepository extends DeviceStateRepository {
     required bool ledOn,
   }) async {
     lastLedOn = ledOn;
-    _state = DeviceStateInfo(
+    _state = DeviceStatus(
       deviceId: _state.deviceId,
       deviceName: _state.deviceName,
       temperature: _state.temperature,

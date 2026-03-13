@@ -22,7 +22,7 @@ class AppCopy {
   static const String reload = '重新加载';
 
   /// 通用系统总览入口文案。
-  static const String viewAboutProject = '查看使用说明';
+  static const String viewAboutProject = '打开使用帮助';
 
   /// 首页模块标题。
   static const String homeCrossPlatformDemo = '监测值守中枢';
@@ -31,11 +31,11 @@ class AppCopy {
   static const String homeOverview =
       '当前版本围绕账号认证、设备监控、LED 控制和运维自检构建统一工作闭环，所有主入口都对准后端当前真实可用的业务能力。';
 
-  /// 首页入口“系统总览”标题。
-  static const String homePreviewTitle = '使用说明';
+  /// 首页入口“视频中心”标题。
+  static const String homePreviewTitle = '视频中心';
 
-  /// 首页入口“系统总览”副标题。
-  static const String homePreviewSubtitle = '快速了解页面怎么用。';
+  /// 首页入口“视频中心”副标题。
+  static const String homePreviewSubtitle = '查看实时画面并直接打开观看。';
 
   /// 首页入口“实时监测”标题。
   static const String homeRealtimeTitle = '值守台';
@@ -235,7 +235,7 @@ class AppCopy {
   static const String realtimeOpenSettings = '我的';
 
   /// 启动初始化说明。
-  static const String splashBootstrapping = '正在初始化环境配置、本地状态和账号信息...';
+  static const String splashBootstrapping = '正在准备页面、本机设置和当前账号信息。';
 
   /// 启动失败重试按钮。
   static const String splashRetry = '重试初始化';
@@ -243,8 +243,8 @@ class AppCopy {
   /// 启动失败提示。
   static String splashInitFailed(Object error) => '初始化失败：$error';
 
-  /// 系统总览页标题。
-  static const String aboutPageTitle = '使用说明';
+  /// 系统帮助页标题。
+  static const String aboutPageTitle = '使用帮助';
 
   /// 系统总览页平台定位标题。
   static const String aboutProjectTitle = '平台定位';
@@ -273,8 +273,8 @@ class AppCopy {
   /// 设置页加载中提示。
   static const String settingsLoading = '正在加载设置...';
 
-  /// 运行环境标题。
-  static const String settingsOverviewTitle = '当前设备';
+  /// 当前使用概览标题。
+  static const String settingsOverviewTitle = '当前使用';
 
   /// 设置加载失败提示。
   static String settingsLoadFailed(Object error) => '设置加载失败：$error';
@@ -301,7 +301,7 @@ class AppCopy {
   static const String settingsSessionTitle = '当前账号';
 
   /// 项目说明标题。
-  static const String settingsProjectTitle = '系统概览';
+  static const String settingsProjectTitle = '使用帮助';
 
   /// 退出登录标题。
   static const String settingsLogoutTitle = '退出登录';
@@ -422,8 +422,8 @@ class AppCopy {
   /// 本地数据说明。
   static const String settingsLocalDataSubtitle = '这里只保留账号回填和恢复默认这两个本机操作。';
 
-  /// 运行环境说明。
-  static const String settingsOverviewSubtitle = '这里只保留当前设备状态和最近同步。';
+  /// 当前使用概览说明。
+  static const String settingsOverviewSubtitle = '先确认当前设备、账号和版本，再处理后续操作。';
 
   /// 健康检查说明。
   static const String settingsHealthSubtitle =

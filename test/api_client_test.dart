@@ -69,6 +69,33 @@ void main() {
   );
 
   test(
+    'ApiClient maps empty server reply to backend response ApiException',
+    () async {
+      final server = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(server.close);
+
+      server.listen((socket) {
+        socket.listen((_) {
+          socket.destroy();
+        });
+      });
+
+      final client = _buildClient(baseUrl: 'http://127.0.0.1:${server.port}');
+
+      await expectLater(
+        client.getJson('/empty-reply'),
+        throwsA(
+          isA<ApiException>().having(
+            (error) => error.message,
+            'message',
+            '服务未返回有效响应，请检查后端服务状态。',
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
     'ApiClient invokes unauthorized callback for HTTP 401 response',
     () async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);

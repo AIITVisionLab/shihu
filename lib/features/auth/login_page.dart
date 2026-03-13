@@ -10,6 +10,7 @@ import 'package:sickandflutter/features/auth/auth_repository.dart';
 import 'package:sickandflutter/features/auth/mock_auth_repository.dart';
 import 'package:sickandflutter/features/auth/remembered_account_repository.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_entry_shell.dart';
+import 'package:sickandflutter/features/auth/widgets/auth_form/auth_feedback_banner.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_form_card.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_overview_panel.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
@@ -57,7 +58,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final authRepository = ref.watch(authRepositoryProvider);
     final envConfig = ref.watch(envConfigProvider);
     final settings = ref.watch(effectiveAppSettingsProvider);
-    final serviceEndpoints = ref.watch(resolvedServiceEndpointsProvider);
     final effectiveFormMode = authRepository.isMockMode
         ? AuthFormMode.login
         : _formMode;
@@ -85,7 +85,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       overviewPanel: showAssistPanel
           ? AuthOverviewPanel(
               isMockMode: authRepository.isMockMode,
-              currentDeviceBaseUrl: serviceEndpoints.deviceBaseUrl,
               isUsingCustomServiceConfig: isUsingCustomServiceConfig,
               canResetServiceConfig:
                   envConfig.allowRiskySettings &&
@@ -95,35 +94,60 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               onResetServiceConfig: _resetServiceConfig,
             )
           : null,
-      formPanel: AuthFormCard(
-        usernameController: _usernameController,
-        passwordController: _passwordController,
-        confirmPasswordController: _confirmPasswordController,
-        helperMessage: helperMessage,
-        helperTone: helperTone,
-        isSubmitting: authState.isSubmitting,
-        isMockMode: authRepository.isMockMode,
-        formMode: effectiveFormMode,
-        rememberAccount: _rememberAccount,
-        showPassword: _showPassword,
-        showConfirmPassword: _showConfirmPassword,
-        onRememberAccountChanged: (value) {
-          setState(() {
-            _rememberAccount = value;
-          });
-        },
-        onTogglePasswordVisibility: () {
-          setState(() {
-            _showPassword = !_showPassword;
-          });
-        },
-        onToggleConfirmPasswordVisibility: () {
-          setState(() {
-            _showConfirmPassword = !_showConfirmPassword;
-          });
-        },
-        onSelectMode: _switchFormMode,
-        onSubmit: _submit,
+      formPanel: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          AuthFormCard(
+            usernameController: _usernameController,
+            passwordController: _passwordController,
+            confirmPasswordController: _confirmPasswordController,
+            helperMessage: helperMessage,
+            helperTone: helperTone,
+            isSubmitting: authState.isSubmitting,
+            isMockMode: authRepository.isMockMode,
+            formMode: effectiveFormMode,
+            rememberAccount: _rememberAccount,
+            showPassword: _showPassword,
+            showConfirmPassword: _showConfirmPassword,
+            onRememberAccountChanged: (value) {
+              setState(() {
+                _rememberAccount = value;
+              });
+            },
+            onTogglePasswordVisibility: () {
+              setState(() {
+                _showPassword = !_showPassword;
+              });
+            },
+            onToggleConfirmPasswordVisibility: () {
+              setState(() {
+                _showConfirmPassword = !_showConfirmPassword;
+              });
+            },
+            onSelectMode: _switchFormMode,
+            onSubmit: _submit,
+          ),
+          if (envConfig.allowRiskySettings) ...<Widget>[
+            const SizedBox(height: 16),
+            Center(
+              child: TextButton.icon(
+                onPressed: authState.isSubmitting
+                    ? null
+                    : () async {
+                        await ref
+                            .read(authControllerProvider.notifier)
+                            .enterPreviewWorkspace();
+                        if (!context.mounted) {
+                          return;
+                        }
+                        context.goNamed(AppRoutes.home);
+                      },
+                icon: const Icon(Icons.visibility_outlined),
+                label: const Text('先看界面'),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

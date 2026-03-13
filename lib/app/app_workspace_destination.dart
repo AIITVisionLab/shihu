@@ -9,8 +9,8 @@ enum AppWorkspaceDestination {
   /// 值守台。
   realtime,
 
-  /// 使用说明。
-  about,
+  /// 视频中心。
+  video,
 
   /// 我的。
   settings,
@@ -25,8 +25,8 @@ extension AppWorkspaceDestinationX on AppWorkspaceDestination {
         return '总览';
       case AppWorkspaceDestination.realtime:
         return '值守';
-      case AppWorkspaceDestination.about:
-        return '说明';
+      case AppWorkspaceDestination.video:
+        return '视频';
       case AppWorkspaceDestination.settings:
         return '我的';
     }
@@ -39,8 +39,8 @@ extension AppWorkspaceDestinationX on AppWorkspaceDestination {
         return Icons.dashboard_outlined;
       case AppWorkspaceDestination.realtime:
         return Icons.monitor_heart_outlined;
-      case AppWorkspaceDestination.about:
-        return Icons.info_outline_rounded;
+      case AppWorkspaceDestination.video:
+        return Icons.videocam_outlined;
       case AppWorkspaceDestination.settings:
         return Icons.settings_outlined;
     }
@@ -53,8 +53,8 @@ extension AppWorkspaceDestinationX on AppWorkspaceDestination {
         return Icons.dashboard_rounded;
       case AppWorkspaceDestination.realtime:
         return Icons.monitor_heart_rounded;
-      case AppWorkspaceDestination.about:
-        return Icons.info_rounded;
+      case AppWorkspaceDestination.video:
+        return Icons.videocam_rounded;
       case AppWorkspaceDestination.settings:
         return Icons.settings_rounded;
     }
@@ -67,10 +67,24 @@ extension AppWorkspaceDestinationX on AppWorkspaceDestination {
         return AppRoutes.home;
       case AppWorkspaceDestination.realtime:
         return AppRoutes.realtimeDetect;
-      case AppWorkspaceDestination.about:
-        return AppRoutes.about;
+      case AppWorkspaceDestination.video:
+        return AppRoutes.video;
       case AppWorkspaceDestination.settings:
         return AppRoutes.settings;
+    }
+  }
+
+  /// 导航专用的辅助底色。
+  Color get accentColor {
+    switch (this) {
+      case AppWorkspaceDestination.home:
+        return const Color(0xFFC9E2D0);
+      case AppWorkspaceDestination.realtime:
+        return const Color(0xFFA7D3B2);
+      case AppWorkspaceDestination.video:
+        return const Color(0xFFD2D6AC);
+      case AppWorkspaceDestination.settings:
+        return const Color(0xFFCEBBD8);
     }
   }
 }

@@ -6,7 +6,6 @@ class AuthOverviewPanel extends StatelessWidget {
   /// 创建登录页辅助面板。
   const AuthOverviewPanel({
     required this.isMockMode,
-    required this.currentDeviceBaseUrl,
     required this.isUsingCustomServiceConfig,
     required this.canResetServiceConfig,
     required this.onFillDemo,
@@ -16,9 +15,6 @@ class AuthOverviewPanel extends StatelessWidget {
 
   /// 当前是否为联调登录模式。
   final bool isMockMode;
-
-  /// 当前设备服务地址。
-  final String currentDeviceBaseUrl;
 
   /// 当前是否使用了自定义服务配置。
   final bool isUsingCustomServiceConfig;
@@ -39,7 +35,6 @@ class AuthOverviewPanel extends StatelessWidget {
     }
 
     return _ServiceNoticeCard(
-      currentDeviceBaseUrl: currentDeviceBaseUrl,
       isUsingCustomServiceConfig: isUsingCustomServiceConfig,
       canResetServiceConfig: canResetServiceConfig,
       onResetServiceConfig: onResetServiceConfig,
@@ -57,86 +52,36 @@ class _MockAccessCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 360;
-
-          return isCompact
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    _NoticeHeader(
-                      icon: Icons.auto_awesome_rounded,
-                      title: '演示环境',
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '当前页面使用演示账号入口。',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton.tonalIcon(
-                      onPressed: onFillDemo,
-                      icon: const Icon(Icons.auto_fix_high_rounded),
-                      label: const Text(AppCopy.authFillDemoAccount),
-                    ),
-                  ],
-                )
-              : Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          _NoticeHeader(
-                            icon: Icons.auto_awesome_rounded,
-                            title: '演示环境',
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '当前页面使用演示账号入口。',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    FilledButton.tonalIcon(
-                      onPressed: onFillDemo,
-                      icon: const Icon(Icons.auto_fix_high_rounded),
-                      label: const Text(AppCopy.authFillDemoAccount),
-                    ),
-                  ],
-                );
-        },
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        const _NoticeHeader(icon: Icons.auto_awesome_rounded, title: '体验模式'),
+        const SizedBox(height: 8),
+        Text(
+          '可以一键填入演示账号，先看完整界面，再决定是否继续登录。',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 14),
+        FilledButton.tonalIcon(
+          onPressed: onFillDemo,
+          icon: const Icon(Icons.auto_fix_high_rounded),
+          label: const Text(AppCopy.authFillDemoAccount),
+        ),
+      ],
     );
   }
 }
 
 class _ServiceNoticeCard extends StatelessWidget {
   const _ServiceNoticeCard({
-    required this.currentDeviceBaseUrl,
     required this.isUsingCustomServiceConfig,
     required this.canResetServiceConfig,
     required this.onResetServiceConfig,
   });
 
-  final String currentDeviceBaseUrl;
   final bool isUsingCustomServiceConfig;
   final bool canResetServiceConfig;
   final Future<void> Function() onResetServiceConfig;
@@ -145,60 +90,86 @@ class _ServiceNoticeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final title = isUsingCustomServiceConfig ? '地址已改动' : '默认地址已恢复';
+    final title = isUsingCustomServiceConfig ? '已切换到其他服务' : '当前使用默认服务';
     final description = isUsingCustomServiceConfig
-        ? '如果这不是你的操作，请先恢复默认值再继续登录。'
-        : '当前已经恢复到默认服务地址，可以继续登录。';
+        ? '如果这不是你主动切换的，可以先恢复默认配置，再继续登录。'
+        : '当前正在使用标准连接配置，可以直接继续登录。';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        _NoticeHeader(icon: Icons.info_outline_rounded, title: title),
+        const SizedBox(height: 8),
+        Text(
+          description,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: <Widget>[
+            _StatusPill(
+              icon: isUsingCustomServiceConfig
+                  ? Icons.swap_horiz_rounded
+                  : Icons.check_circle_outline_rounded,
+              label: isUsingCustomServiceConfig ? '已改动' : '默认配置',
+            ),
+            if (canResetServiceConfig)
+              const _StatusPill(
+                icon: Icons.restart_alt_rounded,
+                label: '可一键恢复',
+              ),
+          ],
+        ),
+        if (canResetServiceConfig) ...<Widget>[
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: () async {
+              await onResetServiceConfig();
+            },
+            icon: const Icon(Icons.restart_alt_rounded),
+            label: const Text(AppCopy.authResetServiceConfig),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(20),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.44),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: colorScheme.outlineVariant),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          _NoticeHeader(icon: Icons.info_outline_rounded, title: title),
-          const SizedBox(height: 8),
+          Icon(icon, size: 16, color: colorScheme.primary),
+          const SizedBox(width: 8),
           Text(
-            description,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              height: 1.5,
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.58,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: colorScheme.outlineVariant),
-            ),
-            child: SelectableText(
-              currentDeviceBaseUrl,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          if (canResetServiceConfig) ...<Widget>[
-            const SizedBox(height: 10),
-            TextButton.icon(
-              onPressed: () async {
-                await onResetServiceConfig();
-              },
-              icon: const Icon(Icons.restart_alt_rounded),
-              label: const Text(AppCopy.authResetServiceConfig),
-            ),
-          ],
         ],
       ),
     );

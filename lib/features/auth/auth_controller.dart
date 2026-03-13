@@ -6,6 +6,7 @@ import 'package:sickandflutter/core/network/api_exception.dart';
 import 'package:sickandflutter/core/storage/auth_storage.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
+import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 
 /// 认证状态入口。
@@ -172,6 +173,35 @@ class AuthController extends Notifier<AuthState> {
       isSubmitting: false,
       session: null,
       errorMessage: null,
+    );
+  }
+
+  /// 直接写入一份本地预览会话，用于在非正式环境查看完整界面。
+  Future<void> enterPreviewWorkspace() async {
+    await ensureInitialized();
+
+    final now = DateTime.now();
+    final session = AuthSession(
+      accessToken: 'preview_${now.microsecondsSinceEpoch}',
+      refreshToken: 'preview_refresh_${now.microsecondsSinceEpoch}',
+      tokenType: 'Bearer',
+      expiresAt: now.add(const Duration(hours: 8)).toIso8601String(),
+      loginMode: AuthLoginMode.mock,
+      user: const AuthUser(
+        userId: 'preview_user',
+        account: 'preview',
+        displayName: '界面预览',
+        roles: <String>['app_user'],
+      ),
+    );
+
+    await _persistSession(session);
+    state = state.copyWith(
+      isBootstrapping: false,
+      isSubmitting: false,
+      session: session,
+      errorMessage: null,
+      unauthorizedMessage: null,
     );
   }
 

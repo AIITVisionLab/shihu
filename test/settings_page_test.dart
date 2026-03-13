@@ -7,12 +7,12 @@ import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/features/auth/remembered_account_repository.dart';
-import 'package:sickandflutter/features/settings/device_state_repository.dart';
+import 'package:sickandflutter/features/device/application/device_runtime_providers.dart';
+import 'package:sickandflutter/features/device/domain/device_status.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/features/settings/settings_page.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
-import 'package:sickandflutter/shared/models/device_state_info.dart';
 
 void main() {
   testWidgets('SettingsPage renders device, account and local info', (
@@ -71,8 +71,8 @@ void main() {
             ),
           ),
           settingsControllerProvider.overrideWith(() => settingsController),
-          deviceStateProvider.overrideWith(
-            (ref) async => const DeviceStateInfo(
+          deviceStatusProvider.overrideWith(
+            (ref) async => const DeviceStatus(
               deviceId: 'dev_1',
               deviceName: '石斛培育柜',
               temperature: 24.5,
@@ -94,15 +94,16 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('当前设备'), findsOneWidget);
+    expect(find.text('当前使用'), findsWidgets);
     expect(find.text('石斛培育柜'), findsWidgets);
     expect(find.text('系统运行正常'), findsOneWidget);
     expect(find.text('2025-03-08 10:00'), findsOneWidget);
     expect(find.text('2.3.4+56'), findsOneWidget);
-    expect(find.text('demo'), findsOneWidget);
-    expect(find.text('联调登录'), findsOneWidget);
+    expect(find.text('demo'), findsWidgets);
+    expect(find.text('账号登录'), findsWidgets);
     expect(find.text('记住的账号'), findsOneWidget);
     expect(find.text('ops_admin'), findsOneWidget);
+    expect(find.text('使用帮助'), findsWidgets);
   });
 
   testWidgets('SettingsPage resets defaults', (tester) async {
@@ -143,8 +144,8 @@ void main() {
             ),
           ),
           settingsControllerProvider.overrideWith(() => settingsController),
-          deviceStateProvider.overrideWith(
-            (ref) async => const DeviceStateInfo(
+          deviceStatusProvider.overrideWith(
+            (ref) async => const DeviceStatus(
               deviceId: 'dev_1',
               deviceName: '石斛培育柜',
               temperature: 24.5,
@@ -220,8 +221,8 @@ void main() {
               ),
             ),
           ),
-          deviceStateProvider.overrideWith(
-            (ref) async => const DeviceStateInfo(
+          deviceStatusProvider.overrideWith(
+            (ref) async => const DeviceStatus(
               deviceId: 'dev_1',
               deviceName: '石斛培育柜',
               temperature: 24.5,

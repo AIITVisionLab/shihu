@@ -2,13 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
 import 'package:sickandflutter/core/network/api_client.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
-import 'package:sickandflutter/features/settings/device_state_repository.dart';
+import 'package:sickandflutter/features/device/infrastructure/device_remote_runtime_repository.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
 
 void main() {
   test(
-    'DeviceStateRepository treats pending led status as accepted receipt',
+    'DeviceRuntimeRepository treats pending led status as accepted receipt',
     () async {
       final apiClient = _FakeApiClient(
         responseJson: <String, dynamic>{
@@ -17,7 +17,7 @@ void main() {
           'message': 'OneNET API调用失败,已登记到待处理队列',
         },
       );
-      final repository = DeviceStateRepository(apiClient: apiClient);
+      final repository = DeviceRemoteRuntimeRepository(apiClient: apiClient);
 
       final receipt = await repository.setLed(
         deviceId: 'dev_001',
@@ -37,9 +37,9 @@ void main() {
   );
 
   test(
-    'DeviceStateRepository throws backend message for led error status',
+    'DeviceRuntimeRepository throws backend message for led error status',
     () async {
-      final repository = DeviceStateRepository(
+      final repository = DeviceRemoteRuntimeRepository(
         apiClient: _FakeApiClient(
           responseJson: <String, dynamic>{
             'status': 'error',

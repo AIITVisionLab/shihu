@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:sickandflutter/app/app_workspace_destination.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/app/widgets/app_workspace_scaffold.dart';
+import 'package:sickandflutter/app/widgets/workspace/workspace_bottom_navigation.dart';
+import 'package:sickandflutter/app/widgets/workspace/workspace_rail_pane.dart';
 
 void main() {
   testWidgets('AppWorkspaceScaffold renders top navigation on wide layout', (
@@ -30,11 +32,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.byType(WorkspaceRailPane), findsOneWidget);
+    expect(find.byType(WorkspaceBottomNavigation), findsNothing);
     expect(find.text('总览'), findsOneWidget);
     expect(find.text('值守'), findsOneWidget);
-    expect(find.text('说明'), findsOneWidget);
+    expect(find.text('视频'), findsOneWidget);
     expect(find.text('我的'), findsOneWidget);
   });
 
@@ -62,7 +64,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(find.byType(WorkspaceBottomNavigation), findsOneWidget);
       expect(find.text('值守'), findsOneWidget);
     },
   );
@@ -81,7 +83,7 @@ void main() {
     final initCounts = <String, int>{
       'home': 0,
       'realtime': 0,
-      'about': 0,
+      'video': 0,
       'settings': 0,
     };
 
@@ -120,11 +122,11 @@ void main() {
             StatefulShellBranch(
               routes: <RouteBase>[
                 GoRoute(
-                  path: AppRoutes.aboutPath,
+                  path: AppRoutes.videoPath,
                   builder: (context, state) => _ShellTestPage(
-                    destination: AppWorkspaceDestination.about,
-                    title: '说明',
-                    counterKey: 'about',
+                    destination: AppWorkspaceDestination.video,
+                    title: '视频',
+                    counterKey: 'video',
                     initCounts: initCounts,
                   ),
                 ),
@@ -153,9 +155,9 @@ void main() {
 
     expect(initCounts['home'], 1);
 
-    await tester.tap(find.byIcon(Icons.info_outline_rounded).first);
+    await tester.tap(find.byIcon(Icons.videocam_outlined).first);
     await tester.pumpAndSettle();
-    expect(initCounts['about'], 1);
+    expect(initCounts['video'], 1);
 
     await tester.tap(find.byIcon(Icons.dashboard_outlined).first);
     await tester.pumpAndSettle();

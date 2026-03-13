@@ -18,6 +18,14 @@ void main() {
   testWidgets('LoginPage shows register mode in real auth mode', (
     tester,
   ) async {
+    tester.view
+      ..physicalSize = const Size(1200, 1600)
+      ..devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await tester.pumpWidget(
       _buildPage(authRepository: _FakeRealAuthRepository()),
@@ -25,6 +33,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('注册'), findsOneWidget);
+    expect(find.text('先看界面'), findsOneWidget);
 
     await tester.tap(find.text('注册'));
     await tester.pumpAndSettle();
@@ -36,6 +45,14 @@ void main() {
   testWidgets('LoginPage hides register mode in mock auth mode', (
     tester,
   ) async {
+    tester.view
+      ..physicalSize = const Size(1200, 1600)
+      ..devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await tester.pumpWidget(
       _buildPage(
@@ -57,6 +74,14 @@ void main() {
   testWidgets('LoginPage can reset custom service config before login', (
     tester,
   ) async {
+    tester.view
+      ..physicalSize = const Size(1200, 1600)
+      ..devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     SharedPreferences.setMockInitialValues(<String, Object>{});
     const envConfig = EnvConfig(
       flavor: BuildFlavor.development,
@@ -81,12 +106,13 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.text('http://192.168.1.20:8080'),
+      find.text('已切换到其他服务'),
       240,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
-    expect(find.text('http://192.168.1.20:8080'), findsWidgets);
+    expect(find.text('已切换到其他服务'), findsOneWidget);
+    expect(find.text('可一键恢复'), findsOneWidget);
     expect(find.text('恢复默认服务地址'), findsOneWidget);
 
     await tester.tap(find.text('恢复默认服务地址'));
@@ -100,7 +126,29 @@ void main() {
 
     expect(settingsController.resetCount, 1);
     expect(find.text('已恢复默认服务地址，请重新尝试登录。'), findsOneWidget);
-    expect(find.text('http://127.0.0.1:8080'), findsWidgets);
+    expect(find.text('当前使用默认服务'), findsOneWidget);
+  });
+
+  testWidgets('LoginPage renders mobile layout without overflow', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(390, 844)
+      ..devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    await tester.pumpWidget(
+      _buildPage(authRepository: _FakeRealAuthRepository()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('把状态、画面和设置收进同一块界面。'), findsOneWidget);
+    expect(find.text('欢迎回来'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
 

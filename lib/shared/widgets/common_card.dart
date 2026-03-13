@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
 
 /// 项目内统一卡片容器，约束圆角、留白和标题区样式。
 class CommonCard extends StatelessWidget {
@@ -7,7 +8,7 @@ class CommonCard extends StatelessWidget {
     required this.child,
     this.title,
     this.subtitle,
-    this.padding = const EdgeInsets.all(20),
+    this.padding = const EdgeInsets.all(22),
     super.key,
   });
 
@@ -25,82 +26,145 @@ class CommonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final hasHeader = title != null;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isCompact =
-            constraints.maxWidth > 0 && constraints.maxWidth < 560;
-        final effectivePadding = padding == const EdgeInsets.all(20)
-            ? EdgeInsets.all(isCompact ? 16 : 20)
-            : padding;
-
-        return DecoratedBox(
+    return Material(
+      color: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            color: colorScheme.surfaceContainerLow.withValues(alpha: 0.98),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.92),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[
+                colorScheme.surfaceBright.withValues(alpha: 0.99),
+                colorScheme.surfaceContainerLow.withValues(alpha: 0.95),
+                AppPalette.paperMist.withValues(alpha: 0.78),
+              ],
             ),
-            boxShadow: const <BoxShadow>[
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.62),
+            ),
+            boxShadow: <BoxShadow>[
               BoxShadow(
-                color: Color(0x38000000),
-                blurRadius: 22,
-                offset: Offset(0, 12),
+                color: AppPalette.pineGreen.withValues(alpha: 0.06),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+              const BoxShadow(
+                color: Color(0x10101713),
+                blurRadius: 18,
+                offset: Offset(0, 8),
               ),
             ],
           ),
           child: Stack(
             children: <Widget>[
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.24),
+                    ),
+                  ),
+                ),
+              ),
               Positioned(
-                left: 18,
-                right: 18,
                 top: 0,
-                child: IgnorePointer(
-                  child: Container(
-                    height: 1,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: <Color>[
-                          colorScheme.primary.withValues(alpha: 0.0),
-                          colorScheme.primary.withValues(alpha: 0.62),
-                          colorScheme.tertiary.withValues(alpha: 0.0),
-                        ],
-                      ),
+                left: 20,
+                right: 20,
+                child: Container(
+                  height: 1.1,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: <Color>[
+                        Colors.transparent,
+                        AppPalette.pineGreen.withValues(alpha: 0.28),
+                        AppPalette.mistMint.withValues(alpha: 0.14),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: -54,
+                right: -24,
+                child: Container(
+                  width: 146,
+                  height: 146,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: <Color>[
+                        AppPalette.softPine.withValues(alpha: 0.14),
+                        Colors.transparent,
+                      ],
                     ),
                   ),
                 ),
               ),
               Padding(
-                padding: effectivePadding,
+                padding: padding,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    if (title != null) ...<Widget>[
-                      Text(
-                        title!,
-                        style: textTheme.titleMedium?.copyWith(
-                          color: colorScheme.onSurface,
-                          fontWeight: FontWeight.w800,
-                        ),
+                    if (hasHeader) ...<Widget>[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Container(
+                            width: 4,
+                            height: subtitle == null ? 24 : 44,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: <Color>[
+                                  AppPalette.pineGreen,
+                                  AppPalette.softPine,
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  title!,
+                                  style: textTheme.titleLarge?.copyWith(
+                                    color: colorScheme.onSurface,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                if (subtitle != null) ...<Widget>[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    subtitle!,
+                                    style: textTheme.bodyMedium?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                      height: 1.58,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                       if (subtitle != null) ...<Widget>[
-                        const SizedBox(height: 6),
-                        Text(
-                          subtitle!,
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            height: 1.54,
-                          ),
-                        ),
-                      ],
-                      SizedBox(height: subtitle != null ? 16 : 14),
+                        const SizedBox(height: 24),
+                      ] else
+                        const SizedBox(height: 20),
                     ],
                     child,
                   ],
@@ -108,8 +172,8 @@ class CommonCard extends StatelessWidget {
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

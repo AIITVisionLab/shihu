@@ -15,10 +15,10 @@ enum DeviceAlertLevel {
   unknown,
 }
 
-/// 后端 `/api/status` 返回的设备状态信息。
-class DeviceStateInfo {
+/// 后端 `/api/status` 返回的设备运行时状态实体。
+class DeviceStatus {
   /// 创建设备状态对象。
-  const DeviceStateInfo({
+  const DeviceStatus({
     required this.deviceId,
     required this.deviceName,
     required this.temperature,
@@ -35,8 +35,8 @@ class DeviceStateInfo {
   });
 
   /// 从 JSON 构建设备状态对象。
-  factory DeviceStateInfo.fromJson(Map<String, dynamic> json) {
-    return DeviceStateInfo(
+  factory DeviceStatus.fromJson(Map<String, dynamic> json) {
+    return DeviceStatus(
       deviceId: asString(json['deviceId']),
       deviceName: asString(json['deviceName']),
       temperature: _sensorValue(json['temperature']),
@@ -127,24 +127,6 @@ class DeviceStateInfo {
     return age <= threshold;
   }
 
-  /// 当前状态的值守新鲜度说明。
-  String freshnessLabel({
-    DateTime? referenceTime,
-    Duration threshold = const Duration(seconds: 18),
-  }) {
-    final age = ageSince(referenceTime);
-    if (age == null) {
-      return '未收到设备上报';
-    }
-    if (age <= threshold) {
-      return '数据已同步';
-    }
-    if (age.inMinutes >= 1) {
-      return '数据已滞后 ${age.inMinutes} 分钟';
-    }
-    return '数据已滞后 ${age.inSeconds} 秒';
-  }
-
   /// 当前运行等级。
   DeviceAlertLevel get alertLevel {
     switch (errorCode) {
@@ -159,42 +141,6 @@ class DeviceStateInfo {
     }
   }
 
-  /// 当前运行状态标题。
-  String get alertTitle {
-    switch (errorCode) {
-      case 0:
-        return '系统运行正常';
-      case 1:
-        return '设备需要人工复核';
-      case 2:
-        return '设备处于告警状态';
-      default:
-        return '状态来源待确认';
-    }
-  }
-
-  /// 当前运行状态说明。
-  String get alertDescription {
-    switch (errorCode) {
-      case 0:
-        return '当前采集和控制链路处于正常区间，可以继续观察环境波动。';
-      case 1:
-        return '后端标记为预警状态，建议尽快复核设备环境并关注后续变化。';
-      case 2:
-        return '后端标记为严重告警，应优先处理设备或环境异常。';
-      default:
-        return '后端尚未返回可识别的异常码，当前前端按未知状态展示。';
-    }
-  }
-
-  /// LED 状态文案。
-  String get ledLabel {
-    if (ledOn == null) {
-      return '未知';
-    }
-    return ledOn! ? '已开启' : '已关闭';
-  }
-
   /// 当前是否满足 LED 控制接口的最小请求条件。
   bool get canControlLed => deviceId.trim().isNotEmpty;
 
@@ -207,27 +153,6 @@ class DeviceStateInfo {
       humidity != null ||
       light != null ||
       mq2 != null;
-
-  /// 以“值 + 单位”形式格式化传感器展示值。
-  String formatMetric(
-    double? value,
-    String unit, {
-    int fractionDigits = 1,
-    String fallback = '--',
-  }) {
-    if (value == null) {
-      return fallback;
-    }
-
-    final normalizedValue = value.truncateToDouble() == value
-        ? value.toStringAsFixed(0)
-        : value.toStringAsFixed(fractionDigits);
-    final normalizedUnit = unit.trim();
-    if (normalizedUnit.isEmpty) {
-      return normalizedValue;
-    }
-    return '$normalizedValue $normalizedUnit';
-  }
 
   static double? _sensorValue(Object? rawValue) {
     final json = asStringMap(rawValue);

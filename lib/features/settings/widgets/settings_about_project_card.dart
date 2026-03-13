@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/shared/widgets/common_button.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
+import 'package:sickandflutter/shared/widgets/feature_surface.dart';
 
 /// 设置页系统总览入口卡片。
 class SettingsAboutProjectCard extends StatelessWidget {
@@ -15,30 +17,38 @@ class SettingsAboutProjectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return CommonCard(
       title: AppCopy.settingsProjectTitle,
-      subtitle: '需要确认平台定位、业务闭环或指标目标时，从这里进入系统概览。',
+      subtitle: '不清楚怎么操作时，从这里查看使用说明。',
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final summary = Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.surfaceContainerLowest.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-            ),
-            child: Text(
-              '聚焦环境监测、风险预警、远程调控和排障链路，不再把说明页做成宣传页。',
-              style: Theme.of(context).textTheme.bodyMedium,
+          final summary = FeatureInsetPanel(
+            padding: const EdgeInsets.all(18),
+            borderRadius: 24,
+            accentColor: AppPalette.softLavender,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const <Widget>[
+                _AboutHintRow(
+                  icon: Icons.route_rounded,
+                  title: '查看页面怎么用',
+                  description: '帮助页会把总览、值守、视频和我的说清楚。',
+                ),
+                SizedBox(height: 14),
+                _AboutHintRow(
+                  icon: Icons.visibility_rounded,
+                  title: '只保留常用内容',
+                  description: '帮助页只展示你日常会用到的说明。',
+                ),
+              ],
             ),
           );
-          final action = CommonButton(
-            label: AppCopy.viewAboutProject,
-            tone: CommonButtonTone.secondary,
-            icon: const Icon(Icons.info_outline),
-            onPressed: onOpenAbout,
+          final action = SizedBox(
+            width: constraints.maxWidth < 760 ? double.infinity : 220,
+            child: CommonButton(
+              label: AppCopy.viewAboutProject,
+              tone: CommonButtonTone.secondary,
+              icon: const Icon(Icons.info_outline),
+              onPressed: onOpenAbout,
+            ),
           );
 
           if (constraints.maxWidth < 760) {
@@ -49,6 +59,7 @@ class SettingsAboutProjectCard extends StatelessWidget {
           }
 
           return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Expanded(child: summary),
               const SizedBox(width: 16),
@@ -57,6 +68,62 @@ class SettingsAboutProjectCard extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _AboutHintRow extends StatelessWidget {
+  const _AboutHintRow({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppPalette.softLavender.withValues(alpha: 0.22),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(icon, color: colorScheme.primary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.52,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

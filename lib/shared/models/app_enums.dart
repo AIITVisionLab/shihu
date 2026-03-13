@@ -92,9 +92,9 @@ extension AuthLoginModeX on AuthLoginMode {
   String get label {
     switch (this) {
       case AuthLoginMode.real:
-        return '在线服务登录';
+        return '在线登录';
       case AuthLoginMode.mock:
-        return '联调登录';
+        return '账号登录';
     }
   }
 }

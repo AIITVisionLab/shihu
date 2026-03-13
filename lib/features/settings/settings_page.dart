@@ -5,16 +5,19 @@ import 'package:sickandflutter/app/app_workspace_destination.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/app/widgets/app_workspace_scaffold.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
+import 'package:sickandflutter/features/auth/application/current_user_label_provider.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/remembered_account_repository.dart';
-import 'package:sickandflutter/features/settings/device_state_repository.dart';
+import 'package:sickandflutter/features/device/application/device_runtime_providers.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
+import 'package:sickandflutter/features/settings/widgets/settings_about_project_card.dart';
 import 'package:sickandflutter/features/settings/widgets/settings_auth_session_card.dart';
 import 'package:sickandflutter/features/settings/widgets/settings_local_data_card.dart';
 import 'package:sickandflutter/features/settings/widgets/settings_overview_card.dart';
+import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/widgets/loading_view.dart';
 
-/// 设置页，负责展示当前设备、账号和本地偏好。
+/// 设置页，负责展示当前使用、账号信息和本机偏好。
 class SettingsPage extends ConsumerWidget {
   /// 创建设置页。
   const SettingsPage({super.key});
@@ -23,22 +26,19 @@ class SettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(settingsControllerProvider);
     final packageInfo = ref.watch(packageInfoProvider).asData?.value;
-    final deviceStateAsync = ref.watch(deviceStateProvider);
+    final deviceStateAsync = ref.watch(deviceStatusProvider);
     final rememberedAccountAsync = ref.watch(
       rememberedAccountControllerProvider,
     );
     final authState = ref.watch(authControllerProvider);
-    final currentUser =
-        authState.session?.user.displayName ??
-        authState.session?.user.account ??
-        '--';
+    final currentUser = ref.watch(currentUserLabelProvider);
 
     return AppWorkspaceScaffold(
       destination: AppWorkspaceDestination.settings,
       title: AppCopy.settingsPageTitle,
-      subtitle: '管理当前设备、登录账号和本机偏好。',
+      subtitle: '先确认当前使用，再处理账号、本机偏好和帮助。',
       currentUser: currentUser,
-      maxContentWidth: 920,
+      maxContentWidth: 1040,
       child: settingsAsync.when(
         loading: () => const LoadingView(message: AppCopy.settingsLoading),
         error: (error, stackTrace) =>
@@ -163,6 +163,9 @@ class SettingsPage extends ConsumerWidget {
                 );
             },
           );
+          final aboutCard = SettingsAboutProjectCard(
+            onOpenAbout: () => context.goNamed(AppRoutes.about),
+          );
 
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
@@ -170,15 +173,18 @@ class SettingsPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 SettingsOverviewCard(
+                  currentUser: currentUser,
+                  loginModeLabel: authState.session?.loginMode.label ?? '未登录',
                   versionLabel: packageInfo == null
                       ? '--'
                       : '${packageInfo.version}+${packageInfo.buildNumber}',
                   deviceStateAsync: deviceStateAsync,
                 ),
                 const SizedBox(height: 20),
-                _SettingsResponsiveRow(
-                  left: authSessionCard,
-                  right: localDataCard,
+                _SettingsPrimarySection(
+                  authSessionCard: authSessionCard,
+                  localDataCard: localDataCard,
+                  aboutCard: aboutCard,
                 ),
               ],
             ),
@@ -189,29 +195,50 @@ class SettingsPage extends ConsumerWidget {
   }
 }
 
-class _SettingsResponsiveRow extends StatelessWidget {
-  const _SettingsResponsiveRow({required this.left, required this.right});
+class _SettingsPrimarySection extends StatelessWidget {
+  const _SettingsPrimarySection({
+    required this.authSessionCard,
+    required this.localDataCard,
+    required this.aboutCard,
+  });
 
-  final Widget left;
-  final Widget right;
+  final Widget authSessionCard;
+  final Widget localDataCard;
+  final Widget aboutCard;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 1040) {
+        if (constraints.maxWidth < 980) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[left, const SizedBox(height: 20), right],
+            children: <Widget>[
+              authSessionCard,
+              const SizedBox(height: 20),
+              localDataCard,
+              const SizedBox(height: 20),
+              aboutCard,
+            ],
           );
         }
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Expanded(child: left),
+            Expanded(flex: 12, child: authSessionCard),
             const SizedBox(width: 20),
-            Expanded(child: right),
+            Expanded(
+              flex: 10,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  localDataCard,
+                  const SizedBox(height: 20),
+                  aboutCard,
+                ],
+              ),
+            ),
           ],
         );
       },

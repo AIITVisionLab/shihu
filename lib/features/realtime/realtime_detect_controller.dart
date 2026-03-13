@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
-import 'package:sickandflutter/features/settings/device_state_repository.dart';
-import 'package:sickandflutter/shared/models/device_state_info.dart';
+import 'package:sickandflutter/features/device/application/device_runtime_providers.dart';
+import 'package:sickandflutter/features/device/domain/device_status.dart';
 
 /// 实时监控轮询间隔配置。
 final realtimeDetectPollingIntervalProvider = Provider<Duration>((ref) {
@@ -19,17 +19,30 @@ final realtimeDetectControllerProvider =
 /// 管理设备状态轮询、手动刷新和 LED 控制。
 class RealtimeDetectController extends Notifier<RealtimeDetectState> {
   Timer? _pollingTimer;
+  Timer? _pendingLedRefreshTimer;
   bool _isRefreshing = false;
   bool _isSubmittingLed = false;
+  bool _hasStartedMonitoring = false;
 
   @override
   RealtimeDetectState build() {
-    ref.onDispose(_stopPolling);
+    ref.onDispose(() {
+      _pendingLedRefreshTimer?.cancel();
+      _stopPolling();
+    });
+    if (!_hasStartedMonitoring) {
+      Future<void>.microtask(startMonitoring);
+    }
     return const RealtimeDetectState(isAutoRefreshEnabled: true);
   }
 
   /// 进入页面后启动实时监控。
   Future<void> startMonitoring() async {
+    if (_hasStartedMonitoring) {
+      return;
+    }
+    _hasStartedMonitoring = true;
+
     if (state.isAutoRefreshEnabled) {
       _startPolling();
     }
@@ -37,11 +50,6 @@ class RealtimeDetectController extends Notifier<RealtimeDetectState> {
     if (!state.hasDeviceState || state.errorMessage != null) {
       await refreshNow();
     }
-  }
-
-  /// 离开页面后停止轮询。
-  void stopMonitoring() {
-    _stopPolling();
   }
 
   /// 立即刷新一次设备状态。
@@ -54,8 +62,8 @@ class RealtimeDetectController extends Notifier<RealtimeDetectState> {
     state = state.copyWith(isRefreshing: true, errorMessage: null);
 
     try {
-      final repository = await ref.read(deviceStateRepositoryProvider.future);
-      final deviceState = await repository.fetchState();
+      final repository = await ref.read(deviceRuntimeRepositoryProvider.future);
+      final deviceState = await repository.fetchStatus();
       state = state.copyWith(
         deviceState: deviceState,
         isRefreshing: false,
@@ -71,7 +79,7 @@ class RealtimeDetectController extends Notifier<RealtimeDetectState> {
     } catch (error) {
       state = state.copyWith(
         isRefreshing: false,
-        errorMessage: '拉取设备状态失败：$error',
+        errorMessage: '获取设备状态失败，请稍后重试。',
         lastRefreshAt: DateTime.now(),
       );
     } finally {
@@ -103,26 +111,27 @@ class RealtimeDetectController extends Notifier<RealtimeDetectState> {
       throw const ApiException(message: '当前还没有可控制的设备状态。');
     }
     if (!deviceState.canControlLed) {
-      throw const ApiException(message: '当前设备状态缺少 deviceId，暂时无法下发 LED 指令。');
+      throw const ApiException(message: '当前还不能调整补光，请先等待状态稳定。');
     }
 
     _isSubmittingLed = true;
     state = state.copyWith(isSubmittingLed: true, errorMessage: null);
 
     try {
-      final repository = await ref.read(deviceStateRepositoryProvider.future);
+      final repository = await ref.read(deviceRuntimeRepositoryProvider.future);
       final receipt = await repository.setLed(
         deviceId: deviceState.deviceId,
         deviceName: deviceState.deviceName,
         ledOn: ledOn,
       );
       await refreshNow();
+      _schedulePendingLedRefresh();
       return receipt.buildUserMessage(ledOn: ledOn);
     } on ApiException catch (error) {
       state = state.copyWith(errorMessage: error.message);
       rethrow;
     } catch (error) {
-      final exception = ApiException(message: 'LED 控制失败：$error');
+      final exception = ApiException(message: '补光调整失败，请稍后重试。');
       state = state.copyWith(errorMessage: exception.message);
       throw exception;
     } finally {
@@ -147,6 +156,16 @@ class RealtimeDetectController extends Notifier<RealtimeDetectState> {
     _pollingTimer?.cancel();
     _pollingTimer = null;
   }
+
+  void _schedulePendingLedRefresh() {
+    _pendingLedRefreshTimer?.cancel();
+    _pendingLedRefreshTimer = Timer(const Duration(seconds: 2), () {
+      if (_isRefreshing) {
+        return;
+      }
+      unawaited(refreshNow());
+    });
+  }
 }
 
 const Object _realtimeStateUnset = Object();
@@ -164,7 +183,7 @@ class RealtimeDetectState {
   });
 
   /// 当前设备状态。
-  final DeviceStateInfo? deviceState;
+  final DeviceStatus? deviceState;
 
   /// 是否正在刷新。
   final bool isRefreshing;
@@ -196,7 +215,7 @@ class RealtimeDetectState {
     return RealtimeDetectState(
       deviceState: identical(deviceState, _realtimeStateUnset)
           ? this.deviceState
-          : deviceState as DeviceStateInfo?,
+          : deviceState as DeviceStatus?,
       isRefreshing: isRefreshing ?? this.isRefreshing,
       isAutoRefreshEnabled: isAutoRefreshEnabled ?? this.isAutoRefreshEnabled,
       isSubmittingLed: isSubmittingLed ?? this.isSubmittingLed,

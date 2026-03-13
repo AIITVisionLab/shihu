@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sickandflutter/shared/models/device_state_info.dart';
+import 'package:sickandflutter/features/device/domain/device_status.dart';
 
 /// 实时监控页使用的告警色板。
 class RealtimeAlertPalette {
@@ -21,24 +21,24 @@ RealtimeAlertPalette resolveRealtimeAlertPalette(DeviceAlertLevel? level) {
   switch (level) {
     case DeviceAlertLevel.safe:
       return const RealtimeAlertPalette(
-        backgroundColor: Color(0xFFE8F7EB),
-        foregroundColor: Color(0xFF166534),
+        backgroundColor: Color(0xFFEAF1EB),
+        foregroundColor: Color(0xFF375844),
       );
     case DeviceAlertLevel.warning:
       return const RealtimeAlertPalette(
-        backgroundColor: Color(0xFFFFF4E5),
-        foregroundColor: Color(0xFFB45309),
+        backgroundColor: Color(0xFFF4EEDF),
+        foregroundColor: Color(0xFF8A6633),
       );
     case DeviceAlertLevel.danger:
       return const RealtimeAlertPalette(
-        backgroundColor: Color(0xFFFEEBEC),
-        foregroundColor: Color(0xFFB91C1C),
+        backgroundColor: Color(0xFFF5E8E6),
+        foregroundColor: Color(0xFF90514A),
       );
     case DeviceAlertLevel.unknown:
     case null:
       return const RealtimeAlertPalette(
-        backgroundColor: Color(0xFFE5ECF5),
-        foregroundColor: Color(0xFF475569),
+        backgroundColor: Color(0xFFE7EBE6),
+        foregroundColor: Color(0xFF556258),
       );
   }
 }
@@ -47,15 +47,6 @@ RealtimeAlertPalette resolveRealtimeAlertPalette(DeviceAlertLevel? level) {
 String formatRealtimeDisplayText(String? value) {
   final normalizedValue = value?.trim() ?? '';
   return normalizedValue.isEmpty ? '--' : normalizedValue;
-}
-
-/// 格式化设备错误码。
-String formatRealtimeErrorCode(DeviceStateInfo? deviceState) {
-  final errorCode = deviceState?.errorCode;
-  if (errorCode == null) {
-    return '--';
-  }
-  return '$errorCode';
 }
 
 /// 格式化设备更新时间。

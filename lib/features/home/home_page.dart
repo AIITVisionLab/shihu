@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,60 +5,33 @@ import 'package:sickandflutter/app/app_workspace_destination.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/app/widgets/app_workspace_scaffold.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
-import 'package:sickandflutter/features/auth/auth_controller.dart';
+import 'package:sickandflutter/features/auth/application/current_user_label_provider.dart';
+import 'package:sickandflutter/features/home/application/home_overview_device_status_provider.dart';
+import 'package:sickandflutter/features/home/widgets/home_action_track_card.dart';
 import 'package:sickandflutter/features/home/widgets/home_device_snapshot_card.dart';
 import 'package:sickandflutter/features/home/widgets/home_entry_card.dart';
 import 'package:sickandflutter/features/home/widgets/home_header_card.dart';
-import 'package:sickandflutter/features/settings/device_state_repository.dart';
-import 'package:sickandflutter/shared/widgets/adaptive_wrap_grid.dart';
 
 /// 首页，作为培育管理平台的总览入口。
-class HomePage extends ConsumerStatefulWidget {
+class HomePage extends ConsumerWidget {
   /// 创建首页。
   const HomePage({super.key});
 
   @override
-  ConsumerState<HomePage> createState() => _HomePageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final deviceStateAsync = ref.watch(homeOverviewDeviceStatusProvider);
+    final currentUser = ref.watch(currentUserLabelProvider);
 
-class _HomePageState extends ConsumerState<HomePage> {
-  Timer? _refreshTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 8), (_) {
-      if (!mounted) {
-        return;
-      }
-      _refreshOverview();
-    });
-  }
-
-  @override
-  void dispose() {
-    _refreshTimer?.cancel();
-    super.dispose();
-  }
-
-  void _refreshOverview() {
-    ref.invalidate(deviceStateProvider);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
-    final deviceStateAsync = ref.watch(deviceStateProvider);
-    final currentUser =
-        authState.session?.user.displayName ??
-        authState.session?.user.account ??
-        '--';
+    void refreshOverview() {
+      ref.invalidate(homeOverviewDeviceStatusProvider);
+    }
 
     return AppWorkspaceScaffold(
       destination: AppWorkspaceDestination.home,
       title: '总览',
-      subtitle: '先看当前状态，再决定是否进入值守。',
+      subtitle: '先看当前状态，再决定进入值守、视频或个人设置。',
       currentUser: currentUser,
+      maxContentWidth: 1120,
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
         child: Column(
@@ -69,38 +40,61 @@ class _HomePageState extends ConsumerState<HomePage> {
             HomeHeaderCard(
               currentUser: currentUser,
               deviceStateAsync: deviceStateAsync,
-              onRefresh: _refreshOverview,
+              onRefresh: refreshOverview,
             ),
-            const SizedBox(height: 16),
-            AdaptiveWrapGrid(
-              minItemWidth: 300,
-              spacing: 16,
-              runSpacing: 16,
-              children: <Widget>[
-                HomeEntryCard(
-                  icon: Icons.monitor_heart_rounded,
-                  title: AppCopy.homeRealtimeTitle,
-                  subtitle: '查看实时状态，必要时处理补光。',
-                  onTap: () => context.goNamed(AppRoutes.realtimeDetect),
-                ),
-                HomeEntryCard(
-                  icon: Icons.info_outline_rounded,
-                  title: AppCopy.homePreviewTitle,
-                  subtitle: '快速了解页面怎么用。',
-                  onTap: () => context.goNamed(AppRoutes.about),
-                ),
-                HomeEntryCard(
-                  icon: Icons.settings_rounded,
-                  title: AppCopy.homeSettingsTitle,
-                  subtitle: '管理账号、设备和本机偏好。',
-                  onTap: () => context.goNamed(AppRoutes.settings),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            HomeDeviceSnapshotCard(
-              deviceStateAsync: deviceStateAsync,
-              onRefresh: _refreshOverview,
+            const SizedBox(height: 20),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final actionTrack = HomeActionTrackCard(
+                  children: <Widget>[
+                    HomeEntryCard(
+                      stepLabel: '01',
+                      icon: Icons.monitor_heart_rounded,
+                      title: AppCopy.homeRealtimeTitle,
+                      subtitle: '先确认当前结论和补光状态。',
+                      onTap: () => context.goNamed(AppRoutes.realtimeDetect),
+                    ),
+                    HomeEntryCard(
+                      stepLabel: '02',
+                      icon: Icons.videocam_rounded,
+                      title: AppCopy.homePreviewTitle,
+                      subtitle: '需要看画面时直接进入，不再来回找入口。',
+                      onTap: () => context.goNamed(AppRoutes.video),
+                    ),
+                    HomeEntryCard(
+                      stepLabel: '03',
+                      icon: Icons.settings_rounded,
+                      title: AppCopy.homeSettingsTitle,
+                      subtitle: '最后处理账号、本机偏好和使用帮助。',
+                      onTap: () => context.goNamed(AppRoutes.settings),
+                    ),
+                  ],
+                );
+                final snapshot = HomeDeviceSnapshotCard(
+                  deviceStateAsync: deviceStateAsync,
+                  onRefresh: refreshOverview,
+                );
+
+                if (constraints.maxWidth < 960) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      actionTrack,
+                      const SizedBox(height: 20),
+                      snapshot,
+                    ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(flex: 10, child: actionTrack),
+                    const SizedBox(width: 20),
+                    Expanded(flex: 12, child: snapshot),
+                  ],
+                );
+              },
             ),
           ],
         ),

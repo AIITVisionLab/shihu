@@ -159,6 +159,34 @@ void main() {
     expect(authState.isAuthenticated, isTrue);
     expect(authState.session?.user.displayName, 'demo');
   });
+
+  test(
+    'AuthController can enter preview workspace without real backend',
+    () async {
+      final authStorage = AuthStorage(
+        VolatileSensitiveStorage(values: <String, String>{}),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          authStorageProvider.overrideWith((ref) => authStorage),
+          authRepositoryProvider.overrideWith(
+            (ref) => const MockAuthRepository(responseDelay: Duration.zero),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(authControllerProvider.notifier);
+      await notifier.enterPreviewWorkspace();
+
+      final authState = container.read(authControllerProvider);
+      expect(authState.isAuthenticated, isTrue);
+      expect(authState.session?.user.displayName, '界面预览');
+      expect(authState.session?.loginMode, AuthLoginMode.mock);
+      expect(await authStorage.readSession(), isNotNull);
+    },
+  );
 }
 
 class _RefreshingAuthRepository implements AuthRepository {

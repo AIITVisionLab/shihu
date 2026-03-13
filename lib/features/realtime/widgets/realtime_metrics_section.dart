@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:sickandflutter/shared/models/device_state_info.dart';
+import 'package:sickandflutter/app/app_palette.dart';
+import 'package:sickandflutter/features/device/application/device_status_view_data.dart';
+import 'package:sickandflutter/features/device/domain/device_status.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
+import 'package:sickandflutter/shared/widgets/feature_surface.dart';
 
 /// 实时监控页环境指标区。
 class RealtimeMetricsSection extends StatelessWidget {
@@ -8,85 +11,108 @@ class RealtimeMetricsSection extends StatelessWidget {
   const RealtimeMetricsSection({required this.deviceState, super.key});
 
   /// 当前设备状态。
-  final DeviceStateInfo? deviceState;
+  final DeviceStatus? deviceState;
 
   @override
   Widget build(BuildContext context) {
+    final viewData = deviceState == null
+        ? null
+        : DeviceStatusViewData.fromState(deviceState!);
     final items = <({IconData icon, String title, String value, Color accent})>[
       (
         icon: Icons.thermostat_rounded,
         title: '温度',
-        value:
-            deviceState?.formatMetric(
-              deviceState?.temperature,
-              deviceState?.temperatureUnit ?? '°C',
-            ) ??
-            '--',
-        accent: const Color(0xFFB95C3C),
+        value: viewData?.temperatureLabel ?? '--',
+        accent: AppPalette.softPine,
       ),
       (
         icon: Icons.water_drop_rounded,
         title: '湿度',
-        value:
-            deviceState?.formatMetric(
-              deviceState?.humidity,
-              deviceState?.humidityUnit ?? '%',
-            ) ??
-            '--',
-        accent: const Color(0xFF2F7D82),
+        value: viewData?.humidityLabel ?? '--',
+        accent: AppPalette.mistMint,
       ),
       (
         icon: Icons.light_mode_rounded,
         title: '光照',
-        value:
-            deviceState?.formatMetric(
-              deviceState?.light,
-              deviceState?.lightUnit ?? 'Lux',
-              fractionDigits: 0,
-            ) ??
-            '--',
-        accent: const Color(0xFFBF8A29),
+        value: viewData?.lightLabel ?? '--',
+        accent: AppPalette.linenOlive,
       ),
       (
         icon: Icons.sensors_rounded,
         title: 'MQ2',
-        value:
-            deviceState?.formatMetric(
-              deviceState?.mq2,
-              deviceState?.mq2Unit ?? 'ppm',
-            ) ??
-            '--',
-        accent: const Color(0xFF556D5D),
+        value: viewData?.mq2Label ?? '--',
+        accent: AppPalette.softLavender,
       ),
     ];
 
     return CommonCard(
       title: '环境指标',
-      subtitle: '核心指标收在一个面板里，减少页面碎片。',
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = constraints.maxWidth >= 720 ? 2 : 1;
-          final itemWidth =
-              (constraints.maxWidth - ((columns - 1) * 14)) / columns;
-
-          return Wrap(
-            spacing: 14,
-            runSpacing: 14,
-            children: items
-                .map(
-                  (item) => SizedBox(
-                    width: itemWidth,
-                    child: _MetricTile(
-                      icon: item.icon,
-                      title: item.title,
-                      value: item.value,
-                      accentColor: item.accent,
+      subtitle: '核心指标集中成矩阵，进入值守后先横向读数，再决定是否处理。',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          FeatureInsetPanel(
+            padding: const EdgeInsets.all(18),
+            borderRadius: 24,
+            accentColor: AppPalette.linenOlive,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppPalette.linenOlive.withValues(alpha: 0.34),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.grid_3x3_rounded),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    deviceState == null
+                        ? '设备接入后会在这里显示四项核心指标。'
+                        : '当前已经回到四项主指标视图，避免在值守页堆叠过多解释型内容。',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      height: 1.56,
                     ),
                   ),
-                )
-                .toList(growable: false),
-          );
-        },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 860
+                  ? 2
+                  : constraints.maxWidth >= 420
+                  ? 2
+                  : 1;
+              final itemWidth =
+                  (constraints.maxWidth - ((columns - 1) * 14)) / columns;
+
+              return Wrap(
+                spacing: 14,
+                runSpacing: 14,
+                children: items
+                    .map(
+                      (item) => SizedBox(
+                        width: itemWidth,
+                        child: _MetricTile(
+                          icon: item.icon,
+                          title: item.title,
+                          value: item.value,
+                          accentColor: item.accent,
+                        ),
+                      ),
+                    )
+                    .toList(growable: false),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -110,45 +136,48 @@ class _MetricTile extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.28),
-        ),
-      ),
-      child: Row(
+    return FeatureInsetPanel(
+      padding: const EdgeInsets.all(18),
+      borderRadius: 22,
+      accentColor: accentColor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: accentColor),
+          Row(
+            children: <Widget>[
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: accentColor),
+              ),
+              const Spacer(),
+              Container(
+                width: 28,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.72),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  title,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  value,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 18),
+          Text(
+            title,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ],

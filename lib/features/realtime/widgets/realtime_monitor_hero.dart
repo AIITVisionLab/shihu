@@ -1,270 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
+import 'package:sickandflutter/features/device/application/device_status_view_data.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_controller.dart';
 import 'package:sickandflutter/features/realtime/realtime_view_utils.dart';
-import 'package:sickandflutter/shared/models/device_state_info.dart';
+import 'package:sickandflutter/features/realtime/widgets/realtime_monitor/realtime_decision_panel.dart';
+import 'package:sickandflutter/features/realtime/widgets/realtime_monitor/realtime_monitor_summary.dart';
+import 'package:sickandflutter/shared/widgets/feature_surface.dart';
 
 /// 实时监控页主状态区，汇总设备核心状态与当前告警说明。
 class RealtimeMonitorHero extends StatelessWidget {
   /// 创建实时监控页主状态区。
-  const RealtimeMonitorHero({required this.state, super.key});
+  const RealtimeMonitorHero({
+    required this.state,
+    required this.onRefresh,
+    required this.onToggleAutoRefresh,
+    super.key,
+  });
 
   /// 实时监控页状态。
   final RealtimeDetectState state;
 
+  /// 手动刷新回调。
+  final Future<void> Function() onRefresh;
+
+  /// 自动刷新开关回调。
+  final Future<void> Function(bool enabled) onToggleAutoRefresh;
+
   @override
   Widget build(BuildContext context) {
-    final deviceState = state.deviceState;
-    final palette = resolveRealtimeAlertPalette(deviceState?.alertLevel);
-    final colorScheme = Theme.of(context).colorScheme;
+    final deviceStatus = state.deviceState;
+    final palette = resolveRealtimeAlertPalette(deviceStatus?.alertLevel);
+    final viewData = deviceStatus == null
+        ? null
+        : DeviceStatusViewData.fromState(deviceStatus);
 
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: colorScheme.outlineVariant),
-        boxShadow: const <BoxShadow>[
-          BoxShadow(
-            color: Color(0x52000000),
-            blurRadius: 28,
-            offset: Offset(0, 16),
-          ),
-        ],
-      ),
+    return FeatureHeroCard(
+      padding: const EdgeInsets.all(28),
+      borderRadius: 36,
+      accentColor: AppPalette.pineGreen,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth >= 860;
-          final summary = _MonitorSummary(
-            deviceState: deviceState,
+          final summary = RealtimeMonitorSummary(
+            state: state,
+            deviceStatus: deviceStatus,
+            viewData: viewData,
             errorMessage: state.errorMessage,
+            onRefresh: onRefresh,
+            onToggleAutoRefresh: onToggleAutoRefresh,
           );
-          final decision = _DecisionPanel(
+          final decision = RealtimeDecisionPanel(
             palette: palette,
-            deviceState: deviceState,
+            deviceStatus: deviceStatus,
+            viewData: viewData,
           );
 
-          if (isWide) {
+          if (constraints.maxWidth >= 940) {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Expanded(flex: 11, child: summary),
-                const SizedBox(width: 18),
-                Expanded(flex: 7, child: decision),
+                Expanded(flex: 12, child: summary),
+                const SizedBox(width: 20),
+                Expanded(flex: 8, child: decision),
               ],
             );
           }
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[summary, const SizedBox(height: 18), decision],
+            children: <Widget>[summary, const SizedBox(height: 20), decision],
           );
         },
-      ),
-    );
-  }
-}
-
-class _MonitorSummary extends StatelessWidget {
-  const _MonitorSummary({
-    required this.deviceState,
-    required this.errorMessage,
-  });
-
-  final DeviceStateInfo? deviceState;
-  final String? errorMessage;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          deviceState?.deviceName.trim().isNotEmpty == true
-              ? deviceState!.deviceName
-              : '等待设备状态上报',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          deviceState == null ? '系统正在等待设备状态。' : '当前只保留值守判断需要的核心指标。',
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-            height: 1.54,
-          ),
-        ),
-        const SizedBox(height: 18),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final columns = constraints.maxWidth >= 620 ? 2 : 1;
-            final itemWidth =
-                (constraints.maxWidth - ((columns - 1) * 12)) / columns;
-
-            return Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: <Widget>[
-                _FactTile(
-                  width: itemWidth,
-                  label: '设备 ID',
-                  value: formatRealtimeDisplayText(deviceState?.deviceId),
-                ),
-                _FactTile(
-                  width: itemWidth,
-                  label: '最近上报',
-                  value: formatRealtimeTimestamp(deviceState?.updatedAtTime),
-                ),
-              ],
-            );
-          },
-        ),
-        if (errorMessage != null) ...<Widget>[
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: colorScheme.errorContainer,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: colorScheme.error.withValues(alpha: 0.22),
-              ),
-            ),
-            child: Text(
-              errorMessage!,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onErrorContainer,
-                height: 1.5,
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _FactTile extends StatelessWidget {
-  const _FactTile({
-    required this.width,
-    required this.label,
-    required this.value,
-  });
-
-  final double width;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return SizedBox(
-      width: width,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colorScheme.outlineVariant),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              label,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DecisionPanel extends StatelessWidget {
-  const _DecisionPanel({required this.palette, required this.deviceState});
-
-  final RealtimeAlertPalette palette;
-  final DeviceStateInfo? deviceState;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.36),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            '当前结论',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: palette.backgroundColor,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  deviceState?.alertTitle ?? '等待状态返回',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: palette.foregroundColor,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  deviceState == null
-                      ? '暂无结论。'
-                      : '错误码 ${deviceState!.errorCode} · ${deviceState!.alertDescription}',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: palette.foregroundColor.withValues(alpha: 0.88),
-                    height: 1.52,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '按当前结论决定是否继续处理。',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              height: 1.5,
-            ),
-          ),
-        ],
       ),
     );
   }

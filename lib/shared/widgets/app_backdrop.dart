@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
 
 /// 应用级氛围背景。
 ///
-/// 统一为首页、认证页和主控台提供更像正式软件的层次感背景，
-/// 同时避免页面各自重复堆叠渐变和发光块实现。
+/// 统一为首页、认证页和主控台提供稳定的纸感底层。
 class AppBackdrop extends StatelessWidget {
   /// 创建背景层。
   const AppBackdrop({
     this.baseGradient,
     this.orbs = const <BackdropOrbData>[
       BackdropOrbData(
-        alignment: Alignment(-1.05, -0.95),
+        alignment: Alignment(-1.02, -0.96),
         size: 260,
-        color: Color(0x124B9BFF),
+        color: Color(0x10518463),
       ),
       BackdropOrbData(
-        alignment: Alignment(1.08, -0.18),
+        alignment: Alignment(1.06, -0.18),
         size: 220,
-        color: Color(0x1045D0FF),
+        color: Color(0x0CA7D3B2),
       ),
       BackdropOrbData(
-        alignment: Alignment(0.78, 1.02),
+        alignment: Alignment(0.96, 1.04),
         size: 200,
-        color: Color(0x0D2A77D7),
+        color: Color(0x08CEBBD8),
       ),
     ],
     this.showGrid = false,
@@ -41,73 +41,122 @@ class AppBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient:
-            baseGradient ??
-            LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: <Color>[
-                colorScheme.surface,
-                colorScheme.surfaceContainerLowest,
-                colorScheme.surface,
-              ],
-            ),
-      ),
-      child: Stack(
-        children: <Widget>[
-          Positioned.fill(
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: <Color>[
-                      colorScheme.surface.withValues(alpha: 0.01),
-                      colorScheme.primaryContainer.withValues(alpha: 0.05),
-                      colorScheme.tertiaryContainer.withValues(alpha: 0.04),
-                    ],
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            gradient:
+                baseGradient ??
+                LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: <Color>[
+                    AppPalette.paperSnow,
+                    AppPalette.paperMist,
+                    colorScheme.surfaceContainerLow,
+                  ],
                 ),
-              ),
-            ),
           ),
-          ...orbs.map(
-            (orb) => Align(
-              alignment: orb.alignment,
-              child: IgnorePointer(
-                child: Container(
-                  width: orb.size,
-                  height: orb.size,
+          child: Stack(
+            children: <Widget>[
+              Positioned.fill(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                        color: orb.color,
-                        blurRadius: orb.size * 0.22,
-                        spreadRadius: 10,
+                    gradient: RadialGradient(
+                      center: const Alignment(-0.7, -0.88),
+                      radius: 1.12,
+                      colors: <Color>[
+                        AppPalette.pineGreen.withValues(alpha: 0.1),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: <Color>[
+                        Colors.white.withValues(alpha: 0.22),
+                        AppPalette.mistMint.withValues(alpha: 0.08),
+                        AppPalette.softLavender.withValues(alpha: 0.04),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: const Alignment(-1.0, -0.45),
+                      end: const Alignment(1.0, 0.65),
+                      colors: <Color>[
+                        Colors.transparent,
+                        Colors.white.withValues(alpha: 0.08),
+                        Colors.transparent,
+                      ],
+                      stops: const <double>[0.16, 0.48, 0.82],
+                    ),
+                  ),
+                ),
+              ),
+              ...orbs.map(
+                (orb) => Align(
+                  alignment: orb.alignment,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: orb.size,
+                      height: orb.size,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(
+                            color: orb.color,
+                            blurRadius: orb.size * 0.22,
+                            spreadRadius: 8,
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
+              if (showGrid)
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _BackdropGridPainter(
+                      lineColor: colorScheme.outlineVariant.withValues(
+                        alpha: 0.03,
+                      ),
+                      emphasisColor: AppPalette.softPine.withValues(
+                        alpha: 0.04,
+                      ),
+                    ),
+                  ),
+                ),
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: <Color>[
+                        Colors.transparent,
+                        colorScheme.surface.withValues(alpha: 0.04),
+                        colorScheme.surface.withValues(alpha: 0.12),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          if (showGrid)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: _BackdropGridPainter(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.025),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -132,27 +181,46 @@ class BackdropOrbData {
 }
 
 class _BackdropGridPainter extends CustomPainter {
-  const _BackdropGridPainter({required this.color});
+  const _BackdropGridPainter({
+    required this.lineColor,
+    required this.emphasisColor,
+  });
 
-  final Color color;
+  final Color lineColor;
+  final Color emphasisColor;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
+    final minorPaint = Paint()
+      ..color = lineColor
       ..strokeWidth = 0.7;
-    const step = 64.0;
+    final majorPaint = Paint()
+      ..color = emphasisColor
+      ..strokeWidth = 1;
+    const step = 52.0;
 
-    for (double x = 0; x <= size.width; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    int index = 0;
+    for (double x = 0; x <= size.width; x += step, index++) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x, size.height),
+        index % 4 == 0 ? majorPaint : minorPaint,
+      );
     }
-    for (double y = 0; y <= size.height; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+
+    index = 0;
+    for (double y = 0; y <= size.height; y += step, index++) {
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        index % 4 == 0 ? majorPaint : minorPaint,
+      );
     }
   }
 
   @override
   bool shouldRepaint(covariant _BackdropGridPainter oldDelegate) {
-    return oldDelegate.color != color;
+    return oldDelegate.lineColor != lineColor ||
+        oldDelegate.emphasisColor != emphasisColor;
   }
 }

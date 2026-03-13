@@ -8,6 +8,7 @@ import 'package:sickandflutter/features/home/home_page.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_page.dart';
 import 'package:sickandflutter/features/settings/settings_page.dart';
 import 'package:sickandflutter/features/splash/splash_page.dart';
+import 'package:sickandflutter/features/video/video_page.dart';
 
 /// 全局路由配置入口。
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -31,6 +32,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.loginPath,
         name: AppRoutes.login,
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.aboutPath,
+        name: AppRoutes.about,
+        builder: (context, state) => const AboutPage(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -57,9 +63,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
-                path: AppRoutes.aboutPath,
-                name: AppRoutes.about,
-                builder: (context, state) => const AboutPage(),
+                path: AppRoutes.videoPath,
+                name: AppRoutes.video,
+                builder: (context, state) => const VideoPage(),
               ),
             ],
           ),
@@ -125,6 +131,9 @@ final class AppRoutes {
   /// 设置页路由名。
   static const String settings = 'settings';
 
+  /// 视频中心路由名。
+  static const String video = 'video';
+
   /// 关于页路由名。
   static const String about = 'about';
 
@@ -142,6 +151,9 @@ final class AppRoutes {
 
   /// 设置页路由路径。
   static const String settingsPath = '/settings';
+
+  /// 视频中心路由路径。
+  static const String videoPath = '/video';
 
   /// 关于页路由路径。
   static const String aboutPath = '/about';

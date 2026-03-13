@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
+import 'package:sickandflutter/shared/widgets/feature_surface.dart';
 
 /// 设置页通用键值行。
 class SettingsSettingRow extends StatelessWidget {
@@ -24,35 +26,43 @@ class SettingsSettingRow extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      width: double.infinity,
+    return FeatureInsetPanel(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.82),
-        ),
-      ),
+      borderRadius: 20,
+      accentColor: AppPalette.softPine,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 520 && trailing != null;
+          final stacked = constraints.maxWidth < 520 && trailing != null;
           final titleWidget = Text(
             title,
             style: theme.textTheme.labelLarge?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           );
-          final valueWidget = SelectableText(
-            value,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w700,
-              height: 1.45,
-            ),
+          final valueWidget = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 30,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.72),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SelectableText(
+                value,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
+                  height: 1.45,
+                ),
+              ),
+            ],
           );
 
-          if (isCompact) {
+          if (stacked) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[

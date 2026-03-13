@@ -235,11 +235,29 @@ class ApiClient {
       case DioExceptionType.cancel:
         return ApiException(statusCode: statusCode, message: '请求已取消。');
       case DioExceptionType.unknown:
+        if (_looksLikeEmptyServerReply(error)) {
+          return ApiException(
+            statusCode: statusCode,
+            message: '服务未返回有效响应，请检查后端服务状态。',
+          );
+        }
         return ApiException(
           statusCode: statusCode,
           message: '网络请求失败：${error.message ?? 'unknown'}。',
         );
     }
+  }
+
+  bool _looksLikeEmptyServerReply(DioException error) {
+    final combinedMessage = <String>[
+      error.message ?? '',
+      error.error?.toString() ?? '',
+    ].join(' ').toLowerCase();
+
+    return combinedMessage.contains('empty reply from server') ||
+        combinedMessage.contains(
+          'connection closed before full header was received',
+        );
   }
 
   String? _extractErrorMessage(Object? responseData) {

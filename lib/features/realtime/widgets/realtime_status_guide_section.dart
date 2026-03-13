@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:sickandflutter/shared/models/device_state_info.dart';
+import 'package:sickandflutter/app/app_palette.dart';
+import 'package:sickandflutter/features/device/domain/device_status.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
 
-/// 实时监控页状态说明区。
+/// 实时监控页处理建议区。
 class RealtimeStatusGuideSection extends StatelessWidget {
-  /// 创建实时监控页状态说明区。
+  /// 创建实时监控页处理建议区。
   const RealtimeStatusGuideSection({required this.deviceState, super.key});
 
   /// 当前设备状态。
-  final DeviceStateInfo? deviceState;
+  final DeviceStatus? deviceState;
 
   @override
   Widget build(BuildContext context) {
     return CommonCard(
-      title: '状态说明',
-      subtitle: '把错误码解释成可执行的处理优先级。',
+      title: '处理建议',
+      subtitle: '把当前状态翻译成更直接的处理优先级，值守时直接按优先级看。',
       child: LayoutBuilder(
         builder: (context, constraints) {
           final columns = constraints.maxWidth >= 720 ? 2 : 1;
@@ -29,8 +30,9 @@ class RealtimeStatusGuideSection extends StatelessWidget {
                 width: itemWidth,
                 child: _GuideItem(
                   icon: Icons.verified_outlined,
-                  title: '错误码 0',
-                  description: '系统运行正常，可继续观察实时数据。',
+                  title: '正常',
+                  description: '继续观察实时数据，暂时不需要额外处理。',
+                  accentColor: AppPalette.softPine,
                   isActive: deviceState?.errorCode == 0,
                 ),
               ),
@@ -38,8 +40,9 @@ class RealtimeStatusGuideSection extends StatelessWidget {
                 width: itemWidth,
                 child: _GuideItem(
                   icon: Icons.warning_amber_rounded,
-                  title: '错误码 1',
-                  description: '系统进入预警状态，建议人工复核。',
+                  title: '注意',
+                  description: '建议尽快人工复核，确认环境是否继续变化。',
+                  accentColor: AppPalette.linenOlive,
                   isActive: deviceState?.errorCode == 1,
                 ),
               ),
@@ -47,8 +50,9 @@ class RealtimeStatusGuideSection extends StatelessWidget {
                 width: itemWidth,
                 child: _GuideItem(
                   icon: Icons.gpp_bad_rounded,
-                  title: '错误码 2',
-                  description: '系统进入严重告警状态，应优先处理。',
+                  title: '严重',
+                  description: '优先处理当前异常，避免继续影响设备运行。',
+                  accentColor: const Color(0xFFCE9A90),
                   isActive: deviceState?.errorCode == 2,
                 ),
               ),
@@ -56,8 +60,9 @@ class RealtimeStatusGuideSection extends StatelessWidget {
                 width: itemWidth,
                 child: _GuideItem(
                   icon: Icons.help_outline_rounded,
-                  title: '其他情况',
-                  description: '按未知状态展示，等待进一步确认。',
+                  title: '待确认',
+                  description: '当前状态还不明确，先继续观察并等待下一次同步。',
+                  accentColor: AppPalette.softLavender,
                   isActive:
                       deviceState == null ||
                       deviceState?.alertLevel == DeviceAlertLevel.unknown,
@@ -76,12 +81,14 @@ class _GuideItem extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.description,
+    required this.accentColor,
     required this.isActive,
   });
 
   final IconData icon;
   final String title;
   final String description;
+  final Color accentColor;
   final bool isActive;
 
   @override
@@ -92,49 +99,85 @@ class _GuideItem extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: isActive
-            ? colorScheme.primaryContainer.withValues(alpha: 0.45)
-            : colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            isActive
+                ? accentColor.withValues(alpha: 0.24)
+                : colorScheme.surfaceContainerLowest.withValues(alpha: 0.96),
+            colorScheme.surfaceContainerLow.withValues(alpha: 0.94),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: isActive
-              ? colorScheme.primary.withValues(alpha: 0.32)
-              : colorScheme.outlineVariant.withValues(alpha: 0.4),
+              ? accentColor.withValues(alpha: 0.6)
+              : colorScheme.outlineVariant.withValues(alpha: 0.5),
         ),
+        boxShadow: isActive
+            ? <BoxShadow>[
+                BoxShadow(
+                  color: accentColor.withValues(alpha: 0.12),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ]
+            : const <BoxShadow>[],
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: isActive
-                  ? colorScheme.primaryContainer
-                  : colorScheme.surface,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: colorScheme.primary),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+          Row(
+            children: <Widget>[
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: accentColor),
+              ),
+              const Spacer(),
+              if (isActive)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerLowest.withValues(
+                      alpha: 0.92,
+                    ),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '当前',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  description,
-                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
-                ),
-              ],
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              height: 1.56,
             ),
           ),
         ],
