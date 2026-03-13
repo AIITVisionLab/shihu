@@ -5,6 +5,7 @@ import 'package:sickandflutter/app/app_workspace_destination.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/app/widgets/app_workspace_scaffold.dart';
 import 'package:sickandflutter/app/widgets/workspace/workspace_bottom_navigation.dart';
+import 'package:sickandflutter/app/widgets/workspace/workspace_header_card.dart';
 import 'package:sickandflutter/app/widgets/workspace/workspace_rail_pane.dart';
 
 void main() {
@@ -38,6 +39,11 @@ void main() {
     expect(find.text('值守'), findsOneWidget);
     expect(find.text('视频'), findsOneWidget);
     expect(find.text('我的'), findsOneWidget);
+
+    final titleLeft = tester.getTopLeft(find.text('平台首页'));
+    final headerSize = tester.getSize(find.byType(WorkspaceHeaderCard));
+    expect(titleLeft.dx, lessThan(420));
+    expect(headerSize.width, greaterThan(900));
   });
 
   testWidgets(

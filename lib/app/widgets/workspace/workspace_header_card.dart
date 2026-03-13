@@ -30,79 +30,85 @@ class WorkspaceHeaderCard extends StatelessWidget {
     final theme = Theme.of(context);
     final hasUser = currentUser.isNotEmpty && currentUser != '--';
 
-    return FeatureHeroCard(
-      padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
-      accentColor: AppPalette.mistMint,
-      showPaletteBands: false,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 820;
-          final titleBlock = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              if (hasUser) ...<Widget>[
-                WorkspaceHeaderChip(
-                  icon: Icons.person_outline_rounded,
-                  label: currentUser,
-                ),
-                const SizedBox(height: 16),
-              ],
-              Text(
-                title,
-                style: theme.textTheme.headlineLarge?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: isCompact ? constraints.maxWidth : 560,
-                ),
-                child: Text(
-                  subtitle,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.56,
-                  ),
-                ),
-              ),
-            ],
-          );
-
-          if (isCompact || actions.isEmpty) {
-            return Column(
+    return SizedBox(
+      width: double.infinity,
+      child: FeatureHeroCard(
+        padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+        accentColor: AppPalette.mistMint,
+        showPaletteBands: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxWidth < 820;
+            final titleBlock = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                titleBlock,
-                if (actions.isNotEmpty) ...<Widget>[
-                  const SizedBox(height: 18),
-                  Wrap(spacing: 10, runSpacing: 10, children: actions),
+                if (hasUser) ...<Widget>[
+                  WorkspaceHeaderChip(
+                    icon: Icons.person_outline_rounded,
+                    label: currentUser,
+                  ),
+                  const SizedBox(height: 16),
                 ],
-              ],
-            );
-          }
-
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Expanded(child: titleBlock),
-              const SizedBox(width: 18),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 320),
-                child: Align(
-                  alignment: Alignment.topRight,
-                  child: Wrap(
-                    alignment: WrapAlignment.end,
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: actions,
+                Text(
+                  title,
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+                const SizedBox(height: 8),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: isCompact ? constraints.maxWidth : 560,
+                  ),
+                  child: Text(
+                    subtitle,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.56,
+                    ),
+                  ),
+                ),
+              ],
+            );
+
+            if (isCompact || actions.isEmpty) {
+              return SizedBox(
+                width: double.infinity,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    titleBlock,
+                    if (actions.isNotEmpty) ...<Widget>[
+                      const SizedBox(height: 18),
+                      Wrap(spacing: 10, runSpacing: 10, children: actions),
+                    ],
+                  ],
+                ),
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Expanded(child: titleBlock),
+                const SizedBox(width: 18),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 320),
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: actions,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

@@ -37,12 +37,16 @@ class WorkspaceContentPane extends StatelessWidget {
     final screenWidth = MediaQuery.sizeOf(context).width;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        WorkspaceHeaderCard(
-          title: title,
-          subtitle: subtitle,
-          currentUser: currentUser,
-          actions: headerActions,
+        SizedBox(
+          width: double.infinity,
+          child: WorkspaceHeaderCard(
+            title: title,
+            subtitle: subtitle,
+            currentUser: currentUser,
+            actions: headerActions,
+          ),
         ),
         SizedBox(height: screenWidth < 720 ? 14 : 18),
         Expanded(
