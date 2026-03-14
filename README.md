@@ -80,6 +80,10 @@
 flutter pub get
 ```
 
+说明：
+
+- 当前仓库不再内置 `third_party` Flutter 插件源码，依赖统一通过 `pub` 获取
+
 本地启动：
 
 ```bash

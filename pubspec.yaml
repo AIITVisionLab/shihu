@@ -18,8 +18,7 @@ dependencies:
   go_router: ^17.1.0
   json_annotation: ^4.11.0
   package_info_plus: ^9.0.0
-  shared_preferences:
-    path: third_party/openharmony/shared_preferences/shared_preferences
+  shared_preferences: ^2.5.4
   webview_flutter: ^4.13.1
   webview_flutter_web: ^0.2.3+4
 
@@ -29,10 +28,6 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   json_serializable: ^6.11.1
-
-dependency_overrides:
-  shared_preferences_ohos:
-    path: third_party/openharmony/shared_preferences/shared_preferences_ohos
 
 flutter:
   uses-material-design: true

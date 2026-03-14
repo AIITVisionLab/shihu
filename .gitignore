@@ -31,13 +31,4 @@ flutter_*.log
 .playwright-cli/
 .kiro/
 output/
-
-# 三方插件的非源码文件
-third_party/openharmony/**/example/
-third_party/openharmony/**/test/
-third_party/openharmony/**/README*
-third_party/openharmony/**/CHANGELOG*
-third_party/openharmony/**/AUTHORS
-third_party/openharmony/**/OAT.xml
-third_party/openharmony/**/extension/
-third_party/openharmony/**/tool/
+third_party/
