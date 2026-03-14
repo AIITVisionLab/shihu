@@ -25,6 +25,12 @@ ohos/.signing/
 
 # OS
 .DS_Store
+flutter_*.log
+
+# 本地协作与调试产物
+.playwright-cli/
+.kiro/
+output/
 
 # 三方插件的非源码文件
 third_party/openharmony/**/example/

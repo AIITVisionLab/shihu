@@ -37,7 +37,7 @@ class HomeHeaderLead extends StatelessWidget {
     final hasUser = currentUser.trim().isNotEmpty && currentUser != '--';
     final title = viewData?.alertTitle ?? '等待设备状态';
     final description =
-        viewData?.alertDescription ?? '设备接入后会自动显示当前状态，你只需要从这里进入下一步。';
+        viewData?.alertDescription ?? '设备接入后，这里会显示当前判断、同步状态和补光建议。';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +107,7 @@ class HomeHeaderLead extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     deviceStatus == null
-                        ? '设备接入后会在这里显示完整状态。'
+                        ? '设备接入后会在这里补全状态、同步和处理建议。'
                         : viewData!.alertDescription,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,

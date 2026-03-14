@@ -10,6 +10,7 @@ class WorkspaceHeaderCard extends StatelessWidget {
     required this.subtitle,
     required this.currentUser,
     required this.actions,
+    this.showCurrentUserChip = true,
     super.key,
   });
 
@@ -22,6 +23,9 @@ class WorkspaceHeaderCard extends StatelessWidget {
   /// 当前用户。
   final String currentUser;
 
+  /// 是否展示当前用户标签。
+  final bool showCurrentUserChip;
+
   /// 右侧动作。
   final List<Widget> actions;
 
@@ -33,7 +37,7 @@ class WorkspaceHeaderCard extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: FeatureHeroCard(
-        padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+        padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
         accentColor: AppPalette.mistMint,
         showPaletteBands: false,
         child: LayoutBuilder(
@@ -42,12 +46,12 @@ class WorkspaceHeaderCard extends StatelessWidget {
             final titleBlock = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                if (hasUser) ...<Widget>[
+                if (hasUser && showCurrentUserChip) ...<Widget>[
                   WorkspaceHeaderChip(
                     icon: Icons.person_outline_rounded,
                     label: currentUser,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                 ],
                 Text(
                   title,
@@ -75,15 +79,20 @@ class WorkspaceHeaderCard extends StatelessWidget {
             if (isCompact || actions.isEmpty) {
               return SizedBox(
                 width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    titleBlock,
-                    if (actions.isNotEmpty) ...<Widget>[
-                      const SizedBox(height: 18),
-                      Wrap(spacing: 10, runSpacing: 10, children: actions),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: isCompact ? constraints.maxWidth : 660,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      titleBlock,
+                      if (actions.isNotEmpty) ...<Widget>[
+                        const SizedBox(height: 18),
+                        Wrap(spacing: 10, runSpacing: 10, children: actions),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               );
             }

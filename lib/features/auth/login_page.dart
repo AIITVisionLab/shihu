@@ -7,12 +7,11 @@ import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_form_mode.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
-import 'package:sickandflutter/features/auth/mock_auth_repository.dart';
 import 'package:sickandflutter/features/auth/remembered_account_repository.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_entry_shell.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_form/auth_feedback_banner.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_form_card.dart';
-import 'package:sickandflutter/features/auth/widgets/auth_overview_panel.dart';
+import 'package:sickandflutter/features/auth/widgets/auth_service_notice_panel.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 
 /// 登录页，承接用户名登录、注册和会话恢复入口。
@@ -62,12 +61,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ? AuthFormMode.login
         : _formMode;
     final isUsingCustomServiceConfig = settings.baseUrl != envConfig.baseUrl;
-    final keepAssistPanelForResetNotice =
-        _localHelperMessage == AppCopy.authResetServiceConfigSuccess;
-    final showAssistPanel =
-        authRepository.isMockMode ||
-        (envConfig.allowRiskySettings && isUsingCustomServiceConfig) ||
-        keepAssistPanelForResetNotice;
+    final showServiceRecoveryPanel =
+        envConfig.allowRiskySettings &&
+        !authRepository.isMockMode &&
+        isUsingCustomServiceConfig;
     final helperMessage =
         _localHelperMessage ??
         authState.unauthorizedMessage ??
@@ -82,72 +79,38 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       onBackPressed: authState.isSubmitting
           ? null
           : () => context.goNamed(AppRoutes.about),
-      overviewPanel: showAssistPanel
-          ? AuthOverviewPanel(
-              isMockMode: authRepository.isMockMode,
-              isUsingCustomServiceConfig: isUsingCustomServiceConfig,
-              canResetServiceConfig:
-                  envConfig.allowRiskySettings &&
-                  !authRepository.isMockMode &&
-                  isUsingCustomServiceConfig,
-              onFillDemo: _fillDemoCredentials,
-              onResetServiceConfig: _resetServiceConfig,
-            )
+      overviewPanel: showServiceRecoveryPanel
+          ? AuthServiceNoticePanel(onResetServiceConfig: _resetServiceConfig)
           : null,
-      formPanel: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          AuthFormCard(
-            usernameController: _usernameController,
-            passwordController: _passwordController,
-            confirmPasswordController: _confirmPasswordController,
-            helperMessage: helperMessage,
-            helperTone: helperTone,
-            isSubmitting: authState.isSubmitting,
-            isMockMode: authRepository.isMockMode,
-            formMode: effectiveFormMode,
-            rememberAccount: _rememberAccount,
-            showPassword: _showPassword,
-            showConfirmPassword: _showConfirmPassword,
-            onRememberAccountChanged: (value) {
-              setState(() {
-                _rememberAccount = value;
-              });
-            },
-            onTogglePasswordVisibility: () {
-              setState(() {
-                _showPassword = !_showPassword;
-              });
-            },
-            onToggleConfirmPasswordVisibility: () {
-              setState(() {
-                _showConfirmPassword = !_showConfirmPassword;
-              });
-            },
-            onSelectMode: _switchFormMode,
-            onSubmit: _submit,
-          ),
-          if (envConfig.allowRiskySettings) ...<Widget>[
-            const SizedBox(height: 16),
-            Center(
-              child: TextButton.icon(
-                onPressed: authState.isSubmitting
-                    ? null
-                    : () async {
-                        await ref
-                            .read(authControllerProvider.notifier)
-                            .enterPreviewWorkspace();
-                        if (!context.mounted) {
-                          return;
-                        }
-                        context.goNamed(AppRoutes.home);
-                      },
-                icon: const Icon(Icons.visibility_outlined),
-                label: const Text('先看界面'),
-              ),
-            ),
-          ],
-        ],
+      formPanel: AuthFormCard(
+        usernameController: _usernameController,
+        passwordController: _passwordController,
+        confirmPasswordController: _confirmPasswordController,
+        helperMessage: helperMessage,
+        helperTone: helperTone,
+        isSubmitting: authState.isSubmitting,
+        isMockMode: authRepository.isMockMode,
+        formMode: effectiveFormMode,
+        rememberAccount: _rememberAccount,
+        showPassword: _showPassword,
+        showConfirmPassword: _showConfirmPassword,
+        onRememberAccountChanged: (value) {
+          setState(() {
+            _rememberAccount = value;
+          });
+        },
+        onTogglePasswordVisibility: () {
+          setState(() {
+            _showPassword = !_showPassword;
+          });
+        },
+        onToggleConfirmPasswordVisibility: () {
+          setState(() {
+            _showConfirmPassword = !_showConfirmPassword;
+          });
+        },
+        onSelectMode: _switchFormMode,
+        onSubmit: _submit,
       ),
     );
   }
@@ -176,13 +139,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
 
     await ref.read(rememberedAccountControllerProvider.notifier).clear();
-  }
-
-  void _fillDemoCredentials() {
-    _usernameController.text = MockAuthRepository.demoAccount;
-    _passwordController.text = MockAuthRepository.demoPassword;
-    _confirmPasswordController.clear();
-    _clearLocalHelper();
   }
 
   void _switchFormMode(AuthFormMode nextMode) {

@@ -40,25 +40,25 @@ class CommonCard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: <Color>[
-                colorScheme.surfaceBright.withValues(alpha: 0.99),
-                colorScheme.surfaceContainerLow.withValues(alpha: 0.95),
-                AppPalette.paperMist.withValues(alpha: 0.78),
+                colorScheme.surfaceBright.withValues(alpha: 0.985),
+                AppPalette.paperWarm.withValues(alpha: 0.96),
+                AppPalette.paperMist.withValues(alpha: 0.82),
               ],
             ),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.62),
+              color: colorScheme.outlineVariant.withValues(alpha: 0.54),
             ),
             boxShadow: <BoxShadow>[
               BoxShadow(
-                color: AppPalette.pineGreen.withValues(alpha: 0.06),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
+                color: const Color(0x0D30281E),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
               ),
               const BoxShadow(
-                color: Color(0x10101713),
-                blurRadius: 18,
-                offset: Offset(0, 8),
+                color: Color(0x06140F0B),
+                blurRadius: 8,
+                offset: Offset(0, 2),
               ),
             ],
           ),
@@ -84,25 +84,8 @@ class CommonCard extends StatelessWidget {
                     gradient: LinearGradient(
                       colors: <Color>[
                         Colors.transparent,
-                        AppPalette.pineGreen.withValues(alpha: 0.28),
-                        AppPalette.mistMint.withValues(alpha: 0.14),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: -54,
-                right: -24,
-                child: Container(
-                  width: 146,
-                  height: 146,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: <Color>[
-                        AppPalette.softPine.withValues(alpha: 0.14),
+                        AppPalette.pineGreen.withValues(alpha: 0.18),
+                        AppPalette.linenOlive.withValues(alpha: 0.1),
                         Colors.transparent,
                       ],
                     ),

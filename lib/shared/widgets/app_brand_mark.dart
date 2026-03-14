@@ -56,9 +56,9 @@ class AppBrandBadge extends StatelessWidget {
         boxShadow: showShadow
             ? <BoxShadow>[
                 BoxShadow(
-                  color: AppPalette.pineGreen.withValues(alpha: 0.12),
-                  blurRadius: size * 0.4,
-                  offset: Offset(0, size * 0.18),
+                  color: const Color(0x102B241B),
+                  blurRadius: size * 0.22,
+                  offset: Offset(0, size * 0.1),
                 ),
               ]
             : const <BoxShadow>[],
@@ -68,9 +68,9 @@ class AppBrandBadge extends StatelessWidget {
           borderRadius: BorderRadius.circular(size * 0.26),
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: AppPalette.pineInk.withValues(alpha: 0.06),
-              blurRadius: size * 0.12,
-              offset: Offset(0, size * 0.04),
+              color: AppPalette.pineInk.withValues(alpha: 0.03),
+              blurRadius: size * 0.08,
+              offset: Offset(0, size * 0.02),
             ),
           ],
         ),

@@ -6,6 +6,22 @@ import 'package:sickandflutter/app/widgets/workspace/workspace_content_pane.dart
 import 'package:sickandflutter/app/widgets/workspace/workspace_rail_pane.dart';
 import 'package:sickandflutter/shared/widgets/app_backdrop.dart';
 
+/// 根据屏幕宽度返回工作台主体内容区的统一留白。
+EdgeInsets resolveWorkspacePagePadding(
+  BuildContext context, {
+  double top = 4,
+  double bottom = 32,
+}) {
+  final width = MediaQuery.sizeOf(context).width;
+  final horizontal = switch (width) {
+    < 560 => 12.0,
+    < 1240 => 16.0,
+    _ => 20.0,
+  };
+
+  return EdgeInsets.fromLTRB(horizontal, top, horizontal, bottom);
+}
+
 /// 主工作台统一壳层。
 ///
 /// 桌面端使用自定义侧栏导航，紧凑宽度下自动切换为底部 dock。
@@ -23,18 +39,18 @@ class AppWorkspaceScaffold extends StatelessWidget {
     this.backgroundOrbs = const <BackdropOrbData>[
       BackdropOrbData(
         alignment: Alignment(-1.0, -0.96),
-        size: 420,
-        color: Color(0x12518463),
+        size: 360,
+        color: Color(0x0A718C75),
       ),
       BackdropOrbData(
         alignment: Alignment(1.02, -0.12),
-        size: 340,
-        color: Color(0x10A7D3B2),
+        size: 300,
+        color: Color(0x08CDBFA7),
       ),
       BackdropOrbData(
         alignment: Alignment(0.94, 1.1),
-        size: 300,
-        color: Color(0x10CEBBD8),
+        size: 260,
+        color: Color(0x06D6CBD6),
       ),
     ],
     this.showGrid = false,
@@ -86,6 +102,7 @@ class AppWorkspaceScaffold extends StatelessWidget {
       title: title,
       subtitle: subtitle,
       currentUser: currentUser,
+      showCurrentUserChip: !useRail,
       headerActions: headerActions,
       maxContentWidth: maxContentWidth,
       child: child,

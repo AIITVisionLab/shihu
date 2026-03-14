@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sickandflutter/app/widgets/workspace/workspace_bottom_navigation.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
@@ -99,6 +100,65 @@ void main() {
     );
     expect(find.text('处理建议'), findsOneWidget);
     expect(find.text('正常'), findsWidgets);
+  });
+
+  testWidgets('RealtimeDetectPage renders mobile layout without overflow', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(390, 844)
+      ..devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final repository = _TestDeviceRuntimeRepository(
+      state: const DeviceStatus(
+        deviceId: 'dev_1',
+        deviceName: '石斛培育柜',
+        temperature: 24.5,
+        humidity: 82.0,
+        light: 1500,
+        mq2: 18,
+        errorCode: 0,
+        ledOn: true,
+        updatedAt: 1741399200000,
+      ),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(
+            () => _TestAuthController(
+              initialState: const AuthState(
+                session: AuthSession(
+                  accessToken: 'session_demo',
+                  loginMode: AuthLoginMode.real,
+                  user: AuthUser(
+                    userId: 'user_1',
+                    account: 'tester',
+                    displayName: '联调用户',
+                    roles: <String>['admin'],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          deviceRuntimeRepositoryProvider.overrideWith(
+            (ref) async => repository,
+          ),
+        ],
+        child: const MaterialApp(home: RealtimeDetectPage()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(WorkspaceBottomNavigation), findsOneWidget);
+    expect(find.text('值守台'), findsWidgets);
+    expect(find.text('查看实时状态，必要时处理补光。'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
 

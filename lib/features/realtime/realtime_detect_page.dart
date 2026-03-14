@@ -31,7 +31,7 @@ class RealtimeDetectPage extends ConsumerWidget {
       child: RefreshIndicator(
         onRefresh: controller.refreshNow,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+          padding: resolveWorkspacePagePadding(context),
           children: <Widget>[
             RealtimeMonitorHero(
               state: state,

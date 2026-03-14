@@ -29,11 +29,11 @@ class HomePage extends ConsumerWidget {
     return AppWorkspaceScaffold(
       destination: AppWorkspaceDestination.home,
       title: '总览',
-      subtitle: '先看当前状态，再决定进入值守、视频或个人设置。',
+      subtitle: '统一查看当前设备状态、最近同步和常用入口。',
       currentUser: currentUser,
       maxContentWidth: 1120,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: resolveWorkspacePagePadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -51,21 +51,21 @@ class HomePage extends ConsumerWidget {
                       stepLabel: '01',
                       icon: Icons.monitor_heart_rounded,
                       title: AppCopy.homeRealtimeTitle,
-                      subtitle: '先确认当前结论和补光状态。',
+                      subtitle: '需要处理设备状态、同步与补光时进入。',
                       onTap: () => context.goNamed(AppRoutes.realtimeDetect),
                     ),
                     HomeEntryCard(
                       stepLabel: '02',
                       icon: Icons.videocam_rounded,
                       title: AppCopy.homePreviewTitle,
-                      subtitle: '需要看画面时直接进入，不再来回找入口。',
+                      subtitle: '需要确认现场时，直接查看当前可用画面。',
                       onTap: () => context.goNamed(AppRoutes.video),
                     ),
                     HomeEntryCard(
                       stepLabel: '03',
                       icon: Icons.settings_rounded,
                       title: AppCopy.homeSettingsTitle,
-                      subtitle: '最后处理账号、本机偏好和使用帮助。',
+                      subtitle: '账号、本机偏好和使用帮助都收在这里。',
                       onTap: () => context.goNamed(AppRoutes.settings),
                     ),
                   ],

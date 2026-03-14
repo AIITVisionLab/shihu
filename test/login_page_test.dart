@@ -33,7 +33,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('注册'), findsOneWidget);
-    expect(find.text('先看界面'), findsOneWidget);
+    expect(find.text('先看界面'), findsNothing);
 
     await tester.tap(find.text('注册'));
     await tester.pumpAndSettle();
@@ -62,16 +62,10 @@ void main() {
     await tester.pump();
 
     expect(find.text('注册'), findsNothing);
-    await tester.scrollUntilVisible(
-      find.text('填入演示账号'),
-      240,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('填入演示账号'), findsOneWidget);
+    expect(find.text('填入演示账号'), findsNothing);
   });
 
-  testWidgets('LoginPage can reset custom service config before login', (
+  testWidgets('LoginPage can restore custom service config before login', (
     tester,
   ) async {
     tester.view
@@ -105,28 +99,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(
-      find.text('已切换到其他服务'),
-      240,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
     expect(find.text('已切换到其他服务'), findsOneWidget);
-    expect(find.text('可一键恢复'), findsOneWidget);
     expect(find.text('恢复默认服务地址'), findsOneWidget);
 
     await tester.tap(find.text('恢复默认服务地址'));
     await tester.pumpAndSettle();
-    await tester.dragUntilVisible(
-      find.text('已恢复默认服务地址，请重新尝试登录。'),
-      find.byType(Scrollable).first,
-      const Offset(0, 240),
-    );
-    await tester.pumpAndSettle();
 
     expect(settingsController.resetCount, 1);
     expect(find.text('已恢复默认服务地址，请重新尝试登录。'), findsOneWidget);
-    expect(find.text('当前使用默认服务'), findsOneWidget);
   });
 
   testWidgets('LoginPage renders mobile layout without overflow', (
@@ -146,7 +126,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('把状态、画面和设置收进同一块界面。'), findsOneWidget);
+    expect(find.text('默认进入值守台'), findsOneWidget);
     expect(find.text('欢迎回来'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

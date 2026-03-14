@@ -12,20 +12,12 @@ class SettingsOverviewCard extends StatelessWidget {
   /// 创建设备概览卡片。
   const SettingsOverviewCard({
     required this.currentUser,
-    required this.loginModeLabel,
-    required this.versionLabel,
     required this.deviceStateAsync,
     super.key,
   });
 
   /// 当前用户名称。
   final String currentUser;
-
-  /// 当前登录方式文案。
-  final String loginModeLabel;
-
-  /// 当前应用版本文案。
-  final String versionLabel;
 
   /// 当前设备状态。
   final AsyncValue<DeviceStatus> deviceStateAsync;
@@ -51,9 +43,10 @@ class SettingsOverviewCard extends StatelessWidget {
               );
               final board = _OverviewBoard(
                 currentUser: currentUser,
-                loginModeLabel: loginModeLabel,
+                alertTitle: viewData.alertTitle,
                 lastSync: _formatDateTime(deviceState.updatedAtTime),
-                versionLabel: versionLabel,
+                freshnessLabel: viewData.freshnessLabel,
+                ledLabel: viewData.ledLabel,
               );
 
               if (constraints.maxWidth < 940) {
@@ -197,7 +190,7 @@ class _OverviewLead extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '先确认当前设备、账号和最近同步，再处理下面的设置。',
+                      '先确认当前设备和最近同步，再处理下面的设置。',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                         height: 1.54,
@@ -217,15 +210,17 @@ class _OverviewLead extends StatelessWidget {
 class _OverviewBoard extends StatelessWidget {
   const _OverviewBoard({
     required this.currentUser,
-    required this.loginModeLabel,
+    required this.alertTitle,
     required this.lastSync,
-    required this.versionLabel,
+    required this.freshnessLabel,
+    required this.ledLabel,
   });
 
   final String currentUser;
-  final String loginModeLabel;
+  final String alertTitle;
   final String lastSync;
-  final String versionLabel;
+  final String freshnessLabel;
+  final String ledLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -240,12 +235,10 @@ class _OverviewBoard extends StatelessWidget {
               (constraints.maxWidth - ((columns - 1) * 12)) / columns;
           final items = <({String title, String value})>[
             (title: '当前账号', value: currentUser == '--' ? '未登录' : currentUser),
-            (title: '登录方式', value: loginModeLabel),
+            (title: '当前状态', value: alertTitle),
             (title: '最近同步', value: lastSync),
-            (
-              title: AppCopy.settingsAppVersion,
-              value: versionLabel == '--' ? '待同步' : versionLabel,
-            ),
+            (title: '数据状态', value: freshnessLabel),
+            (title: '补光状态', value: ledLabel),
           ];
 
           return Wrap(

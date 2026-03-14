@@ -36,7 +36,7 @@ class WorkspaceRailPane extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           FeatureInsetPanel(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
             borderRadius: 24,
             accentColor: AppPalette.softPine,
             backgroundColor: colorScheme.surfaceContainerLowest.withValues(
@@ -46,24 +46,37 @@ class WorkspaceRailPane extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const AppBrandBadge(size: 62, showShadow: false),
-                const SizedBox(height: 14),
-                Text(
-                  AppConstants.appName,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: colorScheme.onSurface,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '石斛培育环境值守',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    const AppBrandBadge(size: 54, showShadow: false),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            AppConstants.appName,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: colorScheme.onSurface,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '石斛培育环境值守',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.42,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 if (hasUser) ...<Widget>[
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                   WorkspaceRailMetaChip(
                     icon: Icons.person_outline_rounded,
                     label: currentUser,
@@ -72,7 +85,7 @@ class WorkspaceRailPane extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Expanded(
             child: FeatureInsetPanel(
               padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
@@ -256,7 +269,7 @@ class _RailCaption extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
       child: Text(
-        '先看总览，再决定进入值守、视频或我的。',
+        '总览负责看状态，需要处理时再切到值守、视频或我的。',
         style: theme.textTheme.bodySmall?.copyWith(
           color: colorScheme.onSurfaceVariant,
           height: 1.5,

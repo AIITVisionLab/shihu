@@ -15,9 +15,9 @@ class AuthFormHero extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final title = formMode.isRegister ? '创建账号' : '欢迎回来';
     final description = formMode.isRegister
-        ? '填写账号和密码后即可完成开通，随后直接进入主界面。'
-        : '输入账号和密码后，继续查看今天的状态和画面。';
-    final label = formMode.isRegister ? '新账号开通' : '账号登录';
+        ? '开通完成后返回登录，使用新账号进入值守台。'
+        : '输入账号和密码后，直接进入值守台。';
+    final label = formMode.isRegister ? '新账号开通' : '登录';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

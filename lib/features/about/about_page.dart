@@ -58,7 +58,7 @@ class AboutPage extends ConsumerWidget {
         ),
       ],
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: resolveWorkspacePagePadding(context),
         children: const <Widget>[
           AboutHelpHero(),
           SizedBox(height: 18),

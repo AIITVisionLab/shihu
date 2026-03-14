@@ -8,6 +8,7 @@ class WorkspaceContentPane extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.currentUser,
+    required this.showCurrentUserChip,
     required this.headerActions,
     required this.maxContentWidth,
     required this.child,
@@ -22,6 +23,9 @@ class WorkspaceContentPane extends StatelessWidget {
 
   /// 当前用户。
   final String currentUser;
+
+  /// 是否展示当前用户标签。
+  final bool showCurrentUserChip;
 
   /// 标题区动作。
   final List<Widget> headerActions;
@@ -45,6 +49,7 @@ class WorkspaceContentPane extends StatelessWidget {
             title: title,
             subtitle: subtitle,
             currentUser: currentUser,
+            showCurrentUserChip: showCurrentUserChip,
             actions: headerActions,
           ),
         ),

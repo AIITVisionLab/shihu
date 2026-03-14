@@ -13,7 +13,7 @@ class HomeActionTrackCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return CommonCard(
       title: '常用入口',
-      subtitle: '先看状态，再进入对应页面。',
+      subtitle: '值守负责处理状态，视频负责查看画面，我的负责账号和本机设置。',
       child: Column(
         children: <Widget>[
           for (int index = 0; index < children.length; index++) ...<Widget>[

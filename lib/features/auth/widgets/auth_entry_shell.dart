@@ -44,22 +44,11 @@ class AuthEntryShell extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: <Color>[
                   AppPalette.paperSnow,
-                  AppPalette.paperMist,
+                  AppPalette.paperWarm,
                   AppPalette.paper,
                 ],
               ),
-              orbs: <BackdropOrbData>[
-                BackdropOrbData(
-                  alignment: Alignment(-1.0, -0.9),
-                  size: 260,
-                  color: Color(0x10518463),
-                ),
-                BackdropOrbData(
-                  alignment: Alignment(1.02, -0.12),
-                  size: 220,
-                  color: Color(0x0CA7D3B2),
-                ),
-              ],
+              orbs: <BackdropOrbData>[],
             ),
           ),
           SafeArea(
@@ -75,23 +64,27 @@ class AuthEntryShell extends StatelessWidget {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1220),
                   child: useSplitLayout
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: <Widget>[
-                            Expanded(
-                              flex: 10,
-                              child: _DesktopIntroPanel(
-                                onBackPressed: onBackPressed,
-                              ),
+                            _AuthTopBar(
+                              onBackPressed: onBackPressed,
+                              compact: false,
                             ),
-                            const SizedBox(width: 28),
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 462),
-                              child: _AuthFormColumn(
-                                compact: false,
-                                formPanel: formPanel,
-                                overviewPanel: overviewPanel,
-                              ),
+                            const SizedBox(height: 28),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                const Expanded(child: _DesktopIntroPanel()),
+                                const SizedBox(width: 24),
+                                Expanded(
+                                  child: _AuthFormColumn(
+                                    compact: false,
+                                    formPanel: formPanel,
+                                    overviewPanel: overviewPanel,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         )
@@ -118,81 +111,115 @@ class AuthEntryShell extends StatelessWidget {
 }
 
 class _DesktopIntroPanel extends StatelessWidget {
-  const _DesktopIntroPanel({required this.onBackPressed});
-
-  final VoidCallback? onBackPressed;
+  const _DesktopIntroPanel();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        _AuthTopBar(onBackPressed: onBackPressed, compact: false),
-        const SizedBox(height: 44),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                '把状态、画面和设置收进一块安静的工作台。',
-                style: theme.textTheme.headlineLarge?.copyWith(
-                  color: colorScheme.onSurface,
-                  fontWeight: FontWeight.w800,
-                  height: 1.16,
-                ),
+    return _IntroStage(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              '登录后默认进入值守台',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w800,
               ),
-              const SizedBox(height: 14),
-              Text(
-                '先看当前状态，再决定进入值守、视频还是账号设置。桌面和手机都保持同一套阅读顺序。',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  height: 1.62,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 30),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 620),
-          child: FeatureHeroCard(
-            padding: const EdgeInsets.all(22),
-            borderRadius: 30,
-            accentColor: AppPalette.softLavender,
-            showPaletteBands: false,
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                _IntroListItem(
-                  icon: Icons.monitor_heart_rounded,
-                  title: '先看状态',
-                  description: '进入后先确认当前判断、最近同步和补光状态。',
-                ),
-                SizedBox(height: 16),
-                _IntroListDivider(),
-                SizedBox(height: 16),
-                _IntroListItem(
-                  icon: Icons.videocam_rounded,
-                  title: '再看画面',
-                  description: '需要确认现场时，再直接打开当前可查看的画面。',
-                ),
-                SizedBox(height: 16),
-                _IntroListDivider(),
-                SizedBox(height: 16),
-                _IntroListItem(
-                  icon: Icons.settings_rounded,
-                  title: '设置集中管理',
-                  description: '账号、本机偏好和使用说明都集中在一个地方。',
-                ),
-              ],
             ),
-          ),
+            const SizedBox(height: 12),
+            Text(
+              '值守工作台从这里开始。',
+              style: theme.textTheme.headlineLarge?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w800,
+                height: 1.16,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              '登录成功后默认进入值守台；需要看总览、视频或设置时，再通过同一套导航切换，桌面和手机保持一致。',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.62,
+              ),
+            ),
+            const SizedBox(height: 30),
+            _IntroFocusPanel(
+              title: '值守台',
+              description: '登录成功后默认进入，先确认设备状态、最近同步和 LED 补光。',
+              tags: const <String>['设备状态', '最近同步', 'LED 补光'],
+            ),
+            const SizedBox(height: 18),
+            const _IntroListDivider(),
+            const SizedBox(height: 18),
+            const _IntroListItem(
+              icon: Icons.dashboard_outlined,
+              title: '总览',
+              description: '统一查看当前设备摘要、常用入口和环境速览。',
+            ),
+            const SizedBox(height: 16),
+            const _IntroListDivider(),
+            const SizedBox(height: 16),
+            const _IntroListItem(
+              icon: Icons.videocam_rounded,
+              title: '视频',
+              description: '需要确认现场时，直接打开当前可查看的画面。',
+            ),
+            const SizedBox(height: 16),
+            const _IntroListDivider(),
+            const SizedBox(height: 16),
+            const _IntroListItem(
+              icon: Icons.settings_rounded,
+              title: '我的',
+              description: '账号、本机偏好和使用帮助都集中在这里。',
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+}
+
+class _IntroStage extends StatelessWidget {
+  const _IntroStage({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            colorScheme.surfaceBright.withValues(alpha: 0.995),
+            AppPalette.paperWarm.withValues(alpha: 0.97),
+            AppPalette.softLavender.withValues(alpha: 0.14),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(34),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.84),
+        ),
+        boxShadow: const <BoxShadow>[
+          BoxShadow(
+            color: Color(0x120F1712),
+            blurRadius: 20,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 }
@@ -204,30 +231,74 @@ class _MobileIntroPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         _AuthTopBar(onBackPressed: onBackPressed, compact: true),
-        const SizedBox(height: 18),
-        Text(
-          '把状态、画面和设置收进同一块界面。',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          '输入账号和密码后就能继续使用，手机和电脑保持同一套阅读顺序。',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-            height: 1.58,
-          ),
-        ),
+        const SizedBox(height: 14),
+        const _MobileRouteHint(),
       ],
+    );
+  }
+}
+
+class _MobileRouteHint extends StatelessWidget {
+  const _MobileRouteHint();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return FeatureInsetPanel(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      borderRadius: 24,
+      accentColor: AppPalette.mistMint,
+      backgroundColor: colorScheme.surfaceContainerLowest.withValues(
+        alpha: 0.92,
+      ),
+      showHighlightLine: false,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppPalette.softPine.withValues(alpha: 0.22),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              Icons.monitor_heart_rounded,
+              color: colorScheme.primary,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  '默认进入值守台',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '登录后直接进入，可从底部切到总览、视频和我的。',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -373,6 +444,138 @@ class _OverviewStage extends StatelessWidget {
         ),
       ),
       child: child,
+    );
+  }
+}
+
+class _IntroFocusPanel extends StatelessWidget {
+  const _IntroFocusPanel({
+    required this.title,
+    required this.description,
+    required this.tags,
+  });
+
+  final String title;
+  final String description;
+  final List<String> tags;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return FeatureInsetPanel(
+      padding: const EdgeInsets.all(18),
+      borderRadius: 24,
+      accentColor: AppPalette.mistMint,
+      backgroundColor: colorScheme.surfaceContainerLowest.withValues(
+        alpha: 0.9,
+      ),
+      showHighlightLine: false,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final content = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                '默认进入',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                description,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.58,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: tags
+                    .map((tag) => _IntroTag(label: tag))
+                    .toList(growable: false),
+              ),
+            ],
+          );
+
+          final iconBadge = Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: AppPalette.softPine.withValues(alpha: 0.24),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(
+              Icons.monitor_heart_rounded,
+              color: colorScheme.primary,
+              size: 26,
+            ),
+          );
+
+          if (constraints.maxWidth < 440) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                iconBadge,
+                const SizedBox(height: 14),
+                content,
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              iconBadge,
+              const SizedBox(width: 16),
+              Expanded(child: content),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _IntroTag extends StatelessWidget {
+  const _IntroTag({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: AppPalette.paperSnow.withValues(alpha: 0.84),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.82),
+        ),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: colorScheme.onSurface,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }

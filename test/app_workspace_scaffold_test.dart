@@ -35,6 +35,7 @@ void main() {
 
     expect(find.byType(WorkspaceRailPane), findsOneWidget);
     expect(find.byType(WorkspaceBottomNavigation), findsNothing);
+    expect(find.byType(WorkspaceHeaderChip), findsNothing);
     expect(find.text('总览'), findsOneWidget);
     expect(find.text('值守'), findsOneWidget);
     expect(find.text('视频'), findsOneWidget);
@@ -71,6 +72,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(WorkspaceBottomNavigation), findsOneWidget);
+      expect(find.byType(WorkspaceHeaderChip), findsOneWidget);
       expect(find.text('值守'), findsOneWidget);
     },
   );
