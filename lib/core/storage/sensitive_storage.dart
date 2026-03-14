@@ -20,6 +20,17 @@ final sensitiveStorageProvider = Provider<SensitiveStorage>((ref) {
   return const SecureSensitiveStorage();
 });
 
+/// 当前平台是否支持跨进程持久化敏感会话。
+///
+/// 测试环境统一视为支持，避免组件测试被临时兜底存储影响。
+final supportsPersistentSensitiveStorageProvider = Provider<bool>((ref) {
+  if (_isFlutterTestEnvironment) {
+    return true;
+  }
+
+  return ref.watch(sensitiveStorageProvider).supportsPersistence;
+});
+
 /// 敏感数据存储抽象。
 abstract class SensitiveStorage {
   /// 创建敏感数据存储抽象。

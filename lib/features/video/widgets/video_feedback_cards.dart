@@ -66,7 +66,7 @@ class VideoTipsCard extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final items = const <Widget>[
-            VideoTipRow(title: '在线', description: '说明当前画面已接通，可以直接打开。'),
+            VideoTipRow(title: '在线', description: '说明当前画面已接通，可以直接在软件内查看。'),
             VideoTipRow(title: '离线', description: '说明当前暂未连通，稍后刷新即可。'),
             VideoTipRow(title: '备用入口', description: '主画面打不开时，再尝试备用入口。'),
           ];
@@ -75,7 +75,7 @@ class VideoTipsCard extends StatelessWidget {
             return const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                VideoTipRow(title: '在线', description: '说明当前画面已接通，可以直接打开。'),
+                VideoTipRow(title: '在线', description: '说明当前画面已接通，可以直接在软件内查看。'),
                 SizedBox(height: 14),
                 VideoTipRow(title: '离线', description: '说明当前暂未连通，稍后刷新即可。'),
                 SizedBox(height: 14),

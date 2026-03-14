@@ -66,7 +66,7 @@ class VideoIntroCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                '画面在线时可以直接打开；如果暂时打不开，再尝试备用入口。',
+                '画面在线时可以直接在软件内查看；如果主入口暂时打不开，再尝试备用入口。',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   height: 1.6,
@@ -83,7 +83,7 @@ class VideoIntroCard extends StatelessWidget {
                     _VideoLeadPoint(
                       icon: Icons.visibility_rounded,
                       title: '先看在线状态',
-                      description: '在线后再决定是否直接打开，避免无效点击。',
+                      description: '在线后再进入软件内播放页，避免无效点击。',
                     ),
                     SizedBox(height: 14),
                     _VideoLeadPoint(

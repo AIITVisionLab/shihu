@@ -24,7 +24,7 @@ class VideoPage extends ConsumerWidget {
     return AppWorkspaceScaffold(
       destination: AppWorkspaceDestination.video,
       title: '视频中心',
-      subtitle: '查看当前画面是否在线，必要时直接打开观看。',
+      subtitle: '查看当前画面是否在线，必要时直接在软件内观看。',
       currentUser: currentUser,
       maxContentWidth: 1240,
       backgroundGradient: const LinearGradient(
@@ -47,7 +47,7 @@ class VideoPage extends ConsumerWidget {
         onRefresh: () => _refresh(ref),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+          padding: resolveWorkspacePagePadding(context),
           children: streamListAsync.when(
             loading: () => const <Widget>[
               SizedBox(height: 120),

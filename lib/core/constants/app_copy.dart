@@ -68,6 +68,10 @@ class AppCopy {
   /// 登录页能力标签：会话 Cookie。
   static const String authSessionChip = '自动保持登录';
 
+  /// 当前平台不支持持久化登录态提示。
+  static const String authSessionPersistenceNotice =
+      '当前平台暂不支持安全保存登录状态，关闭应用或系统回收进程后需要重新登录。';
+
   /// 登录页能力标签：真实接口注册。
   static const String authRegisterChip = '账号在线开通';
 
@@ -412,6 +416,13 @@ class AppCopy {
   /// 当前会话说明。
   static const String settingsSessionSubtitle = '查看当前登录账号，并在需要时退出。';
 
+  /// 当前平台登录态不会持久化提示标题。
+  static const String settingsSessionPersistenceWarningTitle = '本机不会长期保留登录状态';
+
+  /// 当前平台登录态不会持久化提示内容。
+  static const String settingsSessionPersistenceWarningMessage =
+      '当前平台暂不支持安全保存登录状态。关闭应用、清理后台或系统回收进程后，需要重新登录。';
+
   /// 服务配置：开发/测试环境提示。
   static const String settingsServiceConfigEditable =
       '当前构建允许调整设备服务地址，修改后会立即影响登录、巡检和设备控制链路。';
@@ -456,4 +467,30 @@ class AppCopy {
 
   /// 清除记住账号按钮。
   static const String settingsClearRememberedAccount = '清除记住账号';
+
+  /// 软件内视频播放页标题。
+  static const String videoPlaybackInlineTitle = '软件内实时画面';
+
+  /// 软件内视频播放页副标题。
+  static const String videoPlaybackInlineSubtitle =
+      '当前已切换到软件内播放页，画面和备用入口都在应用内打开。';
+
+  /// 视频播放页加载中提示。
+  static const String videoPlaybackLoading = '正在载入画面...';
+
+  /// 视频播放页加载失败标题。
+  static const String videoPlaybackLoadFailed = '画面载入失败';
+
+  /// 视频播放页地址无效提示。
+  static const String videoPlaybackAddressInvalid = '画面地址无效';
+
+  /// 视频播放页地址无效补充说明。
+  static const String videoPlaybackAddressHint = '当前接口没有返回可用的播放地址，请稍后刷新后重试。';
+
+  /// 当前平台不支持软件内播放标题。
+  static const String videoPlaybackUnsupportedTitle = '当前平台暂不支持软件内查看';
+
+  /// 当前平台不支持软件内播放说明。
+  static const String videoPlaybackUnsupportedMessage =
+      '当前平台还没有接入内嵌视频能力。请优先在 Android、iOS、macOS 或 Web 端使用视频中心。';
 }

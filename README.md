@@ -14,6 +14,7 @@
 - 登录、注册、会话恢复、退出登录
 - 工作台首页
 - 实时监控主控台
+- 视频中心与软件内视频查看
 - 运维设置
 - 系统总览
 - 设备状态轮询、异常等级展示、LED 控制
@@ -25,7 +26,6 @@
 - 单图识别
 - 识别结果页
 - 识别历史记录
-- 视频中心与视频详情
 - 与以上模块对应的模型、测试、端点解析和共享组件
 
 ## 当前后端契约
@@ -49,6 +49,9 @@
 - Web 端认证请求使用浏览器 Cookie
 - 非 Web 端会提取并保存 `JSESSIONID`
 - 当前后端不是 Bearer Token 模式
+- 当前默认设备服务地址仍为 `http://101.35.79.76:8082`
+- Android / iOS 原生端如果不放开明文 HTTP，请求会在系统网络层被拦截，表现为手机端无法登录
+- Web 端若不是与后端同源部署，跨站 Cookie 可能在部分手机浏览器上被更严格限制，部署时优先使用同源反向代理或统一 HTTPS
 
 ## 平台范围
 
@@ -68,6 +71,7 @@
 - 桌面端使用侧边导航，紧凑宽度下自动切换为底部导航
 - 主视觉使用青绿色主色，辅助色使用暖砂色和冷蓝灰
 - 页面、卡片、背景和动效统一保持同一套软件视觉语言
+- 已补 GitHub Actions 出包工作流，推送到 `app` 分支或手动触发后会在 GitHub 上生成 Android、Linux、Web、Windows、macOS 与未签名 iOS 构建产物
 
 ## 本地运行
 
@@ -95,19 +99,25 @@ flutter run --dart-define=BASE_URL=http://127.0.0.1:8082
 flutter run --dart-define=USE_MOCK_AUTH=true
 ```
 
+移动端网络说明：
+
+- Android 发布包需要在 `android/app/src/main/AndroidManifest.xml` 中保留 `INTERNET` 权限，并允许当前 HTTP 设备服务的明文访问
+- iOS 原生端需要在 `ios/Runner/Info.plist` 中配置 ATS 例外，否则默认会拦截 `http://` 设备服务
+- 如果后端未来统一切到 HTTPS，可回收以上明文访问放行配置
+
 ## 当前验证结果
 
-以下结果已于 `2026-03-11` 在当前 Linux 开发环境验证通过：
+以下结果已于 `2026-03-14` 在当前 Linux 开发环境验证通过：
 
 - `dart format lib test`
 - `flutter analyze`
 - `flutter test`
+- `flutter build apk --release`
 - `flutter build web`
 - `flutter build linux --debug`
 
 未在当前环境验证的平台：
 
-- Android
 - iOS
 - macOS
 - Windows
@@ -115,7 +125,8 @@ flutter run --dart-define=USE_MOCK_AUTH=true
 
 原因：
 
-- 需要对应主机、SDK、签名和平台工具链
+- Android 已补齐本机构建验证，但当前仍未在真机上逐项回归登录、会话恢复和退出链路
+- iOS、macOS、Windows、OpenHarmony / 鸿蒙 仍需要对应主机、SDK、签名和平台工具链
 
 ## 文档导航
 

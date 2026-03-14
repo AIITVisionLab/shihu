@@ -1,8 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 当前默认设备服务仍使用 HTTP 地址，发布包也需要保留联网权限。 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="斛生"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"

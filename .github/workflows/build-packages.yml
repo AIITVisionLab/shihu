@@ -1,0 +1,131 @@
+name: build-packages
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - app
+
+permissions:
+  contents: read
+
+jobs:
+  android-linux-web:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake libgtk-3-dev ninja-build pkg-config
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.41.4
+
+      - name: Fetch Dart packages
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build Android release APK
+        run: flutter build apk --release
+
+      - name: Build Linux release bundle
+        run: flutter build linux --release
+
+      - name: Build Web bundle
+        run: flutter build web
+
+      - name: Package Ubuntu artifacts
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk dist/sickandflutter-android-release.apk
+          tar -C build/linux/x64/release/bundle -czf dist/sickandflutter-linux-x64-release.tar.gz .
+          tar -C build/web -czf dist/sickandflutter-web.tar.gz .
+
+      - name: Upload Ubuntu artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sickandflutter-android-linux-web
+          path: dist/*
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.41.4
+
+      - name: Fetch Dart packages
+        run: flutter pub get
+
+      - name: Build Windows release bundle
+        run: flutter build windows --release
+
+      - name: Package Windows artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath dist/sickandflutter-windows-x64-release.zip -Force
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sickandflutter-windows
+          path: dist/*
+          if-no-files-found: error
+
+  apple:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.41.4
+
+      - name: Fetch Dart packages
+        run: flutter pub get
+
+      - name: Build macOS release app
+        run: flutter build macos --release
+
+      - name: Build iOS release app without code signing
+        run: flutter build ios --release --no-codesign
+
+      - name: Package Apple artifacts
+        run: |
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/Runner.app dist/sickandflutter-macos-release.zip
+          ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app dist/sickandflutter-ios-runner-app-unsigned.zip
+
+      - name: Upload Apple artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sickandflutter-apple
+          path: dist/*
+          if-no-files-found: error

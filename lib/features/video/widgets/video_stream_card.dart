@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:sickandflutter/core/utils/external_link_launcher.dart';
+import 'package:sickandflutter/features/video/video_playback_page.dart';
 import 'package:sickandflutter/features/video/video_stream_info.dart';
 import 'package:sickandflutter/features/video/widgets/video_view_primitives.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
@@ -115,10 +114,11 @@ class VideoStreamCard extends StatelessWidget {
               final stacked = constraints.maxWidth < 520;
               final primaryButton = FilledButton.icon(
                 onPressed: hasPrimaryAction
-                    ? () => _openUrl(
+                    ? () => _openPlayer(
                         context,
-                        primaryUrl,
-                        fallbackMessage: '已为你准备好画面入口，请稍后重试。',
+                        title: stream.displayName,
+                        url: primaryUrl,
+                        sourceLabel: stream.hasPlayerUrl ? '主画面' : '备用入口',
                       )
                     : null,
                 icon: const Icon(Icons.play_circle_outline_rounded),
@@ -126,10 +126,11 @@ class VideoStreamCard extends StatelessWidget {
               );
               final secondaryButton = OutlinedButton.icon(
                 onPressed: hasSecondaryAction
-                    ? () => _openUrl(
+                    ? () => _openPlayer(
                         context,
-                        stream.gatewayPageUrl,
-                        fallbackMessage: '已为你准备好备用入口，请稍后重试。',
+                        title: stream.displayName,
+                        url: stream.gatewayPageUrl,
+                        sourceLabel: '备用入口',
                       )
                     : null,
                 icon: const Icon(Icons.open_in_new_rounded),
@@ -168,7 +169,7 @@ class VideoStreamCard extends StatelessWidget {
     if (!stream.hasPlayerUrl && !stream.hasGatewayPageUrl) {
       return '画面已经在线，正在准备打开方式。';
     }
-    return '当前画面可正常查看，需要时可以直接打开。';
+    return '当前画面可正常查看，需要时可以直接在软件内查看。';
   }
 
   String _modeLabel() {
@@ -182,24 +183,25 @@ class VideoStreamCard extends StatelessWidget {
     return '自动选择';
   }
 
-  Future<void> _openUrl(
-    BuildContext context,
-    String url, {
-    required String fallbackMessage,
+  Future<void> _openPlayer(
+    BuildContext context, {
+    required String title,
+    required String url,
+    required String sourceLabel,
   }) async {
-    final opened = await openExternalUrl(url);
-    if (opened || !context.mounted) {
-      return;
-    }
-
-    await Clipboard.setData(ClipboardData(text: url));
     if (!context.mounted) {
       return;
     }
 
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(fallbackMessage)));
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => VideoPlaybackPage(
+          title: title,
+          initialUrl: url,
+          sourceLabel: sourceLabel,
+        ),
+      ),
+    );
   }
 }
 
