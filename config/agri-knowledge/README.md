@@ -7,6 +7,16 @@
 - `curated/`：存放根据原始资料整理后的结构化知识，例如 JSON、YAML、Markdown 摘要等。
   - `extracted/`：从 PDF 等原始资料中抽取出的中间文本，便于人工校对和二次整理。
 
+向量知识库约定：
+- 桥接服务会继续直接读取 `curated/` 下的结构化知识 JSON 作为保底知识。
+- 轻量级向量索引的输入来源主要是：
+  - `curated/extracted/*.txt`
+  - `curated/*.md`
+  - `curated/铁皮石斛知识库.json` 中的结构化摘要
+- 文献新增或更新后，需要手动执行一次：
+  - `python3 scripts/build_agri_vector_index.py --config config/agri-context-bridge.ini`
+- 向量索引文件默认写入 `data/agri-vectordb/`，不提交到 Git。
+
 建议优先收集的资料类型：
 - 石斛适宜生长环境参数
 - 不同生长期管理要求

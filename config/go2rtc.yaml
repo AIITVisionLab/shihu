@@ -1,11 +1,9 @@
-﻿# K230 -> RK3568 go2rtc -> WebRTC/MSE/HLS
-# 说明：
-# - 当前轻量级 v1 方案要求 K230 主码流为 H264。
-# - 如果浏览器无法兼容音频，优先在 K230 侧关闭音频。
-# - 当前公网候选地址已经固定为腾讯云公网 IP 101.35.79.76:8555。
-# - 当前局域网源流地址初始值为 rtsp://172.18.8.103:8554/test。
-# - edgelink-gateway 会根据 K230 /api/ai 的来源地址自动更新 streams.k230。
-
+# K230 -> RK3568 go2rtc -> WebRTC/MSE/HLS
+# Current stage falls back to Wi-Fi only:
+# - K230 currently pushes RTSP from 192.168.1.103 over Wi-Fi
+# - RK3568 stays at 172.18.8.19
+# - streams.k230 starts with the current Wi-Fi IP and may be updated from /api/ai source IPs
+# - Public WebRTC candidate remains 101.35.79.76:8555 via frp
 api:
   listen: ":1984"
 
@@ -15,8 +13,9 @@ rtsp:
 webrtc:
   listen: ":8555"
   candidates:
+    - "172.18.8.19:8555"
     - "101.35.79.76:8555"
 
 streams:
   k230:
-    - "rtsp://172.18.8.103:8554/test"
+    - "rtsp://192.168.1.103:8554/test"

@@ -53,6 +53,7 @@ docs/      架构与协作文档
 - `GET /api/agri/reports/latest`
 - `GET /api/agri/reports/{reportId}`
 - `GET /api/agri/stream?sessionId=...`
+- `GET /api/agri/tools/knowledge-search?q=...&cropId=...&topK=...`
 
 成功返回格式：
 
@@ -76,6 +77,10 @@ docs/      架构与协作文档
 
 - `agri-context-bridge` 是独立本地服务，默认监听 `127.0.0.1:18081`
 - 桥接服务负责归一化视觉/传感事件、存储 SQLite、组装上下文并调用 OpenClaw
+- 当前知识层采用“结构化 JSON + 本地轻量级向量检索”的混合模式
+- 向量库默认使用 `ChromaDB` 本地持久化，目录为 `data/agri-vectordb/`
+- 文献向量化默认使用本地 embedding 模型 `moka-ai/m3e-small`
+- 文献索引仅在手动执行重建脚本时更新，不在服务启动时自动重建
 - OpenClaw 使用独立 agent：`agri-orchestrator`
 - 当前只做“建议、解释、报告、问答”，不做物理执行
 - 推荐动作统一带：
@@ -97,11 +102,24 @@ docs/      架构与协作文档
 农业桥接服务：
 
 1. 检查配置：`python3 src/agri_context_bridge.py --config config/agri-context-bridge.ini --check-config`
-2. 前台运行：`./scripts/run_agri_context_bridge.sh`
-3. systemd 运行：
+2. 安装向量检索依赖：`./scripts/install_agri_vector_deps.sh`
+3. 手动重建向量索引：`python3 scripts/build_agri_vector_index.py --config config/agri-context-bridge.ini`
+4. 前台运行：`./scripts/run_agri_context_bridge.sh`
+5. systemd 运行：
    - `sudo cp systemd/agri-context-bridge.service /etc/systemd/system/`
    - `sudo systemctl daemon-reload`
    - `sudo systemctl enable --now agri-context-bridge`
+
+向量知识库重建说明：
+
+1. 文献原文放在 `config/agri-knowledge/raw/`
+2. 提取文本放在 `config/agri-knowledge/curated/extracted/`
+3. 结构化基线知识保留在 `config/agri-knowledge/curated/铁皮石斛知识库.json`
+4. 每次文献更新后手动执行：
+   - `python3 scripts/build_agri_vector_index.py --config config/agri-context-bridge.ini`
+5. 可通过：
+   - `GET /api/agri/tools/knowledge-search?q=霍山石斛适宜环境`
+   验证向量召回结果
 
 视频服务：
 

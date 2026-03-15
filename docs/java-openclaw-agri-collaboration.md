@@ -32,6 +32,7 @@ Java 后端和 APP 不要直接连 OpenClaw Gateway，统一接 `agri-context-br
 - `GET /api/agri/reports/latest`
 - `GET /api/agri/stream?sessionId=...`
 - `POST /api/agri/actions/execute`
+- `GET /api/agri/tools/knowledge-search?q=...&cropId=...&topK=...`
 
 ## 3. 视觉事件接入
 
@@ -145,7 +146,9 @@ Java 后端和 APP 不要直接连 OpenClaw Gateway，统一接 `agri-context-br
   "evidence": {
     "visionEvents": [],
     "sensorSnapshot": {},
-    "historySummary": []
+    "historySummary": [],
+    "knowledgeHighlights": [],
+    "knowledgeMatches": []
   },
   "humanMessage": "当前棚内偏热偏干，同时视觉侧发现红蜘蛛迹象，建议先降温增湿并安排人工复核。"
 }
@@ -193,6 +196,7 @@ Java 后端可以自己消费 SSE，再转发给 APP。
 - `GET /api/agri/tools/recent-sensor-history?metric=temperature&windowMinutes=60`
 - `GET /api/agri/tools/recent-decision-reports?windowHours=24`
 - `GET /api/agri/tools/crop-profile?cropId=huoshan-shihu`
+- `GET /api/agri/tools/knowledge-search?q=霍山石斛适宜环境&cropId=huoshan-shihu&topK=5`
 - `GET /api/agri/tools/greenhouse-profile?zoneId=default-greenhouse`
 
 ## 9. 控制接口预留
@@ -223,6 +227,7 @@ Java 后端可以自己消费 SSE，再转发给 APP。
 - `GET /api/agri/tools/crop-profile?cropId=huoshan-shihu`
 - `GET /api/agri/tools/crop-knowledge?cropId=huoshan-shihu`
 - `GET /api/agri/tools/knowledge-sources`
+- `GET /api/agri/tools/knowledge-search?q=霍山石斛适宜环境&cropId=huoshan-shihu&topK=5`
 - `GET /api/agri/tools/greenhouse-profile?zoneId=default-greenhouse`
 
 说明：
@@ -230,3 +235,4 @@ Java 后端可以自己消费 SSE，再转发给 APP。
 - `crop-profile` 返回项目运行基线，例如棚内温湿度目标。
 - `crop-knowledge` 返回根据文献整理后的本地知识条目。
 - `knowledge-sources` 返回当前知识库来源索引，便于前后端展示“依据哪篇资料得出结论”。
+- `knowledge-search` 返回文献向量检索召回片段，适合用于展示“模型参考了哪些知识片段”。

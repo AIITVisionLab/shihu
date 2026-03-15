@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
 
+from agri_vector_knowledge import MissingVectorDependency, VectorKnowledgeConfig, VectorKnowledgeStore
 
 MAX_BODY_BYTES = 256 * 1024
 EVENT_LIMIT = 50
@@ -209,12 +210,39 @@ class DomainConfig:
 
 
 @dataclass
+class VectorKnowledgeBridgeConfig:
+    enabled: bool = True
+    backend: str = "chroma"
+    persist_dir: str = "/home/linaro/project/EdgeLink_RK3568/data/agri-vectordb"
+    embedding_model: str = "moka-ai/m3e-small"
+    collection_name: str = "agri_knowledge"
+    top_k: int = 5
+    chunk_size: int = 400
+    chunk_overlap: int = 80
+    min_text_length: int = 80
+
+    def to_runtime(self) -> VectorKnowledgeConfig:
+        return VectorKnowledgeConfig(
+            enabled=self.enabled,
+            backend=self.backend,
+            persist_dir=self.persist_dir,
+            embedding_model=self.embedding_model,
+            collection_name=self.collection_name,
+            top_k=self.top_k,
+            chunk_size=self.chunk_size,
+            chunk_overlap=self.chunk_overlap,
+            min_text_length=self.min_text_length,
+        )
+
+
+@dataclass
 class BridgeConfig:
     http: HttpConfig
     storage: StorageConfig
     openclaw: OpenClawConfig
     analysis: AnalysisConfig
     domain: DomainConfig
+    vector_knowledge: VectorKnowledgeBridgeConfig
 
 
 @dataclass
@@ -581,6 +609,7 @@ class AgriContextBridgeApp:
         self.repo = AgriRepository(config.storage.db_path)
         self.profiles = ProfileStore(config.storage.profiles_path)
         self.knowledge = KnowledgeStore(config.storage.knowledge_path)
+        self.vector_knowledge = VectorKnowledgeStore(config.vector_knowledge.to_runtime())
         self.openclaw = OpenClawClient(config.openclaw)
         self.state = BridgeState()
         self.stop_event = threading.Event()
@@ -588,6 +617,7 @@ class AgriContextBridgeApp:
         self.http_thread: Optional[threading.Thread] = None
         self.analysis_thread: Optional[threading.Thread] = None
         self._last_prune_monotonic = 0.0
+        self._vector_dependency_warning = False
 
     def close(self) -> None:
         self.stop_event.set()
@@ -609,6 +639,8 @@ class AgriContextBridgeApp:
         Path(self.config.storage.db_path).parent.mkdir(parents=True, exist_ok=True)
         self.profiles.load()
         self.knowledge.load()
+        Path(self.config.vector_knowledge.persist_dir).mkdir(parents=True, exist_ok=True)
+        self.vector_knowledge.load_manifest()
 
     def add_subscriber(self, session_id: str, sink: queue.Queue[str]) -> None:
         with self.state.lock:
@@ -781,6 +813,12 @@ class AgriContextBridgeApp:
                 if path == "/api/agri/tools/knowledge-sources":
                     self._write_json(200, self.server.app.get_knowledge_sources())
                     return
+                if path == "/api/agri/tools/knowledge-search":
+                    crop_id = query.get("cropId", [self.server.app.config.domain.default_crop_id])[0]
+                    top_k = coerce_int(query.get("topK", [str(self.server.app.config.vector_knowledge.top_k)])[0])
+                    text = query.get("q", [""])[0]
+                    self._write_json(200, self.server.app.search_knowledge(text, crop_id, top_k))
+                    return
                 if path == "/api/agri/tools/greenhouse-profile":
                     zone_id = query.get("zoneId", [self.server.app.config.domain.default_zone_id])[0]
                     self._write_json(200, self.server.app.get_greenhouse_profile(zone_id))
@@ -834,6 +872,7 @@ class AgriContextBridgeApp:
         )
 
     def http_healthz(self) -> Dict[str, Any]:
+        vector_status = self.vector_knowledge.status()
         return {
             "code": 0,
             "service": "agri-context-bridge",
@@ -841,6 +880,10 @@ class AgriContextBridgeApp:
             "agentId": self.config.openclaw.agent_id,
             "hasEnvironment": bool(self.get_latest_environment()),
             "hasKnowledgeBase": bool(self.knowledge.get_sources()),
+            "hasVectorKnowledge": bool(vector_status.get("ready")),
+            "vectorBackend": vector_status.get("backend"),
+            "vectorChunkCount": vector_status.get("chunkCount"),
+            "vectorModel": vector_status.get("modelName"),
             "latestReportId": (self.repo.get_latest_report() or {}).get("reportId"),
         }
 
@@ -1100,6 +1143,24 @@ class AgriContextBridgeApp:
     def get_knowledge_sources(self) -> Dict[str, Any]:
         return {"sources": self.knowledge.get_sources()}
 
+    def search_knowledge(self, query: str, crop_id: str, top_k: Optional[int] = None) -> Dict[str, Any]:
+        try:
+            matches = self.vector_knowledge.search(query=query, crop_id=crop_id, top_k=top_k)
+            warning = ""
+        except MissingVectorDependency as exc:
+            if not self._vector_dependency_warning:
+                logging.warning("vector knowledge disabled by missing dependency: %s", exc)
+                self._vector_dependency_warning = True
+            matches = []
+            warning = str(exc)
+        return {
+            "query": query,
+            "cropId": crop_id,
+            "topK": top_k or self.config.vector_knowledge.top_k,
+            "matches": matches,
+            "warning": warning,
+        }
+
     def get_greenhouse_profile(self, zone_id: str) -> Dict[str, Any]:
         return {"zoneId": zone_id, "profile": self.profiles.get_greenhouse_profile(zone_id)}
 
@@ -1126,6 +1187,11 @@ class AgriContextBridgeApp:
         knowledge_highlights = crop_knowledge.get("knowledgeHighlights")
         if not isinstance(knowledge_highlights, list):
             knowledge_highlights = []
+        knowledge_matches = self.search_knowledge(
+            query=question,
+            crop_id=crop_id,
+            top_k=self.config.vector_knowledge.top_k,
+        ).get("matches", [])
         prompt_summary = self.build_natural_language_summary(
             latest_environment=latest_environment,
             vision_events=vision_events,
@@ -1145,6 +1211,7 @@ class AgriContextBridgeApp:
             "cropProfile": crop_profile,
             "cropKnowledge": crop_knowledge,
             "knowledgeHighlights": knowledge_highlights[:8],
+            "knowledgeMatches": knowledge_matches,
             "greenhouseProfile": greenhouse_profile,
             "promptSummary": prompt_summary,
         }
@@ -1204,6 +1271,7 @@ class AgriContextBridgeApp:
             "3. 可以给出推荐动作，但必须把 executeEnabled 保持为 false，executionStatus 固定为 disabled_by_policy。\n"
             "4. 如果证据不足，要明确表达不确定性。\n"
             "5. 只输出 JSON，不要输出 Markdown，不要输出额外解释。\n"
+            "6. 如果上下文中的 knowledgeMatches 或 knowledgeHighlights 非空，summary 或 humanMessage 必须显式写出“根据当前知识库中的信息”，并优先带出 sourceTitle。\n"
             f"输出 JSON 模板：{json_dumps(schema)}\n"
             f"上下文 JSON：{json_dumps(context)}"
         )
@@ -1267,6 +1335,41 @@ class AgriContextBridgeApp:
             "humanMessage": f"{summary} 当前结果来自降级规则，原因：{error_text}",
         }
 
+    @staticmethod
+    def knowledge_sources_for_phrase(context: Dict[str, Any]) -> list[str]:
+        source_titles: list[str] = []
+        for item in context.get("knowledgeMatches", []):
+            if not isinstance(item, dict):
+                continue
+            title = str(item.get("sourceTitle") or "").strip()
+            if title and title not in source_titles:
+                source_titles.append(title)
+        if source_titles:
+            return source_titles
+        for item in context.get("knowledgeHighlights", []):
+            if not isinstance(item, dict):
+                continue
+            title = str(item.get("title") or item.get("category") or "").strip()
+            if title and title not in source_titles:
+                source_titles.append(title)
+        return source_titles
+
+    @classmethod
+    def should_prefix_knowledge(cls, context: Dict[str, Any]) -> bool:
+        return bool(context.get("knowledgeMatches") or context.get("knowledgeHighlights"))
+
+    @classmethod
+    def with_knowledge_prefix(cls, text: str, context: Dict[str, Any]) -> str:
+        normalized = str(text or "").strip()
+        if not normalized or not cls.should_prefix_knowledge(context):
+            return normalized
+        if "根据当前知识库中的信息" in normalized:
+            return normalized
+        sources = cls.knowledge_sources_for_phrase(context)
+        if sources:
+            return f"根据当前知识库中的信息《{sources[0]}》，{normalized}"
+        return f"根据当前知识库中的信息，{normalized}"
+
     def normalize_report_payload(
         self,
         model_output: Dict[str, Any],
@@ -1291,13 +1394,16 @@ class AgriContextBridgeApp:
                     "executionStatus": "disabled_by_policy",
                 }
             )
+        summary = self.with_knowledge_prefix(str(model_output.get("summary") or "未生成摘要。"), context)
+        human_message = str(model_output.get("humanMessage") or model_output.get("summary") or "")
+        human_message = self.with_knowledge_prefix(human_message, context)
         return {
             "reportId": make_event_id(),
             "ts": now_iso(),
             "mode": mode,
             "sessionId": session_id,
             "question": question,
-            "summary": str(model_output.get("summary") or "未生成摘要。"),
+            "summary": summary,
             "severity": normalize_severity(model_output.get("severity"), default="info"),
             "decision": {
                 "conclusion": str(decision.get("conclusion") or "observe_only"),
@@ -1309,8 +1415,9 @@ class AgriContextBridgeApp:
                 "sensorSnapshot": context["sensorSnapshot"],
                 "historySummary": context["historySummary"],
                 "knowledgeHighlights": context.get("knowledgeHighlights", []),
+                "knowledgeMatches": context.get("knowledgeMatches", []),
             },
-            "humanMessage": str(model_output.get("humanMessage") or model_output.get("summary") or ""),
+            "humanMessage": human_message,
         }
 
     def generate_report(
@@ -1389,6 +1496,29 @@ def load_config(path: str) -> BridgeConfig:
         domain=DomainConfig(
             default_crop_id=parser.get("domain", "default_crop_id", fallback="huoshan-shihu"),
             default_zone_id=parser.get("domain", "default_zone_id", fallback="default-greenhouse"),
+        ),
+        vector_knowledge=VectorKnowledgeBridgeConfig(
+            enabled=parser.getboolean("vector_knowledge", "enabled", fallback=True),
+            backend=parser.get("vector_knowledge", "backend", fallback="chroma"),
+            persist_dir=parser.get(
+                "vector_knowledge",
+                "persist_dir",
+                fallback="/home/linaro/project/EdgeLink_RK3568/data/agri-vectordb",
+            ),
+            embedding_model=parser.get(
+                "vector_knowledge",
+                "embedding_model",
+                fallback="moka-ai/m3e-small",
+            ),
+            collection_name=parser.get(
+                "vector_knowledge",
+                "collection_name",
+                fallback="agri_knowledge",
+            ),
+            top_k=parser.getint("vector_knowledge", "top_k", fallback=5),
+            chunk_size=parser.getint("vector_knowledge", "chunk_size", fallback=400),
+            chunk_overlap=parser.getint("vector_knowledge", "chunk_overlap", fallback=80),
+            min_text_length=parser.getint("vector_knowledge", "min_text_length", fallback=80),
         ),
     )
 

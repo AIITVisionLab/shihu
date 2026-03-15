@@ -95,7 +95,7 @@ curl -sS -X POST http://127.0.0.1:18081/api/agri/events/vision \
     "type":"spider_mite",
     "confidence":0.85,
     "deviceId":"k230-01",
-    "cropId":"shihu",
+    "cropId":"huoshan-shihu",
     "zoneId":"default-greenhouse"
   }'
 ```
@@ -136,7 +136,7 @@ curl -sS -X POST http://127.0.0.1:18081/api/agri/decisions/analyze \
   -H 'Content-Type: application/json' \
   -d '{
     "sessionId":"agri-analysis:default-greenhouse",
-    "cropId":"shihu",
+    "cropId":"huoshan-shihu",
     "zoneId":"default-greenhouse",
     "query":"当前发现红蜘蛛迹象，请生成处理建议。"
   }'
@@ -147,6 +147,7 @@ curl -sS -X POST http://127.0.0.1:18081/api/agri/decisions/analyze \
 - 返回结构化报告对象
 - `recommendedActions[*].executeEnabled = false`
 - `recommendedActions[*].executionStatus = "disabled_by_policy"`
+- 如果引用了知识库，`summary` 或 `humanMessage` 中显式包含“根据当前知识库中的信息”
 
 ### 5. 交互式问答
 
@@ -165,7 +166,20 @@ curl -sS -X POST http://127.0.0.1:18081/api/agri/chat \
 - `humanMessage` 为适合 APP 展示的自然语言
 - 数据不足时明确表达不确定性
 
-### 6. 安全验证
+### 6. 向量知识库重建与检索
+
+```bash
+python3 scripts/build_agri_vector_index.py --config config/agri-context-bridge.ini
+curl -sS 'http://127.0.0.1:18081/api/agri/tools/knowledge-search?q=霍山石斛适宜环境&cropId=huoshan-shihu&topK=5'
+```
+
+预期：
+
+- 重建后生成 `data/agri-vectordb/manifest.json`
+- 检索接口返回非空 `matches`
+- `matches[*]` 包含 `chunkId/sourceId/sourceTitle/docType/filePath/score/text`
+
+### 7. 安全验证
 
 - `POST /api/agri/actions/execute` 返回 `501`
 - OpenClaw `agri-orchestrator` 不允许写文件、改配置、执行系统命令

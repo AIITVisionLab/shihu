@@ -96,6 +96,7 @@ class VideoSourceSwitchConfig:
     stream_path: str = "/test"
     min_switch_interval_ms: int = 5000
     confirm_hits: int = 2
+    allowed_source_cidrs: Tuple[str, ...] = ()
 
 
 class SouthboundDispatcher:
@@ -189,6 +190,15 @@ class GatewayApp:
 
     @staticmethod
     def _load_video_source_switch_config(config: configparser.ConfigParser) -> VideoSourceSwitchConfig:
+        cidr_items = tuple(
+            item.strip()
+            for item in config.get(
+                "video_source_switch",
+                "allowed_source_cidrs",
+                fallback="",
+            ).split(",")
+            if item.strip()
+        )
         return VideoSourceSwitchConfig(
             enabled=config.getboolean("video_source_switch", "enabled", fallback=True),
             device_id=config.get("video_source_switch", "device_id", fallback="k230").strip(),
@@ -204,6 +214,7 @@ class GatewayApp:
                 "video_source_switch", "min_switch_interval_ms", fallback=5000
             ),
             confirm_hits=config.getint("video_source_switch", "confirm_hits", fallback=2),
+            allowed_source_cidrs=cidr_items,
         )
 
     @staticmethod
@@ -633,6 +644,13 @@ class GatewayApp:
             return
         if parsed_ip.version != 4 or parsed_ip.is_loopback:
             return
+        if not self._is_allowed_k230_source_ip(parsed_ip):
+            logging.info(
+                "ignoring k230 source ip outside allowed_source_cidrs: source_ip=%s cidrs=%s",
+                source_ip,
+                ",".join(self.video_source_switch.allowed_source_cidrs) or "-",
+            )
+            return
 
         with self.state.lock:
             current_ip = self.state.current_k230_stream_ip
@@ -703,6 +721,18 @@ class GatewayApp:
             self.video_source_switch.stream_port,
             self.video_source_switch.stream_path,
         )
+
+    def _is_allowed_k230_source_ip(self, source_ip: ipaddress._BaseAddress) -> bool:
+        cidrs = self.video_source_switch.allowed_source_cidrs
+        if not cidrs:
+            return True
+        for item in cidrs:
+            try:
+                if source_ip in ipaddress.ip_network(item, strict=False):
+                    return True
+            except ValueError:
+                logging.warning("invalid allowed_source_cidrs entry ignored: %s", item)
+        return False
 
     def _read_current_stream_ip(self) -> str:
         try:
