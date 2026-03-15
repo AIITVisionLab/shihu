@@ -49,12 +49,13 @@ if (-not $isccPath) {
 $workDir = Join-Path ([System.IO.Path]::GetTempPath()) ("husheng-installer-" + [System.Guid]::NewGuid().ToString("N"))
 $stageDir = Join-Path $workDir "app"
 $scriptPath = Join-Path $workDir "installer.iss"
+$outputDir = Split-Path -Parent $outputFilePath
+$compilerOutputBase = "husheng-windows-$Architecture-setup"
+$compilerOutputFilePath = Join-Path $outputDir "$compilerOutputBase.exe"
 
 New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
 Copy-Item -Recurse -Force (Join-Path $buildDirPath '*') $stageDir
 
-$outputDir = Split-Path -Parent $outputFilePath
-$outputBase = [System.IO.Path]::GetFileNameWithoutExtension($outputFilePath)
 New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
 
 $appId = if ($Architecture -eq "arm64") {
@@ -63,25 +64,20 @@ $appId = if ($Architecture -eq "arm64") {
   "{{5D33FFB0-0318-4A71-8A5D-53F6D1D99B9E}"
 }
 
-$allowedArch = if ($Architecture -eq "arm64") { "arm64" } else { "x64compatible" }
-$installArch = if ($Architecture -eq "arm64") { "arm64" } else { "x64compatible" }
-
 $iss = @"
 [Setup]
 AppId=$appId
 AppName=斛生
 AppVersion=$Version
 AppPublisher=AIITVisionLab
-DefaultDirName={autopf}\斛生
+DefaultDirName={commonpf64}\斛生
 DefaultGroupName=斛生
 DisableProgramGroupPage=yes
 OutputDir=$outputDir
-OutputBaseFilename=$outputBase
+OutputBaseFilename=$compilerOutputBase
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-ArchitecturesAllowed=$allowedArch
-ArchitecturesInstallIn64BitMode=$installArch
 UninstallDisplayIcon={app}\sickandflutter.exe
 
 [Languages]
@@ -108,6 +104,8 @@ if ($LASTEXITCODE -ne 0) {
   throw "Inno Setup compile failed with exit code $LASTEXITCODE"
 }
 
-if (-not (Test-Path -LiteralPath $outputFilePath)) {
-  throw "Installer not generated: $outputFilePath"
+if (-not (Test-Path -LiteralPath $compilerOutputFilePath)) {
+  throw "Installer not generated: $compilerOutputFilePath"
 }
+
+Move-Item -LiteralPath $compilerOutputFilePath -Destination $outputFilePath -Force
