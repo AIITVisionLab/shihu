@@ -243,13 +243,25 @@ jobs:
       - name: 安装 Inno Setup
         shell: pwsh
         run: |
-          if (Get-Command choco -ErrorAction SilentlyContinue) {
-            choco install innosetup --no-progress -y
-          } elseif (Get-Command winget -ErrorAction SilentlyContinue) {
-            winget install --id JRSoftware.InnoSetup --exact --accept-source-agreements --accept-package-agreements
-          } else {
-            throw "未找到 choco 或 winget，无法安装 Inno Setup。"
+          $installerPath = Join-Path $env:RUNNER_TEMP "innosetup-latest.exe"
+          Invoke-WebRequest "https://jrsoftware.org/download.php/is.exe?dontcount=1" -OutFile $installerPath
+
+          Start-Process `
+            -FilePath $installerPath `
+            -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-" `
+            -Wait
+
+          $isccPath = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path -LiteralPath $isccPath)) {
+            $isccPath = "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
           }
+
+          if (-not (Test-Path -LiteralPath $isccPath)) {
+            throw "Inno Setup 安装完成后未找到 ISCC.exe。"
+          }
+
+          $versionInfo = (Get-Item -LiteralPath $isccPath).VersionInfo
+          Write-Host "Using Inno Setup: $($versionInfo.ProductVersion)"
 
       - name: 生成 Windows 安装器
         shell: pwsh
