@@ -21,11 +21,10 @@ except ImportError:
     import usocket as socket
 
 
-LAN_ENABLED = True
-LAN_STATIC_IP = "172.18.8.103"
-LAN_NETMASK = "255.255.255.0"
-LAN_GATEWAY = "172.18.8.1"
-LAN_DNS = "172.18.8.1"
+LAN_ENABLED = False
+WIFI_ONLY_MODE = True
+# Expect the upstream DHCP server to reserve this IP for the K230 LAN MAC.
+LAN_EXPECTED_IP = "172.18.8.103"
 LAN_CONNECT_TIMEOUT_S = 8
 
 WIFI_SSID = "A6N107"
@@ -34,7 +33,7 @@ WIFI_CONNECT_TIMEOUT_S = 20
 WIFI_CONNECT_RETRIES = 3
 WIFI_RETRY_DELAY_MS = 1500
 
-RK3568_HOST = "172.18.8.19"
+RK3568_HOST = "192.168.1.111"
 RK3568_PORT = 8080
 RK3568_AI_PATH = "/api/ai"
 HTTP_TIMEOUT_S = 2
@@ -48,7 +47,7 @@ DISPLAY_MODE = "virt"
 DISPLAY_SIZE = [ALIGN_UP(1920, 16), 1080]
 RGB888P_SIZE = [1280, 720]
 TO_IDE = False
-WIFI_CHECK_INTERVAL_FRAMES = 30
+NETWORK_CHECK_INTERVAL_FRAMES = 30
 AI_POST_INTERVAL_MS = 1000
 
 KMODEL_PATH = "/sdcard/examples/kmodel/yolo11n-obb.kmodel"
@@ -103,6 +102,7 @@ class LanClient:
     def __init__(self):
         self.iface = None
         self._init_error = None
+        self._mac_all_zero = False
         self._init_iface()
 
     def mode(self):
@@ -113,11 +113,21 @@ class LanClient:
             raise RuntimeError("LAN interface unavailable: %s" % self._init_error)
 
         self._prepare()
+        if self._mac_all_zero:
+            raise RuntimeError(
+                "LAN adapter not initialized: MAC is all zero; plug the USB-RJ45 adapter before power-on and prefer an RTL8152B-compatible adapter"
+            )
         deadline = now_ms() + timeout_s * 1000
         while now_ms() < deadline:
             if self._is_connected():
                 ip_info = self.iface.ifconfig()
                 if ip_info[0] != "0.0.0.0":
+                    print("Actual LAN IP:", ip_info[0])
+                    if ip_info[0] != LAN_EXPECTED_IP:
+                        raise RuntimeError(
+                            "LAN IP mismatch: expected=%s actual=%s"
+                            % (LAN_EXPECTED_IP, ip_info[0])
+                        )
                     self._print_ip("LAN connected")
                     return True
             sleep_ms(500)
@@ -171,16 +181,12 @@ class LanClient:
 
     def _prepare(self):
         try:
-            if hasattr(self.iface, "active"):
-                self.iface.active(True)
-                sleep_ms(300)
+            mac = self.iface.config("mac")
+            print("LAN MAC:", mac)
+            if isinstance(mac, bytes) and mac == b"\x00\x00\x00\x00\x00\x00":
+                self._mac_all_zero = True
         except Exception:
             pass
-
-        try:
-            self.iface.ifconfig((LAN_STATIC_IP, LAN_NETMASK, LAN_GATEWAY, LAN_DNS))
-        except Exception as err:
-            print("LAN static IP apply failed:", err)
 
     def _is_connected(self):
         try:
@@ -331,12 +337,14 @@ class NetworkManager:
         if self.lan is not None:
             try:
                 print("Trying LAN first")
+                print("Expected LAN IP:", LAN_EXPECTED_IP)
                 self.lan.connect()
                 self.active_client = self.lan
                 return True
             except Exception as err:
                 print("LAN unavailable, fallback to Wi-Fi:", err)
 
+        print("Wi-Fi only mode")
         self.wifi.connect()
         self.active_client = self.wifi
         return True
@@ -604,9 +612,11 @@ class ObbDetectionApp(AIBase):
 
 def print_banner():
     print("========================================")
-    print("K230 LAN/Wi-Fi + RTSP + AI JSON gateway")
-    print("LAN preferred:", LAN_ENABLED)
-    print("LAN static IP:", LAN_STATIC_IP)
+    print("K230 Wi-Fi + RTSP + AI JSON gateway")
+    print("LAN enabled:", LAN_ENABLED)
+    print("Wi-Fi only mode:", WIFI_ONLY_MODE)
+    if LAN_ENABLED:
+        print("Expected LAN IP:", LAN_EXPECTED_IP)
     print("Wi-Fi SSID:", WIFI_SSID)
     print("RK3568 AI endpoint: http://%s:%d%s" % (RK3568_HOST, RK3568_PORT, RK3568_AI_PATH))
     print("Display mode:", DISPLAY_MODE)
@@ -675,7 +685,7 @@ def main():
                 publisher.update_latest(detector.build_ai_payload(res, frame_id))
                 frame_id += 1
 
-                if frame_id % WIFI_CHECK_INTERVAL_FRAMES == 0:
+                if frame_id % NETWORK_CHECK_INTERVAL_FRAMES == 0:
                     net_client.ensure_connected()
 
                 gc.collect()
