@@ -330,7 +330,7 @@ jobs:
           mkdir -p dist
           chmod +x tool/package_macos_dmg.sh
           tool/package_macos_dmg.sh \
-            "build/macos/Build/Products/Release/sickandflutter.app" \
+            "build/macos/Build/Products/Release/husheng.app" \
             "dist/${{ matrix.asset_name }}"
           ls -lh dist
 
@@ -338,6 +338,63 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-macos-${{ matrix.build_arch }}
+          path: dist/*
+          if-no-files-found: error
+
+  build_ios:
+    name: 构建 iOS 安装包
+    needs: prepare
+    runs-on: macos-15
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Flutter SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --depth 1 --branch "${FLUTTER_VERSION}" \
+            https://github.com/flutter/flutter.git "${RUNNER_TEMP}/flutter"
+          echo "${RUNNER_TEMP}/flutter/bin" >> "${GITHUB_PATH}"
+
+      - name: 拉取 Flutter 依赖
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter config --no-analytics
+          flutter config --enable-ios
+          flutter pub get
+
+      - name: 构建未签名 iOS 应用
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter build ios --release --no-codesign \
+            --build-name "${{ needs.prepare.outputs.build_name }}" \
+            --build-number "${{ needs.prepare.outputs.build_number }}"
+
+      - name: 生成未签名 IPA 安装包
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          chmod +x tool/package_ios_ipa.sh
+
+          app_path="$(find build/ios/iphoneos -maxdepth 1 -type d -name '*.app' | head -n 1)"
+          if [[ -z "${app_path}" ]]; then
+            echo "未找到 iOS .app 产物。" >&2
+            exit 1
+          fi
+
+          tool/package_ios_ipa.sh \
+            "${app_path}" \
+            "dist/斛生-ios-unsigned.ipa"
+          ls -lh dist
+
+      - name: 上传 iOS 安装包
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-ios
           path: dist/*
           if-no-files-found: error
 
@@ -440,6 +497,7 @@ jobs:
       - build_linux
       - build_windows
       - build_macos
+      - build_ios
       - build_ohos
     steps:
       - name: 拉取代码
@@ -467,12 +525,13 @@ jobs:
           - Linux 按架构拆分 deb
           - Windows 按架构拆分安装器
           - macOS 按架构拆分 dmg
+          - iOS 未签名 IPA
           - OpenHarmony / 鸿蒙 HAP（仅在自托管 runner 启用时提供）
 
           说明：
 
-          - 不再上传目录压缩包、Web 静态资源、AAB、未签名 iOS 包和校验说明文件。
-          - iOS 安装包需要签名后才能生成，当前工作流默认不产出 IPA。
+          - 不再上传目录压缩包、Web 静态资源、AAB 和校验说明文件。
+          - iOS 当前提供未签名 IPA，如需直接安装到真机，请按你的分发流程重新签名。
           - macOS dmg 当前未做 notarization，如需正式分发请继续补签名与公证。
           EOF
 
@@ -486,6 +545,11 @@ jobs:
           set -euo pipefail
 
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release view "${RELEASE_TAG}" --json assets --jq '.assets[].name' | while read -r asset_name; do
+              if [[ -n "${asset_name}" ]]; then
+                gh release delete-asset "${RELEASE_TAG}" "${asset_name}" --yes
+              fi
+            done
             gh release upload "${RELEASE_TAG}" package/* --clobber
             gh release edit "${RELEASE_TAG}" \
               --title "${RELEASE_NAME}" \

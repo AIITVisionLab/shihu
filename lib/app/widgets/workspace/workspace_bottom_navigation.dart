@@ -21,8 +21,9 @@ class WorkspaceBottomNavigation extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: <Color>[
-            colorScheme.surfaceBright.withValues(alpha: 0.99),
-            colorScheme.surfaceContainerLow.withValues(alpha: 0.96),
+            colorScheme.surfaceContainerLowest.withValues(alpha: 0.995),
+            AppPalette.frost.withValues(alpha: 0.98),
+            colorScheme.surfaceContainerLow.withValues(alpha: 0.95),
           ],
         ),
         borderRadius: BorderRadius.circular(32),
@@ -32,13 +33,13 @@ class WorkspaceBottomNavigation extends StatelessWidget {
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: AppPalette.pineGreen.withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
           ),
           BoxShadow(
-            color: Color(0x10131815),
-            blurRadius: 18,
-            offset: Offset(0, 10),
+            color: AppPalette.pineShadow.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),

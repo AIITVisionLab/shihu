@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/features/device/application/device_status_view_data.dart';
 import 'package:sickandflutter/features/device/domain/device_status.dart';
 import 'package:sickandflutter/features/realtime/realtime_view_utils.dart';
@@ -32,6 +33,7 @@ class RealtimeDecisionPanel extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       borderRadius: 28,
       accentColor: palette.foregroundColor,
+      shadow: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -51,6 +53,13 @@ class RealtimeDecisionPanel extends StatelessWidget {
               border: Border.all(
                 color: palette.foregroundColor.withValues(alpha: 0.22),
               ),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: palette.foregroundColor.withValues(alpha: 0.12),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,6 +133,13 @@ class _DecisionStep extends StatelessWidget {
         color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: colorScheme.outlineVariant),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: AppPalette.softPine.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

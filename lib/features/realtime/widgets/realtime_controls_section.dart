@@ -132,6 +132,7 @@ class _DetailTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         borderRadius: 18,
         accentColor: AppPalette.mistMint,
+        shadow: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -175,6 +176,7 @@ class _LedControlPanel extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       borderRadius: 24,
       accentColor: AppPalette.softLavender,
+      shadow: true,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final description = Column(

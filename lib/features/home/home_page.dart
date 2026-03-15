@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/app/app_workspace_destination.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/app/widgets/app_workspace_scaffold.dart';
@@ -52,6 +53,8 @@ class HomePage extends ConsumerWidget {
                       icon: Icons.monitor_heart_rounded,
                       title: AppCopy.homeRealtimeTitle,
                       subtitle: '需要处理设备状态、同步与补光时进入。',
+                      accentColor: AppPalette.softPine,
+                      prominent: true,
                       onTap: () => context.goNamed(AppRoutes.realtimeDetect),
                     ),
                     HomeEntryCard(
@@ -59,6 +62,7 @@ class HomePage extends ConsumerWidget {
                       icon: Icons.videocam_rounded,
                       title: AppCopy.homePreviewTitle,
                       subtitle: '需要确认现场时，直接查看当前可用画面。',
+                      accentColor: AppPalette.linenOlive,
                       onTap: () => context.goNamed(AppRoutes.video),
                     ),
                     HomeEntryCard(
@@ -66,6 +70,7 @@ class HomePage extends ConsumerWidget {
                       icon: Icons.settings_rounded,
                       title: AppCopy.homeSettingsTitle,
                       subtitle: '账号、本机偏好和使用帮助都收在这里。',
+                      accentColor: AppPalette.softLavender,
                       onTap: () => context.goNamed(AppRoutes.settings),
                     ),
                   ],

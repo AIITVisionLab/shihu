@@ -14,13 +14,38 @@ class HomeActionTrackCard extends StatelessWidget {
     return CommonCard(
       title: '常用入口',
       subtitle: '值守负责处理状态，视频负责查看画面，我的负责账号和本机设置。',
-      child: Column(
-        children: <Widget>[
-          for (int index = 0; index < children.length; index++) ...<Widget>[
-            children[index],
-            if (index != children.length - 1) const SizedBox(height: 14),
-          ],
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 760 || children.length < 3) {
+            return Column(
+              children: <Widget>[
+                for (
+                  int index = 0;
+                  index < children.length;
+                  index++
+                ) ...<Widget>[
+                  children[index],
+                  if (index != children.length - 1) const SizedBox(height: 14),
+                ],
+              ],
+            );
+          }
+
+          return Column(
+            children: <Widget>[
+              children.first,
+              const SizedBox(height: 14),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(child: children[1]),
+                  const SizedBox(width: 14),
+                  Expanded(child: children[2]),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }

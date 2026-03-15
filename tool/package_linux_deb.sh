@@ -47,7 +47,7 @@ EOF
 
 cat > "${PKG_ROOT}/usr/bin/${PACKAGE_NAME}" <<EOF
 #!/bin/sh
-exec ${INSTALL_ROOT}/sickandflutter "\$@"
+exec ${INSTALL_ROOT}/husheng "\$@"
 EOF
 chmod 755 "${PKG_ROOT}/usr/bin/${PACKAGE_NAME}"
 
@@ -57,7 +57,7 @@ Version=1.0
 Type=Application
 Name=斛生
 Comment=斛生跨平台客户端
-Exec=${INSTALL_ROOT}/sickandflutter
+Exec=${INSTALL_ROOT}/husheng
 Icon=${PACKAGE_NAME}
 Terminal=false
 Categories=Utility;

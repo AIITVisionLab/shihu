@@ -24,7 +24,8 @@ class VideoIntroCard extends StatelessWidget {
     return FeatureHeroCard(
       padding: const EdgeInsets.all(28),
       borderRadius: 36,
-      accentColor: AppPalette.softLavender,
+      accentColor: AppPalette.mistMint,
+      showPaletteBands: true,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final summaryBoard = Wrap(
@@ -153,6 +154,7 @@ class VideoIntroMetric extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         borderRadius: 22,
         accentColor: accentColor,
+        shadow: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -237,6 +239,7 @@ class VideoHeroMonitor extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       borderRadius: 28,
       accentColor: AppPalette.softPine,
+      shadow: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -251,6 +254,7 @@ class VideoHeroMonitor extends StatelessWidget {
             padding: const EdgeInsets.all(18),
             borderRadius: 24,
             accentColor: AppPalette.mistMint,
+            shadow: true,
             child: Column(
               children: <Widget>[
                 _VideoSummaryRow(label: '在线画面', value: '$onlineCount 路'),

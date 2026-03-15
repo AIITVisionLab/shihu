@@ -44,25 +44,25 @@ class FeatureHeroCard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: <Color>[
-                colorScheme.surfaceBright.withValues(alpha: 0.99),
-                AppPalette.paperWarm.withValues(alpha: 0.96),
-                AppPalette.paperMist.withValues(alpha: 0.9),
+                colorScheme.surfaceContainerLowest.withValues(alpha: 0.995),
+                AppPalette.frost.withValues(alpha: 0.99),
+                AppPalette.paperMist.withValues(alpha: 0.96),
               ],
             ),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.68),
+              color: colorScheme.outlineVariant.withValues(alpha: 0.84),
             ),
             boxShadow: <BoxShadow>[
               BoxShadow(
-                color: const Color(0x0C2C241B),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
+                color: AppPalette.pineShadow.withValues(alpha: 0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
               ),
-              const BoxShadow(
-                color: Color(0x06120F0B),
-                blurRadius: 8,
-                offset: Offset(0, 2),
+              BoxShadow(
+                color: effectiveAccent.withValues(alpha: 0.08),
+                blurRadius: 34,
+                offset: const Offset(0, 16),
               ),
             ],
           ),
@@ -74,7 +74,7 @@ class FeatureHeroCard extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.36),
+                        color: Colors.white.withValues(alpha: 0.5),
                       ),
                       borderRadius: BorderRadius.circular(borderRadius),
                     ),
@@ -87,8 +87,8 @@ class FeatureHeroCard extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: <Color>[
-                          Colors.white.withValues(alpha: 0.18),
-                          effectiveAccent.withValues(alpha: 0.03),
+                          Colors.white.withValues(alpha: 0.24),
+                          effectiveAccent.withValues(alpha: 0.08),
                           Colors.transparent,
                         ],
                       ),
@@ -96,14 +96,20 @@ class FeatureHeroCard extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  top: compact ? 14 : 18,
-                  right: compact ? 18 : 22,
+                  top: compact ? 16 : 18,
+                  right: compact ? 18 : 24,
                   child: IgnorePointer(
                     child: Container(
-                      width: compact ? 44 : 52,
-                      height: 4,
+                      width: compact ? 52 : 72,
+                      height: 5,
                       decoration: BoxDecoration(
-                        color: effectiveAccent.withValues(alpha: 0.36),
+                        gradient: LinearGradient(
+                          colors: <Color>[
+                            effectiveAccent.withValues(alpha: 0.72),
+                            AppPalette.mistMint.withValues(alpha: 0.64),
+                            AppPalette.softLavender.withValues(alpha: 0.52),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),
@@ -111,16 +117,17 @@ class FeatureHeroCard extends StatelessWidget {
                 ),
                 Positioned(
                   top: 0,
-                  left: 24,
-                  right: 24,
+                  left: 26,
+                  right: 26,
                   child: IgnorePointer(
                     child: Container(
-                      height: 1.2,
+                      height: 1.3,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: <Color>[
                             Colors.transparent,
-                            effectiveAccent.withValues(alpha: 0.24),
+                            Colors.white.withValues(alpha: 0.7),
+                            effectiveAccent.withValues(alpha: 0.28),
                             Colors.transparent,
                           ],
                         ),
@@ -133,12 +140,20 @@ class FeatureHeroCard extends StatelessWidget {
                   bottom: 22,
                   left: 18,
                   child: IgnorePointer(
-                    child: Container(
-                      width: 1.5,
+                    child: DecoratedBox(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(999),
-                        color: effectiveAccent.withValues(alpha: 0.18),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: <Color>[
+                            effectiveAccent.withValues(alpha: 0.7),
+                            AppPalette.mistMint.withValues(alpha: 0.42),
+                            Colors.transparent,
+                          ],
+                        ),
                       ),
+                      child: const SizedBox(width: 2.2),
                     ),
                   ),
                 ),
@@ -203,9 +218,9 @@ class FeatureInsetPanel extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final effectiveAccent = accentColor ?? colorScheme.primary;
     final leadingColor =
-        backgroundColor ?? effectiveAccent.withValues(alpha: 0.12);
+        backgroundColor ?? effectiveAccent.withValues(alpha: 0.16);
     final trailingColor = colorScheme.surfaceContainerLowest.withValues(
-      alpha: 0.96,
+      alpha: 0.98,
     );
 
     return DecoratedBox(
@@ -213,18 +228,22 @@ class FeatureInsetPanel extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[leadingColor, trailingColor, trailingColor],
+          colors: <Color>[
+            leadingColor,
+            AppPalette.frost.withValues(alpha: 0.96),
+            trailingColor,
+          ],
         ),
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.72),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.78),
         ),
         boxShadow: shadow
             ? <BoxShadow>[
                 BoxShadow(
-                  color: effectiveAccent.withValues(alpha: 0.06),
-                  blurRadius: 22,
-                  offset: const Offset(0, 8),
+                  color: effectiveAccent.withValues(alpha: 0.1),
+                  blurRadius: 26,
+                  offset: const Offset(0, 12),
                 ),
               ]
             : const <BoxShadow>[],
@@ -240,7 +259,7 @@ class FeatureInsetPanel extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: <Color>[
-                      Colors.white.withValues(alpha: 0.08),
+                      Colors.white.withValues(alpha: 0.12),
                       Colors.transparent,
                     ],
                   ),
@@ -258,7 +277,8 @@ class FeatureInsetPanel extends StatelessWidget {
                     gradient: LinearGradient(
                       colors: <Color>[
                         Colors.transparent,
-                        effectiveAccent.withValues(alpha: 0.24),
+                        Colors.white.withValues(alpha: 0.55),
+                        effectiveAccent.withValues(alpha: 0.28),
                         Colors.transparent,
                       ],
                     ),
@@ -282,11 +302,11 @@ class _PaletteBands extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = <Color>[
-      primaryColor.withValues(alpha: 0.28),
-      AppPalette.softPine.withValues(alpha: 0.24),
-      AppPalette.mistMint.withValues(alpha: 0.22),
-      AppPalette.linenOlive.withValues(alpha: 0.2),
-      AppPalette.softLavender.withValues(alpha: 0.22),
+      primaryColor.withValues(alpha: 0.32),
+      AppPalette.softPine.withValues(alpha: 0.28),
+      AppPalette.mistMint.withValues(alpha: 0.26),
+      AppPalette.linenOlive.withValues(alpha: 0.24),
+      AppPalette.softLavender.withValues(alpha: 0.28),
     ];
     final width = compact ? 164.0 : 222.0;
     final height = compact ? 124.0 : 148.0;

@@ -4,7 +4,7 @@ class AppConstants {
   static const String appName = '斛生';
 
   /// 应用默认包名，供不支持原生版本插件的平台兜底使用。
-  static const String defaultPackageName = 'com.example.sickandflutter';
+  static const String defaultPackageName = 'com.aiitvisionlab.husheng';
 
   /// 首页与启动页使用的项目标语。
   static const String appTagline = '石斛培育环境监测与远程调控';

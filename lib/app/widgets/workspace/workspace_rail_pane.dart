@@ -64,7 +64,7 @@ class WorkspaceRailPane extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '石斛培育环境值守',
+                            '石斛培育环境值守软件',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.42,
@@ -101,7 +101,7 @@ class WorkspaceRailPane extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8, 4, 8, 14),
                     child: Text(
-                      '导航',
+                      '板块',
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -203,6 +203,16 @@ class _WorkspaceRailItem extends StatelessWidget {
                   color: selected ? AppPalette.deepPine : colorScheme.onSurface,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
                 ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              item.sectionCode,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: selected
+                    ? AppPalette.deepPine.withValues(alpha: 0.7)
+                    : colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ],

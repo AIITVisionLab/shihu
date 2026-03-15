@@ -22,6 +22,7 @@ class VideoInfoTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       borderRadius: 22,
       accentColor: AppPalette.mistMint,
+      shadow: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -86,16 +87,16 @@ class VideoStatusChip extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final (backgroundColor, foregroundColor) = switch (tone) {
       VideoStatusChipTone.active => (
-        const Color(0xFFDCE9D9),
-        const Color(0xFF3C5E47),
+        AppPalette.softPine.withValues(alpha: 0.88),
+        AppPalette.deepPine,
       ),
       VideoStatusChipTone.info => (
         AppPalette.mistMint.withValues(alpha: 0.92),
-        const Color(0xFF4D6F58),
+        AppPalette.deepPine,
       ),
       VideoStatusChipTone.secondary => (
         AppPalette.linenOlive.withValues(alpha: 0.92),
-        const Color(0xFF6B6A49),
+        const Color(0xFF6C654E),
       ),
       VideoStatusChipTone.muted => (
         colorScheme.surfaceContainerHigh.withValues(alpha: 0.82),
@@ -144,7 +145,7 @@ class VideoSignalDot extends StatelessWidget {
             ? <BoxShadow>[
                 BoxShadow(
                   color: color.withValues(alpha: 0.42),
-                  blurRadius: 10,
+                  blurRadius: 12,
                   spreadRadius: 1,
                 ),
               ]

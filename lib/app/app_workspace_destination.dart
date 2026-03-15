@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/app/routes.dart';
 
 /// 主工作台内的一级导航目的地。
@@ -78,13 +79,27 @@ extension AppWorkspaceDestinationX on AppWorkspaceDestination {
   Color get accentColor {
     switch (this) {
       case AppWorkspaceDestination.home:
-        return const Color(0xFFC9E2D0);
+        return AppPalette.mistMint;
       case AppWorkspaceDestination.realtime:
-        return const Color(0xFFA7D3B2);
+        return AppPalette.softPine;
       case AppWorkspaceDestination.video:
-        return const Color(0xFFD2D6AC);
+        return AppPalette.linenOlive;
       case AppWorkspaceDestination.settings:
-        return const Color(0xFFCEBBD8);
+        return AppPalette.softLavender;
+    }
+  }
+
+  /// 导航顺序编码。
+  String get sectionCode {
+    switch (this) {
+      case AppWorkspaceDestination.home:
+        return '01';
+      case AppWorkspaceDestination.realtime:
+        return '02';
+      case AppWorkspaceDestination.video:
+        return '03';
+      case AppWorkspaceDestination.settings:
+        return '04';
     }
   }
 }

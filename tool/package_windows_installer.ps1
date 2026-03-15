@@ -78,7 +78,7 @@ OutputBaseFilename=$compilerOutputBase
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-UninstallDisplayIcon={app}\sickandflutter.exe
+UninstallDisplayIcon={app}\husheng.exe
 
 [Languages]
 Name: "chinesesimp"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
@@ -90,11 +90,11 @@ Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: 
 Source: "$stageDir\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\斛生"; Filename: "{app}\sickandflutter.exe"
-Name: "{autodesktop}\斛生"; Filename: "{app}\sickandflutter.exe"; Tasks: desktopicon
+Name: "{autoprograms}\斛生"; Filename: "{app}\husheng.exe"
+Name: "{autodesktop}\斛生"; Filename: "{app}\husheng.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\sickandflutter.exe"; Description: "启动斛生"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\husheng.exe"; Description: "启动斛生"; Flags: nowait postinstall skipifsilent
 "@
 
 Set-Content -LiteralPath $scriptPath -Value $iss -Encoding utf8BOM

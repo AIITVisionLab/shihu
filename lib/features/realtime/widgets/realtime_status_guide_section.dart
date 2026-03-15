@@ -121,8 +121,8 @@ class _GuideItem extends StatelessWidget {
             ? <BoxShadow>[
                 BoxShadow(
                   color: accentColor.withValues(alpha: 0.12),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  blurRadius: 22,
+                  offset: const Offset(0, 12),
                 ),
               ]
             : const <BoxShadow>[],

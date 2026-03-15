@@ -1,4 +1,4 @@
-package com.example.sickandflutter
+package com.aiitvisionlab.husheng
 
 import io.flutter.embedding.android.FlutterActivity
 

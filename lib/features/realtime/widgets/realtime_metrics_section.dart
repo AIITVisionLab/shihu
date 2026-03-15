@@ -72,7 +72,7 @@ class RealtimeMetricsSection extends StatelessWidget {
                   child: Text(
                     deviceState == null
                         ? '设备接入后会在这里显示四项核心指标。'
-                        : '当前已经回到四项主指标视图，避免在值守页堆叠过多解释型内容。',
+                        : '四项主指标保持固定矩阵，值守时先横向对比，再决定是否处理。',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       height: 1.56,
@@ -140,6 +140,7 @@ class _MetricTile extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       borderRadius: 22,
       accentColor: accentColor,
+      shadow: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -159,7 +160,7 @@ class _MetricTile extends StatelessWidget {
                 width: 28,
                 height: 3,
                 decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.72),
+                  color: accentColor.withValues(alpha: 0.82),
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.sickandflutter"
+    namespace = "com.aiitvisionlab.husheng"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,8 +20,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: 替换为项目正式使用的唯一应用标识。
-        applicationId = "com.example.sickandflutter"
+        applicationId = "com.aiitvisionlab.husheng"
         // 以下版本与 SDK 配置可按实际发布要求调整。
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
@@ -31,7 +30,6 @@ android {
 
     buildTypes {
         release {
-            // TODO: 接入正式发布签名配置。
             // 当前先复用调试签名，保证 `flutter run --release` 可以跑通。
             signingConfig = signingConfigs.getByName("debug")
         }

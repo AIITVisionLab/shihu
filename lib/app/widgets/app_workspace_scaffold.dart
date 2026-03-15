@@ -40,20 +40,25 @@ class AppWorkspaceScaffold extends StatelessWidget {
       BackdropOrbData(
         alignment: Alignment(-1.0, -0.96),
         size: 360,
-        color: Color(0x0A718C75),
+        color: Color(0x18518463),
       ),
       BackdropOrbData(
         alignment: Alignment(1.02, -0.12),
         size: 300,
-        color: Color(0x08CDBFA7),
+        color: Color(0x18CBF2E0),
       ),
       BackdropOrbData(
         alignment: Alignment(0.94, 1.1),
         size: 260,
-        color: Color(0x06D6CBD6),
+        color: Color(0x16CEBBD8),
+      ),
+      BackdropOrbData(
+        alignment: Alignment(-0.84, 1.0),
+        size: 250,
+        color: Color(0x12D2C8AC),
       ),
     ],
-    this.showGrid = false,
+    this.showGrid = true,
     super.key,
   });
 
@@ -140,7 +145,7 @@ class AppWorkspaceScaffold extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: <Color>[
                       AppPalette.paperSnow,
-                      AppPalette.paperMist,
+                      AppPalette.frost,
                       AppPalette.paper,
                     ],
                   ),

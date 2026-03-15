@@ -12,17 +12,22 @@ class AppBackdrop extends StatelessWidget {
       BackdropOrbData(
         alignment: Alignment(-1.02, -0.96),
         size: 320,
-        color: Color(0x0A718C75),
+        color: Color(0x16518463),
       ),
       BackdropOrbData(
         alignment: Alignment(1.06, -0.18),
-        size: 280,
-        color: Color(0x08CDBFA7),
+        size: 300,
+        color: Color(0x14CBF2E0),
       ),
       BackdropOrbData(
         alignment: Alignment(0.96, 1.04),
+        size: 260,
+        color: Color(0x14CEBBD8),
+      ),
+      BackdropOrbData(
+        alignment: Alignment(-0.88, 1.08),
         size: 240,
-        color: Color(0x06D6CBD6),
+        color: Color(0x12D2C8AC),
       ),
     ],
     this.showGrid = false,
@@ -50,8 +55,8 @@ class AppBackdrop extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: <Color>[
                 AppPalette.paperSnow,
-                AppPalette.paperMist,
-                colorScheme.surfaceContainerLow,
+                AppPalette.frost,
+                AppPalette.paper,
               ],
             ),
       ),
@@ -64,7 +69,7 @@ class AppBackdrop extends StatelessWidget {
                   center: const Alignment(-0.76, -0.92),
                   radius: 1.08,
                   colors: <Color>[
-                    AppPalette.softPine.withValues(alpha: 0.05),
+                    AppPalette.softPine.withValues(alpha: 0.1),
                     Colors.transparent,
                   ],
                 ),
@@ -78,8 +83,9 @@ class AppBackdrop extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: <Color>[
-                    Colors.white.withValues(alpha: 0.12),
-                    AppPalette.linenOlive.withValues(alpha: 0.03),
+                    Colors.white.withValues(alpha: 0.22),
+                    AppPalette.mistMint.withValues(alpha: 0.08),
+                    AppPalette.linenOlive.withValues(alpha: 0.05),
                     Colors.transparent,
                   ],
                 ),
@@ -89,8 +95,8 @@ class AppBackdrop extends StatelessWidget {
           Positioned.fill(
             child: CustomPaint(
               painter: _BackdropPaperTexturePainter(
-                fiberColor: AppPalette.fogMint.withValues(alpha: 0.2),
-                fleckColor: AppPalette.outlineSoft.withValues(alpha: 0.18),
+                fiberColor: AppPalette.fogMint.withValues(alpha: 0.18),
+                fleckColor: AppPalette.outlineSoft.withValues(alpha: 0.14),
               ),
             ),
           ),
@@ -118,8 +124,10 @@ class AppBackdrop extends StatelessWidget {
             Positioned.fill(
               child: CustomPaint(
                 painter: _BackdropGridPainter(
-                  lineColor: colorScheme.outlineVariant.withValues(alpha: 0.02),
-                  emphasisColor: AppPalette.softPine.withValues(alpha: 0.025),
+                  lineColor: colorScheme.outlineVariant.withValues(
+                    alpha: 0.032,
+                  ),
+                  emphasisColor: AppPalette.softPine.withValues(alpha: 0.04),
                 ),
               ),
             ),
@@ -130,9 +138,9 @@ class AppBackdrop extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: <Color>[
-                    Colors.white.withValues(alpha: 0.04),
+                    Colors.white.withValues(alpha: 0.08),
                     Colors.transparent,
-                    colorScheme.surface.withValues(alpha: 0.12),
+                    colorScheme.surface.withValues(alpha: 0.16),
                   ],
                 ),
               ),

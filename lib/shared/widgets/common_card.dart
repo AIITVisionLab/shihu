@@ -40,25 +40,25 @@ class CommonCard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: <Color>[
-                colorScheme.surfaceBright.withValues(alpha: 0.985),
-                AppPalette.paperWarm.withValues(alpha: 0.96),
-                AppPalette.paperMist.withValues(alpha: 0.82),
+                colorScheme.surfaceContainerLowest.withValues(alpha: 0.995),
+                AppPalette.frost.withValues(alpha: 0.98),
+                AppPalette.paperMist.withValues(alpha: 0.92),
               ],
             ),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.54),
+              color: colorScheme.outlineVariant.withValues(alpha: 0.78),
             ),
             boxShadow: <BoxShadow>[
               BoxShadow(
-                color: const Color(0x0D30281E),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
+                color: AppPalette.pineShadow.withValues(alpha: 0.06),
+                blurRadius: 22,
+                offset: const Offset(0, 12),
               ),
-              const BoxShadow(
-                color: Color(0x06140F0B),
-                blurRadius: 8,
-                offset: Offset(0, 2),
+              BoxShadow(
+                color: AppPalette.softPine.withValues(alpha: 0.06),
+                blurRadius: 28,
+                offset: const Offset(0, 16),
               ),
             ],
           ),
@@ -69,7 +69,7 @@ class CommonCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(30),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.24),
+                      color: Colors.white.withValues(alpha: 0.42),
                     ),
                   ),
                 ),
@@ -84,8 +84,9 @@ class CommonCard extends StatelessWidget {
                     gradient: LinearGradient(
                       colors: <Color>[
                         Colors.transparent,
-                        AppPalette.pineGreen.withValues(alpha: 0.18),
-                        AppPalette.linenOlive.withValues(alpha: 0.1),
+                        Colors.white.withValues(alpha: 0.66),
+                        AppPalette.pineGreen.withValues(alpha: 0.2),
+                        AppPalette.linenOlive.withValues(alpha: 0.14),
                         Colors.transparent,
                       ],
                     ),

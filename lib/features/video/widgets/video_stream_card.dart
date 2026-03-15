@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/features/video/video_playback_page.dart';
 import 'package:sickandflutter/features/video/video_stream_info.dart';
 import 'package:sickandflutter/features/video/widgets/video_view_primitives.dart';
@@ -233,13 +234,21 @@ class VideoScreenStage extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: <Color>[
               stream.available
-                  ? colorScheme.surfaceContainerLow
+                  ? AppPalette.mistMint.withValues(alpha: 0.32)
                   : colorScheme.surfaceContainer,
+              colorScheme.surfaceContainerLowest,
               colorScheme.surface,
             ],
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: colorScheme.outlineVariant),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: AppPalette.pineShadow.withValues(alpha: 0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 12),
+            ),
+          ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
@@ -306,6 +315,13 @@ class VideoScreenStage extends StatelessWidget {
                     border: Border.all(
                       color: colorScheme.outlineVariant.withValues(alpha: 0.8),
                     ),
+                    boxShadow: <BoxShadow>[
+                      BoxShadow(
+                        color: AppPalette.softPine.withValues(alpha: 0.06),
+                        blurRadius: 18,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: <Widget>[

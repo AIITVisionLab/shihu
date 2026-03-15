@@ -31,7 +31,7 @@ class HomeSummaryBoard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            '状态摘要',
+            '值守摘要',
             style: theme.textTheme.labelLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -66,7 +66,9 @@ class HomeSummaryBoard extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        deviceStatus == null ? '等待数据返回' : '把当前状态收成一眼可读的摘要。',
+                        deviceStatus == null
+                            ? '等待数据返回'
+                            : '把当前状态、同步和补光收成一眼可读的摘要。',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                           height: 1.58,
@@ -89,6 +91,12 @@ class HomeSummaryBoard extends StatelessWidget {
             title: '补光状态',
             value: deviceStatus == null ? '待同步' : viewData!.ledLabel,
             accentColor: AppPalette.softLavender,
+          ),
+          const SizedBox(height: 12),
+          HomeSummaryValueCard(
+            title: '下一步',
+            value: deviceStatus == null ? '等待设备接入' : '先看值守台，再决定操作',
+            accentColor: AppPalette.mistMint,
           ),
         ],
       ),
@@ -123,6 +131,7 @@ class HomeSummaryValueCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       borderRadius: 18,
       accentColor: accentColor,
+      shadow: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[

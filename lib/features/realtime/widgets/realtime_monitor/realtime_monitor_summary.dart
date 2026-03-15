@@ -64,9 +64,10 @@ class RealtimeMonitorSummary extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         Text(
-          '当前状态',
+          '当前值守',
           style: theme.textTheme.labelLarge?.copyWith(
             color: colorScheme.secondary,
+            fontWeight: FontWeight.w800,
           ),
         ),
         const SizedBox(height: 10),
@@ -100,7 +101,7 @@ class RealtimeMonitorSummary extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    '当前基线',
+                    '当前判断',
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -278,6 +279,7 @@ class RealtimeFactTile extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       borderRadius: 18,
       accentColor: accentColor,
+      shadow: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -329,6 +331,7 @@ class RealtimeHeroActionStrip extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       borderRadius: 22,
       accentColor: AppPalette.softLavender,
+      shadow: true,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final summary = Column(
@@ -437,9 +440,16 @@ class _RealtimeMetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.68),
+        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: colorScheme.outlineVariant),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: AppPalette.softPine.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

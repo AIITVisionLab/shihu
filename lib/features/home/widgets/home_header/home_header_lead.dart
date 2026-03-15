@@ -47,6 +47,14 @@ class HomeHeaderLead extends StatelessWidget {
           const SizedBox(height: 16),
         ],
         Text(
+          '当前值守基线',
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: colorScheme.secondary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
           title,
           style: theme.textTheme.headlineLarge?.copyWith(
             color: colorScheme.onSurface,
@@ -124,6 +132,40 @@ class HomeHeaderLead extends StatelessWidget {
                     onPressed: onRefresh,
                     icon: const Icon(Icons.refresh_rounded),
                     label: const Text('刷新总览'),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 11,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerLowest.withValues(
+                        alpha: 0.88,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.72,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Icon(
+                          Icons.route_rounded,
+                          size: 18,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '先看值守台',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               );
