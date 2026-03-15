@@ -115,25 +115,31 @@ flutter run --dart-define=USE_MOCK_AUTH=true
 - 推送 `v*` 标签时自动构建并上传到 GitHub Release
 - 也可手动执行 `发布安装包` 工作流，并传入发布标签
 
-默认构建并上传的产物：
+默认构建并上传的安装包：
 
-- Android `APK` 与 `AAB`
-- Linux 桌面端压缩包
-- Windows 桌面端压缩包
-- macOS 应用压缩包
-- Web 静态资源压缩包
-- iOS 未签名 `Runner.app` 压缩包
+- Android 按架构拆分 `APK`
+- Linux `deb`
+- Windows 安装器 `exe`
+- macOS 安装盘镜像 `dmg`
 
-Release 附带内容：
+当前不再上传：
 
-- `README.txt`：当前发布包说明
-- `SHA256SUMS`：所有产物的校验值
+- `AAB`
+- Web 静态资源
+- 目录压缩包
+- 未签名 iOS 包
+- 校验说明附件
 
 OpenHarmony / 鸿蒙说明：
 
 - GitHub 官方 runner 不自带 `flutter-ohos` 与 HarmonyOS SDK
 - 如需把 `HAP` 一起发到 Release，需要启用带 `self-hosted`、`linux`、`ohos` 标签的自托管 runner
 - 需要额外配置仓库变量 `ENABLE_OHOS_RELEASE=true`、`FLUTTER_OHOS_HOME`、`OHOS_SDK_HOME`
+
+iOS 说明：
+
+- `IPA` 必须在签名后才能作为安装包分发
+- 当前工作流未接入签名证书和描述文件，因此默认不生成 iOS 安装包
 
 ## 当前验证结果
 
