@@ -108,6 +108,33 @@ flutter run --dart-define=USE_MOCK_AUTH=true
 - iOS 原生端需要在 `ios/Runner/Info.plist` 中配置 ATS 例外，否则默认会拦截 `http://` 设备服务
 - 如果后端未来统一切到 HTTPS，可回收以上明文访问放行配置
 
+## GitHub Release 自动发布
+
+仓库已补充 GitHub Actions 发布工作流：
+
+- 推送 `v*` 标签时自动构建并上传到 GitHub Release
+- 也可手动执行 `发布安装包` 工作流，并传入发布标签
+
+默认构建并上传的产物：
+
+- Android `APK` 与 `AAB`
+- Linux 桌面端压缩包
+- Windows 桌面端压缩包
+- macOS 应用压缩包
+- Web 静态资源压缩包
+- iOS 未签名 `Runner.app` 压缩包
+
+Release 附带内容：
+
+- `README.txt`：当前发布包说明
+- `SHA256SUMS`：所有产物的校验值
+
+OpenHarmony / 鸿蒙说明：
+
+- GitHub 官方 runner 不自带 `flutter-ohos` 与 HarmonyOS SDK
+- 如需把 `HAP` 一起发到 Release，需要启用带 `self-hosted`、`linux`、`ohos` 标签的自托管 runner
+- 需要额外配置仓库变量 `ENABLE_OHOS_RELEASE=true`、`FLUTTER_OHOS_HOME`、`OHOS_SDK_HOME`
+
 ## 当前验证结果
 
 以下结果已于 `2026-03-14` 在当前 Linux 开发环境验证通过：
