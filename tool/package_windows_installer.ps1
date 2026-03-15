@@ -19,6 +19,9 @@ if (-not (Test-Path -LiteralPath $BuildDir)) {
   throw "BuildDir not found: $BuildDir"
 }
 
+$buildDirPath = (Resolve-Path -LiteralPath $BuildDir).ProviderPath
+$outputFilePath = [System.IO.Path]::GetFullPath($OutputFile)
+
 $isccPath = $null
 $candidates = @(
   "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
@@ -48,10 +51,10 @@ $stageDir = Join-Path $workDir "app"
 $scriptPath = Join-Path $workDir "installer.iss"
 
 New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
-Copy-Item -Recurse -Force (Join-Path $BuildDir '*') $stageDir
+Copy-Item -Recurse -Force (Join-Path $buildDirPath '*') $stageDir
 
-$outputDir = Split-Path -Parent $OutputFile
-$outputBase = [System.IO.Path]::GetFileNameWithoutExtension($OutputFile)
+$outputDir = Split-Path -Parent $outputFilePath
+$outputBase = [System.IO.Path]::GetFileNameWithoutExtension($outputFilePath)
 New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
 
 $appId = if ($Architecture -eq "arm64") {
@@ -63,9 +66,6 @@ $appId = if ($Architecture -eq "arm64") {
 $allowedArch = if ($Architecture -eq "arm64") { "arm64" } else { "x64compatible" }
 $installArch = if ($Architecture -eq "arm64") { "arm64" } else { "x64compatible" }
 
-$stageDirEscaped = $stageDir -replace '\\', '\\'
-$outputDirEscaped = $outputDir -replace '\\', '\\'
-
 $iss = @"
 [Setup]
 AppId=$appId
@@ -75,7 +75,7 @@ AppPublisher=AIITVisionLab
 DefaultDirName={autopf}\斛生
 DefaultGroupName=斛生
 DisableProgramGroupPage=yes
-OutputDir=$outputDirEscaped
+OutputDir=$outputDir
 OutputBaseFilename=$outputBase
 Compression=lzma
 SolidCompression=yes
@@ -91,7 +91,7 @@ Name: "chinesesimp"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加任务:"
 
 [Files]
-Source: "$stageDirEscaped\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "$stageDir\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\斛生"; Filename: "{app}\sickandflutter.exe"
@@ -101,5 +101,13 @@ Name: "{autodesktop}\斛生"; Filename: "{app}\sickandflutter.exe"; Tasks: deskt
 Filename: "{app}\sickandflutter.exe"; Description: "启动斛生"; Flags: nowait postinstall skipifsilent
 "@
 
-Set-Content -LiteralPath $scriptPath -Value $iss -Encoding UTF8
+Set-Content -LiteralPath $scriptPath -Value $iss -Encoding utf8BOM
 & $isccPath $scriptPath | Out-Host
+
+if ($LASTEXITCODE -ne 0) {
+  throw "Inno Setup compile failed with exit code $LASTEXITCODE"
+}
+
+if (-not (Test-Path -LiteralPath $outputFilePath)) {
+  throw "Installer not generated: $outputFilePath"
+}
