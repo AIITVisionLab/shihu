@@ -206,11 +206,9 @@ jobs:
       matrix:
         include:
           - runner: windows-latest
-            flutter_target_platform: windows-x64
             build_arch: x64
             asset_name: 斛生-windows-x64-setup.exe
           - runner: windows-11-arm
-            flutter_target_platform: windows-arm64
             build_arch: arm64
             asset_name: 斛生-windows-arm64-setup.exe
     runs-on: ${{ matrix.runner }}
@@ -239,7 +237,6 @@ jobs:
         run: |
           set -euo pipefail
           flutter build windows --release \
-            --target-platform "${{ matrix.flutter_target_platform }}" \
             --build-name "${{ needs.prepare.outputs.build_name }}" \
             --build-number "${{ needs.prepare.outputs.build_number }}"
 
