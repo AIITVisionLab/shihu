@@ -137,6 +137,10 @@ flutter run --dart-define=USE_MOCK_AUTH=true
 
 - Android 按架构拆分 `APK`
 - Linux `deb`
+- Linux `rpm`
+- Linux `pacman`
+- Linux `AppImage`
+- Linux 便携二进制包 `tar.gz`
 - Windows 安装器 `exe`
 - macOS 安装盘镜像 `dmg`
 - iOS 未签名 `IPA`
@@ -145,7 +149,6 @@ flutter run --dart-define=USE_MOCK_AUTH=true
 
 - `AAB`
 - Web 静态资源
-- 目录压缩包
 - 校验说明附件
 
 OpenHarmony / 鸿蒙说明：

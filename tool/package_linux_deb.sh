@@ -1,25 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/package_linux_common.sh"
+
 BUNDLE_DIR="${1:?bundle dir required}"
 OUTPUT_FILE="${2:?output file required}"
 VERSION="${3:?version required}"
 DEB_ARCH="${4:?deb arch required}"
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ICON_SOURCE="${ROOT_DIR}/assets/branding/app_icon.png"
-PACKAGE_NAME="husheng"
-INSTALL_ROOT="/opt/${PACKAGE_NAME}"
-
-if [[ ! -d "${BUNDLE_DIR}" ]]; then
-  echo "Bundle directory not found: ${BUNDLE_DIR}" >&2
-  exit 1
-fi
-
-if [[ ! -f "${ICON_SOURCE}" ]]; then
-  echo "Icon not found: ${ICON_SOURCE}" >&2
-  exit 1
-fi
+package_linux_validate_inputs "${BUNDLE_DIR}"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
@@ -32,8 +23,9 @@ mkdir -p \
   "${PKG_ROOT}/usr/share/applications" \
   "${PKG_ROOT}/usr/share/icons/hicolor/256x256/apps"
 
-cp -R "${BUNDLE_DIR}/." "${PKG_ROOT}${INSTALL_ROOT}/"
-cp "${ICON_SOURCE}" "${PKG_ROOT}/usr/share/icons/hicolor/256x256/apps/${PACKAGE_NAME}.png"
+package_linux_copy_bundle "${BUNDLE_DIR}" "${PKG_ROOT}${INSTALL_ROOT}"
+package_linux_copy_icon "${PKG_ROOT}/usr/share/icons/hicolor/256x256/apps/${PACKAGE_NAME}.png"
+package_linux_try_fix_rpath "${PKG_ROOT}${INSTALL_ROOT}" || true
 
 cat > "${PKG_ROOT}/DEBIAN/control" <<EOF
 Package: ${PACKAGE_NAME}
@@ -45,24 +37,11 @@ Maintainer: AIITVisionLab
 Description: 斛生跨平台客户端
 EOF
 
-cat > "${PKG_ROOT}/usr/bin/${PACKAGE_NAME}" <<EOF
-#!/bin/sh
-exec ${INSTALL_ROOT}/husheng "\$@"
-EOF
-chmod 755 "${PKG_ROOT}/usr/bin/${PACKAGE_NAME}"
-
-cat > "${PKG_ROOT}/usr/share/applications/${PACKAGE_NAME}.desktop" <<EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=斛生
-Comment=斛生跨平台客户端
-Exec=${INSTALL_ROOT}/husheng
-Icon=${PACKAGE_NAME}
-Terminal=false
-Categories=Utility;
-Keywords=斛生;石斛;监控;
-EOF
+package_linux_write_launcher "${PKG_ROOT}/usr/bin/${PACKAGE_NAME}" "${INSTALL_ROOT}"
+package_linux_write_desktop_file \
+  "${PKG_ROOT}/usr/share/applications/${PACKAGE_NAME}.desktop" \
+  "${PACKAGE_NAME}" \
+  "${PACKAGE_NAME}"
 
 mkdir -p "$(dirname "${OUTPUT_FILE}")"
 dpkg-deb --build --root-owner-group "${PKG_ROOT}" "${OUTPUT_FILE}"

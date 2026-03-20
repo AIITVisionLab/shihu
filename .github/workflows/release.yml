@@ -121,11 +121,13 @@ jobs:
             flutter_target_platform: linux-x64
             build_arch: x64
             deb_arch: amd64
+            rpm_arch: x86_64
             asset_name: 斛生-linux-x64.deb
           - runner: ubuntu-24.04-arm
             flutter_target_platform: linux-arm64
             build_arch: arm64
             deb_arch: arm64
+            rpm_arch: aarch64
             asset_name: 斛生-linux-arm64.deb
     runs-on: ${{ matrix.runner }}
     steps:
@@ -147,12 +149,17 @@ jobs:
             clang \
             cmake \
             dpkg-dev \
+            fakeroot \
             libgtk-3-dev \
             libjsoncpp-dev \
             liblzma-dev \
             libsecret-1-dev \
             ninja-build \
-            pkg-config
+            patchelf \
+            pkg-config \
+            rpm \
+            squashfs-tools \
+            zstd
 
       - name: 安装 Flutter SDK
         shell: bash
@@ -179,17 +186,41 @@ jobs:
             --build-name "${{ needs.prepare.outputs.build_name }}" \
             --build-number "${{ needs.prepare.outputs.build_number }}"
 
-      - name: 生成 Linux deb 安装包
+      - name: 生成 Linux 安装包
         shell: bash
         run: |
           set -euo pipefail
           chmod +x tool/package_linux_deb.sh
+          chmod +x tool/package_linux_common.sh
+          chmod +x tool/package_linux_appimage.sh
+          chmod +x tool/package_linux_pacman.sh
+          chmod +x tool/package_linux_rpm.sh
+          chmod +x tool/package_linux_portable.sh
           mkdir -p dist
           tool/package_linux_deb.sh \
             "build/linux/${{ matrix.build_arch }}/release/bundle" \
             "dist/${{ matrix.asset_name }}" \
             "${{ needs.prepare.outputs.build_name }}" \
             "${{ matrix.deb_arch }}"
+          tool/package_linux_rpm.sh \
+            "build/linux/${{ matrix.build_arch }}/release/bundle" \
+            "dist/斛生-linux-${{ matrix.build_arch }}.rpm" \
+            "${{ needs.prepare.outputs.build_name }}" \
+            "${{ matrix.rpm_arch }}"
+          tool/package_linux_pacman.sh \
+            "build/linux/${{ matrix.build_arch }}/release/bundle" \
+            "dist/斛生-linux-${{ matrix.build_arch }}.pkg.tar.zst" \
+            "${{ needs.prepare.outputs.build_name }}" \
+            "1" \
+            "${{ matrix.rpm_arch }}"
+          tool/package_linux_appimage.sh \
+            "build/linux/${{ matrix.build_arch }}/release/bundle" \
+            "dist/斛生-linux-${{ matrix.build_arch }}.AppImage" \
+            "${{ matrix.rpm_arch }}"
+          tool/package_linux_portable.sh \
+            "build/linux/${{ matrix.build_arch }}/release/bundle" \
+            "dist/斛生-linux-${{ matrix.build_arch }}-portable.tar.gz" \
+            "husheng-linux-${{ matrix.build_arch }}-portable"
 
       - name: 上传 Linux 安装包
         uses: actions/upload-artifact@v4
@@ -522,7 +553,7 @@ jobs:
           当前 Release 仅包含安装包：
 
           - Android 按架构拆分 APK
-          - Linux 按架构拆分 deb
+          - Linux 按架构拆分 deb、rpm、pacman、AppImage 与便携二进制包
           - Windows 按架构拆分安装器
           - macOS 按架构拆分 dmg
           - iOS 未签名 IPA
@@ -530,7 +561,7 @@ jobs:
 
           说明：
 
-          - 不再上传目录压缩包、Web 静态资源、AAB 和校验说明文件。
+          - 不再上传 Web 静态资源、AAB 和校验说明文件。
           - iOS 当前提供未签名 IPA，如需直接安装到真机，请按你的分发流程重新签名。
           - macOS dmg 当前未做 notarization，如需正式分发请继续补签名与公证。
           EOF
