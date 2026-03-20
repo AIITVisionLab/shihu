@@ -91,7 +91,9 @@ class AppWorkspaceScaffold extends StatelessWidget {
           ? null
           : SafeArea(
               top: false,
-              child: Center(
+              child: Align(
+                alignment: Alignment.topCenter,
+                heightFactor: 1,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
                     maxWidth: kWorkspaceBottomNavigationMaxWidth,
@@ -129,33 +131,43 @@ class AppWorkspaceScaffold extends StatelessWidget {
           ),
           SafeArea(
             bottom: !useRail,
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: shellMaxWidth),
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    topPadding,
-                    horizontalPadding,
-                    useRail ? 14 : 6,
-                  ),
-                  child: useRail
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: <Widget>[
-                            SizedBox(
-                              width: kWorkspaceDesktopRailWidth,
-                              child: WorkspaceRailPane(
-                                destination: destination,
-                                currentUser: currentUser,
-                              ),
-                            ),
-                            const SizedBox(width: 24),
-                            Expanded(child: contentPane),
-                          ],
-                        )
-                      : contentPane,
-                ),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                topPadding,
+                horizontalPadding,
+                useRail ? 14 : 6,
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final shellWidth = constraints.maxWidth
+                      .clamp(0, shellMaxWidth)
+                      .toDouble();
+
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: shellWidth,
+                      height: constraints.maxHeight,
+                      child: useRail
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: <Widget>[
+                                SizedBox(
+                                  width: kWorkspaceDesktopRailWidth,
+                                  child: WorkspaceRailPane(
+                                    destination: destination,
+                                    currentUser: currentUser,
+                                  ),
+                                ),
+                                const SizedBox(width: 24),
+                                Expanded(child: contentPane),
+                              ],
+                            )
+                          : contentPane,
+                    ),
+                  );
+                },
               ),
             ),
           ),
