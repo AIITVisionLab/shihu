@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
+import 'package:sickandflutter/core/utils/external_link_launcher.dart';
 import 'package:sickandflutter/core/utils/platform_utils.dart';
 import 'package:sickandflutter/features/video/video_playback_support.dart';
+import 'package:sickandflutter/features/video/widgets/video_playback_embedded_view.dart';
+import 'package:sickandflutter/features/video/widgets/video_playback_native_view.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/widgets/loading_view.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -14,6 +17,8 @@ class VideoPlaybackPage extends StatefulWidget {
     required this.title,
     required this.initialUrl,
     required this.sourceLabel,
+    this.streamId,
+    this.gatewayPageUrl,
     this.platformTypeOverride,
     super.key,
   });
@@ -27,6 +32,12 @@ class VideoPlaybackPage extends StatefulWidget {
   /// 当前入口标签。
   final String sourceLabel;
 
+  /// 当前流标识。
+  final String? streamId;
+
+  /// 当前网关页地址。
+  final String? gatewayPageUrl;
+
   /// 仅供测试时覆盖平台判断。
   final PlatformType? platformTypeOverride;
 
@@ -36,7 +47,10 @@ class VideoPlaybackPage extends StatefulWidget {
 
 class _VideoPlaybackPageState extends State<VideoPlaybackPage> {
   WebViewController? _controller;
+  Uri? _playbackUri;
   int _progress = 0;
+  int _webReloadToken = 0;
+  int _directReloadToken = 0;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -45,6 +59,9 @@ class _VideoPlaybackPageState extends State<VideoPlaybackPage> {
 
   bool get _supportsEmbeddedPlayback =>
       supportsEmbeddedVideoPlaybackOnPlatform(_platformType);
+
+  bool get _supportsDirectPlayback =>
+      supportsDirectVideoPlaybackOnPlatform(_platformType);
 
   @override
   void initState() {
@@ -61,7 +78,19 @@ class _VideoPlaybackPageState extends State<VideoPlaybackPage> {
       return;
     }
 
-    if (!_supportsEmbeddedPlayback) {
+    _playbackUri = uri;
+
+    if (!_supportsEmbeddedPlayback && !_supportsDirectPlayback) {
+      _isLoading = false;
+      return;
+    }
+
+    if (_platformType == PlatformType.web) {
+      _isLoading = false;
+      return;
+    }
+
+    if (_supportsDirectPlayback) {
       _isLoading = false;
       return;
     }
@@ -140,7 +169,14 @@ class _VideoPlaybackPageState extends State<VideoPlaybackPage> {
           ],
         ),
         actions: <Widget>[
-          if (_controller != null)
+          if (_playbackUri != null)
+            IconButton(
+              tooltip: '在新页打开',
+              onPressed: _openExternally,
+              icon: const Icon(Icons.open_in_new_rounded),
+            ),
+          if ((_supportsEmbeddedPlayback || _supportsDirectPlayback) &&
+              _playbackUri != null)
             IconButton(
               tooltip: AppCopy.refresh,
               onPressed: _reload,
@@ -184,7 +220,7 @@ class _VideoPlaybackPageState extends State<VideoPlaybackPage> {
   }
 
   Widget _buildBody() {
-    if (!_supportsEmbeddedPlayback) {
+    if (!_supportsEmbeddedPlayback && !_supportsDirectPlayback) {
       return _PlaybackMessageView(
         icon: Icons.desktop_access_disabled_outlined,
         title: AppCopy.videoPlaybackUnsupportedTitle,
@@ -203,6 +239,40 @@ class _VideoPlaybackPageState extends State<VideoPlaybackPage> {
     }
 
     final controller = _controller;
+    final playbackUri = _playbackUri;
+    if (playbackUri == null) {
+      return _PlaybackMessageView(
+        icon: Icons.link_off_rounded,
+        title: AppCopy.videoPlaybackAddressInvalid,
+        message: AppCopy.videoPlaybackAddressHint,
+      );
+    }
+
+    if (_platformType == PlatformType.web) {
+      return ColoredBox(
+        color: Colors.black,
+        child: VideoPlaybackEmbeddedView(
+          url: playbackUri.toString(),
+          reloadToken: _webReloadToken,
+        ),
+      );
+    }
+
+    if (_supportsDirectPlayback) {
+      final directPlaybackUrl = _resolveDirectPlaybackUrl();
+      if (directPlaybackUrl == null) {
+        return _PlaybackMessageView(
+          icon: Icons.link_off_rounded,
+          title: AppCopy.videoPlaybackAddressInvalid,
+          message: AppCopy.videoPlaybackAddressHint,
+        );
+      }
+      return VideoPlaybackNativeView(
+        key: ValueKey<int>(_directReloadToken),
+        url: directPlaybackUrl,
+      );
+    }
+
     if (controller == null) {
       return _PlaybackMessageView(
         icon: Icons.link_off_rounded,
@@ -239,6 +309,19 @@ class _VideoPlaybackPageState extends State<VideoPlaybackPage> {
   }
 
   Future<void> _reload() async {
+    if (_platformType == PlatformType.web || _supportsDirectPlayback) {
+      setState(() {
+        if (_platformType == PlatformType.web) {
+          _webReloadToken++;
+        }
+        if (_supportsDirectPlayback) {
+          _directReloadToken++;
+        }
+        _errorMessage = null;
+      });
+      return;
+    }
+
     final controller = _controller;
     if (controller == null) {
       return;
@@ -250,6 +333,90 @@ class _VideoPlaybackPageState extends State<VideoPlaybackPage> {
       _errorMessage = null;
     });
     await controller.reload();
+  }
+
+  Future<void> _openExternally() async {
+    final playbackUri = _playbackUri;
+    if (playbackUri == null) {
+      return;
+    }
+
+    final opened = await openExternalUrl(playbackUri.toString());
+    if (!opened || !mounted) {
+      return;
+    }
+  }
+
+  String? _resolveDirectPlaybackUrl() {
+    final playbackUri = _playbackUri;
+    if (playbackUri == null) {
+      return null;
+    }
+
+    if (playbackUri.path.contains('/api/stream.mp4')) {
+      return playbackUri.toString();
+    }
+
+    final streamId = _resolveStreamId(playbackUri);
+    final gatewayUri = _resolveGatewayUri(playbackUri);
+    if (streamId == null || gatewayUri == null) {
+      return null;
+    }
+
+    return gatewayUri
+        .replace(
+          path: _resolveGatewayPath(gatewayUri, 'api/stream.mp4'),
+          queryParameters: <String, String>{'src': streamId},
+        )
+        .toString();
+  }
+
+  String? _resolveStreamId(Uri playbackUri) {
+    final configuredStreamId = widget.streamId?.trim();
+    if (configuredStreamId != null && configuredStreamId.isNotEmpty) {
+      return configuredStreamId;
+    }
+
+    final queryStreamId = playbackUri.queryParameters['src']?.trim();
+    if (queryStreamId != null && queryStreamId.isNotEmpty) {
+      return queryStreamId;
+    }
+
+    return null;
+  }
+
+  Uri? _resolveGatewayUri(Uri playbackUri) {
+    final configuredGateway = widget.gatewayPageUrl?.trim();
+    if (configuredGateway != null && configuredGateway.isNotEmpty) {
+      final gatewayUri = Uri.tryParse(configuredGateway);
+      if (gatewayUri != null && gatewayUri.hasScheme) {
+        return gatewayUri;
+      }
+    }
+
+    return playbackUri.replace(
+      path: _resolveGatewayPath(playbackUri, ''),
+      query: null,
+      fragment: null,
+    );
+  }
+
+  String _resolveGatewayPath(Uri uri, String leaf) {
+    final rawPath = uri.path.trim();
+    String basePath = rawPath;
+    if (basePath.endsWith('/')) {
+      basePath = basePath.substring(0, basePath.length - 1);
+    }
+    if (basePath.endsWith('/stream.html')) {
+      basePath = basePath.substring(0, basePath.length - '/stream.html'.length);
+    }
+    if (basePath.endsWith('/links.html')) {
+      basePath = basePath.substring(0, basePath.length - '/links.html'.length);
+    }
+    if (leaf.isEmpty) {
+      return basePath.isEmpty ? '/' : '$basePath/';
+    }
+    return basePath.isEmpty ? '/$leaf' : '$basePath/$leaf';
   }
 }
 

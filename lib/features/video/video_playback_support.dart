@@ -14,3 +14,18 @@ bool supportsEmbeddedVideoPlaybackOnPlatform(PlatformType platform) {
       return false;
   }
 }
+
+/// 返回当前平台是否支持通过原生播放器在软件内直接播放视频流。
+bool supportsDirectVideoPlaybackOnPlatform(PlatformType platform) {
+  switch (platform) {
+    case PlatformType.windows:
+    case PlatformType.linux:
+      return true;
+    case PlatformType.android:
+    case PlatformType.ios:
+    case PlatformType.macos:
+    case PlatformType.web:
+    case PlatformType.ohos:
+      return false;
+  }
+}

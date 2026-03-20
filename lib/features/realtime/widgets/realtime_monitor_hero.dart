@@ -6,6 +6,7 @@ import 'package:sickandflutter/features/realtime/realtime_view_utils.dart';
 import 'package:sickandflutter/features/realtime/widgets/realtime_monitor/realtime_decision_panel.dart';
 import 'package:sickandflutter/features/realtime/widgets/realtime_monitor/realtime_monitor_summary.dart';
 import 'package:sickandflutter/shared/widgets/feature_surface.dart';
+import 'package:sickandflutter/shared/widgets/workspace_layout.dart';
 
 /// 实时监控页主状态区，汇总设备核心状态与当前告警说明。
 class RealtimeMonitorHero extends StatelessWidget {
@@ -35,41 +36,24 @@ class RealtimeMonitorHero extends StatelessWidget {
         : DeviceStatusViewData.fromState(deviceStatus);
 
     return FeatureHeroCard(
-      padding: const EdgeInsets.all(28),
-      borderRadius: 36,
+      padding: const EdgeInsets.all(18),
+      borderRadius: 30,
       accentColor: AppPalette.pineGreen,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final summary = RealtimeMonitorSummary(
-            state: state,
-            deviceStatus: deviceStatus,
-            viewData: viewData,
-            errorMessage: state.errorMessage,
-            onRefresh: onRefresh,
-            onToggleAutoRefresh: onToggleAutoRefresh,
-          );
-          final decision = RealtimeDecisionPanel(
-            palette: palette,
-            deviceStatus: deviceStatus,
-            viewData: viewData,
-          );
-
-          if (constraints.maxWidth >= 940) {
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Expanded(flex: 12, child: summary),
-                const SizedBox(width: 20),
-                Expanded(flex: 8, child: decision),
-              ],
-            );
-          }
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[summary, const SizedBox(height: 20), decision],
-          );
-        },
+      child: WorkspaceTwoPane(
+        breakpoint: 1040,
+        primary: RealtimeMonitorSummary(
+          state: state,
+          deviceStatus: deviceStatus,
+          viewData: viewData,
+          errorMessage: state.errorMessage,
+          onRefresh: onRefresh,
+          onToggleAutoRefresh: onToggleAutoRefresh,
+        ),
+        secondary: RealtimeDecisionPanel(
+          palette: palette,
+          deviceStatus: deviceStatus,
+          viewData: viewData,
+        ),
       ),
     );
   }

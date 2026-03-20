@@ -145,7 +145,11 @@ class _WorkspaceRailItem extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final backgroundColor = selected
-        ? item.accentColor.withValues(alpha: 0.34)
+        ? AppPalette.blendOnPaper(
+            item.accentColor,
+            opacity: 0.2,
+            base: colorScheme.surfaceContainerLowest,
+          )
         : Colors.transparent;
     final foregroundColor = selected
         ? AppPalette.deepPine
@@ -163,7 +167,7 @@ class _WorkspaceRailItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selected
-                ? item.accentColor.withValues(alpha: 0.5)
+                ? item.accentColor.withValues(alpha: 0.3)
                 : Colors.transparent,
           ),
         ),
@@ -185,14 +189,23 @@ class _WorkspaceRailItem extends StatelessWidget {
               height: 38,
               decoration: BoxDecoration(
                 color: selected
-                    ? Colors.white.withValues(alpha: 0.48)
-                    : item.accentColor.withValues(alpha: 0.18),
+                    ? AppPalette.blendOnPaper(
+                        item.accentColor,
+                        opacity: 0.24,
+                        base: colorScheme.surfaceContainerLowest,
+                      )
+                    : item.accentColor.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: selected
+                      ? item.accentColor.withValues(alpha: 0.24)
+                      : item.accentColor.withValues(alpha: 0.14),
+                ),
               ),
               child: Icon(
                 selected ? item.selectedIcon : item.icon,
                 size: 20,
-                color: selected ? AppPalette.pineGreen : foregroundColor,
+                color: selected ? AppPalette.deepPine : foregroundColor,
               ),
             ),
             const SizedBox(width: 12),
@@ -203,16 +216,6 @@ class _WorkspaceRailItem extends StatelessWidget {
                   color: selected ? AppPalette.deepPine : colorScheme.onSurface,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
                 ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              item.sectionCode,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: selected
-                    ? AppPalette.deepPine.withValues(alpha: 0.7)
-                    : colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w800,
               ),
             ),
           ],
@@ -245,20 +248,24 @@ class WorkspaceRailMetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceBright.withValues(alpha: 0.86),
+        color: AppPalette.blendOnPaper(
+          AppPalette.softPine,
+          opacity: 0.12,
+          base: colorScheme.surfaceContainerLowest,
+        ),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: colorScheme.outlineVariant),
+        border: Border.all(color: AppPalette.softPine.withValues(alpha: 0.26)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, size: 16, color: colorScheme.primary),
+          Icon(icon, size: 16, color: AppPalette.deepPine),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
               label,
               style: theme.textTheme.labelLarge?.copyWith(
-                color: colorScheme.onSurface,
+                color: AppPalette.deepPine,
               ),
             ),
           ),

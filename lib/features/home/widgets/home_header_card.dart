@@ -6,6 +6,7 @@ import 'package:sickandflutter/features/device/domain/device_status.dart';
 import 'package:sickandflutter/features/home/widgets/home_header/home_header_lead.dart';
 import 'package:sickandflutter/features/home/widgets/home_header/home_summary_board.dart';
 import 'package:sickandflutter/shared/widgets/feature_surface.dart';
+import 'package:sickandflutter/shared/widgets/workspace_layout.dart';
 
 /// 首页顶部总览卡片。
 class HomeHeaderCard extends StatelessWidget {
@@ -34,38 +35,21 @@ class HomeHeaderCard extends StatelessWidget {
         : DeviceStatusViewData.fromState(deviceStatus);
 
     return FeatureHeroCard(
-      padding: const EdgeInsets.all(28),
-      borderRadius: 36,
+      padding: const EdgeInsets.all(18),
+      borderRadius: 30,
       accentColor: AppPalette.pineGreen,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final lead = HomeHeaderLead(
-            currentUser: currentUser,
-            deviceStatus: deviceStatus,
-            viewData: viewData,
-            onRefresh: onRefresh,
-          );
-          final board = HomeSummaryBoard(
-            deviceStatus: deviceStatus,
-            viewData: viewData,
-          );
-
-          if (constraints.maxWidth < 900) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[lead, const SizedBox(height: 16), board],
-            );
-          }
-
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Expanded(flex: 12, child: lead),
-              const SizedBox(width: 18),
-              Expanded(flex: 7, child: board),
-            ],
-          );
-        },
+      child: WorkspaceTwoPane(
+        breakpoint: 1020,
+        gap: 18,
+        primary: HomeHeaderLead(
+          deviceStatus: deviceStatus,
+          viewData: viewData,
+          onRefresh: onRefresh,
+        ),
+        secondary: HomeSummaryBoard(
+          deviceStatus: deviceStatus,
+          viewData: viewData,
+        ),
       ),
     );
   }

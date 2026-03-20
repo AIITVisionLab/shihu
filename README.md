@@ -4,7 +4,7 @@
 
 这是一个面向石斛幼苗培育场景的 Flutter 跨平台客户端，当前版本已经收口为可直接值守的工作台软件，而不是继续保留识别、历史记录等未接通模块。
 
-当前代码与后端只围绕 `../shihu-web` 的 `origin/web` 源码对齐。
+当前代码已按 `CjhAIIt/iot-onenet-refact-main` 后端契约对齐。
 
 ## 当前交付范围
 
@@ -18,7 +18,8 @@
 - 运维设置
 - 系统总览
 - 设备状态轮询、异常等级展示、LED 控制
-- 服务健康检查、本地设置和记住账号持久化
+- AI 巡检结果查看、平台日志筛选、最近事件查看
+- 本地设置和记住账号持久化
 - 统一 Material 3 工作台壳层、统一背景系统、统一入场动效
 
 已删除能力：
@@ -30,7 +31,7 @@
 
 ## 当前后端契约
 
-当前真实接口只有 7 个：
+当前前端直接使用 11 个接口：
 
 - `POST /api/login`
 - `POST /api/register`
@@ -38,7 +39,11 @@
 - `POST /api/logout`
 - `GET /api/status`
 - `POST /api/ops/led`
-- `GET /api/health`
+- `GET /api/video/streams`
+- `GET /api/edge/ai-detections/latest`
+- `GET /api/edge/ai-detections/history`
+- `GET /api/logs`
+- `GET /api/logs/summary`
 
 认证方式：
 
@@ -49,7 +54,9 @@
 - Web 端认证请求使用浏览器 Cookie
 - 非 Web 端会提取并保存 `JSESSIONID`
 - 当前后端不是 Bearer Token 模式
-- 当前默认设备服务地址仍为 `http://101.35.79.76:8082`
+- `/api/health` 当前保留为内部联调接口，不在普通用户界面直接暴露
+- `/api/edge/ai-detections` 的 `POST` 上送链路属于边缘端到 Java 后端的写入接口，Flutter 客户端当前不直接调用
+- 当前默认设备服务地址已经切到公网反向代理入口 `http://101.35.79.76`
 - Android / iOS 原生端如果不放开明文 HTTP，请求会在系统网络层被拦截，表现为手机端无法登录
 - Web 端若不是与后端同源部署，跨站 Cookie 可能在部分手机浏览器上被更严格限制，部署时优先使用同源反向代理或统一 HTTPS
 
@@ -91,10 +98,19 @@ flutter pub get
 flutter run
 ```
 
-切换设备服务地址：
+切回本地联调地址：
 
 ```bash
-flutter run --dart-define=BASE_URL=http://127.0.0.1:8082
+flutter run --dart-define=BASE_URL=http://127.0.0.1:8085
+```
+
+视频接口暂未接入业务后端时，可直接指定公网视频网关兜底：
+
+```bash
+  flutter run \
+  --dart-define=BASE_URL=http://127.0.0.1:8085 \
+  --dart-define=VIDEO_GATEWAY_URL=http://101.35.79.76:1984 \
+  --dart-define=VIDEO_DEFAULT_STREAM_ID=k230
 ```
 
 开发 / 测试环境启用本地联调登录：
@@ -108,6 +124,7 @@ flutter run --dart-define=USE_MOCK_AUTH=true
 - Android 发布包需要在 `android/app/src/main/AndroidManifest.xml` 中保留 `INTERNET` 权限，并允许当前 HTTP 设备服务的明文访问
 - iOS 原生端需要在 `ios/Runner/Info.plist` 中配置 ATS 例外，否则默认会拦截 `http://` 设备服务
 - 如果后端未来统一切到 HTTPS，可回收以上明文访问放行配置
+- Web 端当前优先在应用内播放页里直接承接视频地址，必要时可再从播放页新开标签排障
 
 ## GitHub Release 自动发布
 

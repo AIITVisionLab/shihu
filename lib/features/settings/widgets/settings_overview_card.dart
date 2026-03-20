@@ -6,6 +6,7 @@ import 'package:sickandflutter/features/device/application/device_status_view_da
 import 'package:sickandflutter/features/device/domain/device_status.dart';
 import 'package:sickandflutter/features/settings/widgets/settings_setting_row.dart';
 import 'package:sickandflutter/shared/widgets/feature_surface.dart';
+import 'package:sickandflutter/shared/widgets/workspace_layout.dart';
 
 /// 设置页设备概览卡片。
 class SettingsOverviewCard extends StatelessWidget {
@@ -31,40 +32,24 @@ class SettingsOverviewCard extends StatelessWidget {
         final viewData = DeviceStatusViewData.fromState(deviceState);
 
         return FeatureHeroCard(
-          padding: const EdgeInsets.all(28),
-          borderRadius: 36,
+          padding: const EdgeInsets.all(18),
+          borderRadius: 30,
           accentColor: AppPalette.softPine,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final lead = _OverviewLead(
-                deviceName: _resolveDeviceLabel(deviceState),
-                alertTitle: viewData.alertTitle,
-                alertDescription: viewData.alertDescription,
-              );
-              final board = _OverviewBoard(
-                currentUser: currentUser,
-                alertTitle: viewData.alertTitle,
-                lastSync: _formatDateTime(deviceState.updatedAtTime),
-                freshnessLabel: viewData.freshnessLabel,
-                ledLabel: viewData.ledLabel,
-              );
-
-              if (constraints.maxWidth < 940) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[lead, const SizedBox(height: 18), board],
-                );
-              }
-
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Expanded(flex: 11, child: lead),
-                  const SizedBox(width: 20),
-                  Expanded(flex: 10, child: board),
-                ],
-              );
-            },
+          child: WorkspaceTwoPane(
+            breakpoint: 1020,
+            primary: _OverviewLead(
+              deviceName: _resolveDeviceLabel(deviceState),
+              alertTitle: viewData.alertTitle,
+              alertDescription: viewData.alertDescription,
+              freshnessLabel: viewData.freshnessLabel,
+            ),
+            secondary: _OverviewBoard(
+              currentUser: currentUser,
+              alertTitle: viewData.alertTitle,
+              lastSync: _formatDateTime(deviceState.updatedAtTime),
+              freshnessLabel: viewData.freshnessLabel,
+              ledLabel: viewData.ledLabel,
+            ),
           ),
         );
       },
@@ -90,8 +75,8 @@ class _OverviewLoadingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FeatureHeroCard(
-      padding: const EdgeInsets.all(28),
-      borderRadius: 36,
+      padding: const EdgeInsets.all(18),
+      borderRadius: 30,
       accentColor: AppPalette.softPine,
       child: const Padding(
         padding: EdgeInsets.symmetric(vertical: 28),
@@ -107,8 +92,8 @@ class _OverviewErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FeatureHeroCard(
-      padding: const EdgeInsets.all(28),
-      borderRadius: 36,
+      padding: const EdgeInsets.all(18),
+      borderRadius: 30,
       accentColor: AppPalette.softPine,
       child: const SettingsSettingRow(title: '当前状态', value: '设备信息暂不可用'),
     );
@@ -120,11 +105,13 @@ class _OverviewLead extends StatelessWidget {
     required this.deviceName,
     required this.alertTitle,
     required this.alertDescription,
+    required this.freshnessLabel,
   });
 
   final String deviceName;
   final String alertTitle;
   final String alertDescription;
+  final String freshnessLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +130,7 @@ class _OverviewLead extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           deviceName,
-          style: theme.textTheme.headlineMedium?.copyWith(
+          style: theme.textTheme.headlineSmall?.copyWith(
             color: colorScheme.onSurface,
             fontWeight: FontWeight.w800,
           ),
@@ -156,51 +143,14 @@ class _OverviewLead extends StatelessWidget {
             height: 1.58,
           ),
         ),
-        const SizedBox(height: 18),
-        FeatureInsetPanel(
-          padding: const EdgeInsets.all(18),
-          borderRadius: 26,
-          accentColor: AppPalette.mistMint,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppPalette.mistMint.withValues(alpha: 0.26),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Icon(
-                  Icons.monitor_heart_rounded,
-                  color: colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      alertTitle,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: colorScheme.onSurface,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '先确认当前设备和最近同步，再处理下面的设置。',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        height: 1.54,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: <Widget>[
+            _OverviewPill(label: '当前状态', value: alertTitle),
+            _OverviewPill(label: '数据状态', value: freshnessLabel),
+          ],
         ),
       ],
     );
@@ -231,26 +181,39 @@ class _OverviewBoard extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final columns = constraints.maxWidth >= 360 ? 2 : 1;
+          final gap = 10.0;
           final itemWidth =
-              (constraints.maxWidth - ((columns - 1) * 12)) / columns;
-          final items = <({String title, String value})>[
-            (title: '当前账号', value: currentUser == '--' ? '未登录' : currentUser),
-            (title: '当前状态', value: alertTitle),
-            (title: '最近同步', value: lastSync),
-            (title: '数据状态', value: freshnessLabel),
-            (title: '补光状态', value: ledLabel),
+              (constraints.maxWidth - ((columns - 1) * gap)) / columns;
+          final items = <({String title, String value, Color accentColor})>[
+            (
+              title: '当前账号',
+              value: currentUser == '--' ? '未登录' : currentUser,
+              accentColor: AppPalette.softLavender,
+            ),
+            (
+              title: '最近同步',
+              value: lastSync,
+              accentColor: AppPalette.linenOlive,
+            ),
+            (
+              title: '数据状态',
+              value: freshnessLabel,
+              accentColor: AppPalette.softPine,
+            ),
+            (title: '补光状态', value: ledLabel, accentColor: AppPalette.mistMint),
           ];
 
           return Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: gap,
+            runSpacing: gap,
             children: items
                 .map(
                   (item) => SizedBox(
                     width: itemWidth,
-                    child: SettingsSettingRow(
+                    child: _OverviewBoardTile(
                       title: item.title,
                       value: item.value,
+                      accentColor: item.accentColor,
                     ),
                   ),
                 )
@@ -269,4 +232,68 @@ String _resolveDeviceLabel(DeviceStatus state) {
   }
 
   return '当前设备';
+}
+
+class _OverviewPill extends StatelessWidget {
+  const _OverviewPill({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.48),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.14)),
+      ),
+      child: RichText(
+        text: TextSpan(
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            height: 1.4,
+          ),
+          children: <InlineSpan>[
+            TextSpan(text: '$label  '),
+            TextSpan(
+              text: value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OverviewBoardTile extends StatelessWidget {
+  const _OverviewBoardTile({
+    required this.title,
+    required this.value,
+    required this.accentColor,
+  });
+
+  final String title;
+  final String value;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return FeatureSummaryTile(
+      label: title,
+      value: value,
+      accentColor: accentColor,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 20,
+      shadow: false,
+    );
+  }
 }

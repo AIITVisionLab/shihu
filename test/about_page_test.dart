@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sickandflutter/app/widgets/workspace/workspace_bottom_navigation.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/about/about_page.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
@@ -58,11 +59,11 @@ void main() {
     expect(find.text('视频'), findsWidgets);
 
     await tester.scrollUntilVisible(
-      find.text('你会看到的信息'),
+      find.text('平时重点看这些信息'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('你会看到的信息'), findsOneWidget);
+    expect(find.text('平时重点看这些信息'), findsOneWidget);
     expect(find.text('设备状态'), findsOneWidget);
     expect(find.text('实时画面'), findsOneWidget);
   });
@@ -93,6 +94,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('立即登录'), findsOneWidget);
+    expect(find.text(AppCopy.aboutPreviewEnter), findsOneWidget);
     expect(find.text('返回总览'), findsNothing);
   });
 

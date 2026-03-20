@@ -111,6 +111,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         },
         onSelectMode: _switchFormMode,
         onSubmit: _submit,
+        onEnterPreview: _enterPreviewWorkspace,
+        showPreviewEntry: true,
       ),
     );
   }
@@ -225,5 +227,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       _localHelperMessage = null;
       _localHelperTone = null;
     });
+  }
+
+  Future<void> _enterPreviewWorkspace() async {
+    FocusScope.of(context).unfocus();
+    _clearLocalHelper();
+    ref.read(authControllerProvider.notifier).clearMessages();
+    await ref.read(authControllerProvider.notifier).enterPreviewWorkspace();
+    if (!mounted) {
+      return;
+    }
+
+    context.goNamed(AppRoutes.home);
   }
 }

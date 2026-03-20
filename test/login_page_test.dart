@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/core/storage/auth_storage.dart';
 import 'package:sickandflutter/core/storage/sensitive_storage.dart';
+import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_repository.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
@@ -33,7 +37,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('注册'), findsOneWidget);
-    expect(find.text('先看界面'), findsNothing);
+    expect(find.text(AppCopy.authPreviewEnter), findsOneWidget);
 
     await tester.tap(find.text('注册'));
     await tester.pumpAndSettle();
@@ -63,6 +67,7 @@ void main() {
 
     expect(find.text('注册'), findsNothing);
     expect(find.text('填入演示账号'), findsNothing);
+    expect(find.text(AppCopy.authPreviewEnter), findsOneWidget);
   });
 
   testWidgets('LoginPage can restore custom service config before login', (
@@ -129,6 +134,63 @@ void main() {
     expect(find.text('默认进入值守台'), findsOneWidget);
     expect(find.text('欢迎回来'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('LoginPage offers a preview entry when backend is unavailable', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(1200, 1600)
+      ..devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final authController = _PreviewAuthController();
+    final router = GoRouter(
+      initialLocation: AppRoutes.loginPath,
+      routes: <RouteBase>[
+        GoRoute(
+          path: AppRoutes.loginPath,
+          name: AppRoutes.login,
+          builder: (context, state) => const LoginPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.homePath,
+          name: AppRoutes.home,
+          builder: (context, state) =>
+              const Scaffold(body: Text('preview-home')),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authStorageProvider.overrideWith(
+            (ref) => AuthStorage(
+              VolatileSensitiveStorage(values: <String, String>{}),
+            ),
+          ),
+          authRepositoryProvider.overrideWith(
+            (ref) => _FakeRealAuthRepository(),
+          ),
+          authControllerProvider.overrideWith(() => authController),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppCopy.authPreviewEnter), findsOneWidget);
+
+    await tester.tap(find.text(AppCopy.authPreviewEnter));
+    await tester.pumpAndSettle();
+
+    expect(authController.enterPreviewCount, 1);
+    expect(find.text('preview-home'), findsOneWidget);
   });
 }
 
@@ -205,6 +267,29 @@ class _TestSettingsController extends SettingsController {
         buildFlavor: initialSettings.buildFlavor,
         baseUrl: 'http://127.0.0.1:8080',
         enableLog: initialSettings.enableLog,
+      ),
+    );
+  }
+}
+
+class _PreviewAuthController extends AuthController {
+  int enterPreviewCount = 0;
+
+  @override
+  AuthState build() => const AuthState(isBootstrapping: false);
+
+  @override
+  Future<void> enterPreviewWorkspace() async {
+    enterPreviewCount += 1;
+    state = state.copyWith(
+      session: const AuthSession(
+        accessToken: 'preview_access',
+        loginMode: AuthLoginMode.mock,
+        user: AuthUser(
+          userId: 'preview_user',
+          account: 'preview',
+          displayName: '界面预览',
+        ),
       ),
     );
   }

@@ -6,7 +6,7 @@ import 'package:sickandflutter/shared/models/app_settings.dart';
 
 void main() {
   test('ApiClientFactory distinguishes public and session clients', () {
-    const baseUrl = 'http://127.0.0.1:8082';
+    const baseUrl = 'http://127.0.0.1:8085';
     const factory = ApiClientFactory(
       envConfig: EnvConfig(
         flavor: BuildFlavor.development,

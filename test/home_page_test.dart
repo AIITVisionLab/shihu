@@ -5,18 +5,20 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/app/widgets/workspace/workspace_bottom_navigation.dart';
+import 'package:sickandflutter/app/widgets/workspace/workspace_rail_pane.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/features/device/domain/device_status.dart';
 import 'package:sickandflutter/features/home/application/home_overview_device_status_provider.dart';
 import 'package:sickandflutter/features/home/home_page.dart';
-import 'package:sickandflutter/features/home/widgets/home_entry_card.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 
 void main() {
-  testWidgets('HomePage renders entry cards and device status', (tester) async {
+  testWidgets('HomePage renders backend-driven summary and device status', (
+    tester,
+  ) async {
     tester.view
       ..physicalSize = const Size(1400, 1600)
       ..devicePixelRatio = 1;
@@ -75,16 +77,16 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(HomeEntryCard, '值守台'), findsOneWidget);
-    expect(find.widgetWithText(HomeEntryCard, '视频中心'), findsOneWidget);
-    expect(find.widgetWithText(HomeEntryCard, '我的'), findsOneWidget);
-    expect(find.text('常用入口'), findsOneWidget);
+    expect(find.byType(WorkspaceRailPane), findsOneWidget);
     expect(find.text('环境速览'), findsOneWidget);
     expect(find.text('石斛培育柜'), findsWidgets);
     expect(find.text('系统运行正常'), findsWidgets);
+    expect(find.text('常用入口'), findsNothing);
   });
 
-  testWidgets('HomePage entry cards navigate to named routes', (tester) async {
+  testWidgets('HomePage uses workspace navigation to switch routes', (
+    tester,
+  ) async {
     tester.view
       ..physicalSize = const Size(1400, 1600)
       ..devicePixelRatio = 1;
@@ -143,22 +145,21 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(HomeEntryCard, '值守台'));
+    await tester.tap(find.byIcon(Icons.monitor_heart_outlined).first);
     await tester.pumpAndSettle();
     expect(find.text('realtime-page'), findsOneWidget);
 
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(HomeEntryCard, '视频中心'));
+    await tester.tap(find.byIcon(Icons.videocam_outlined).first);
     await tester.pumpAndSettle();
     expect(find.text('video-page'), findsOneWidget);
 
     router.goNamed(AppRoutes.home);
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.widgetWithText(HomeEntryCard, '我的'));
-    await tester.tap(find.widgetWithText(HomeEntryCard, '我的'));
+    await tester.tap(find.byIcon(Icons.settings_outlined).first);
     await tester.pumpAndSettle();
     expect(find.text('settings-page'), findsOneWidget);
   });
@@ -225,7 +226,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(WorkspaceBottomNavigation), findsOneWidget);
-    expect(find.text('常用入口'), findsOneWidget);
     expect(find.text('环境速览'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

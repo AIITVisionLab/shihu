@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:sickandflutter/core/config/service_endpoint_resolver.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
+import 'package:sickandflutter/features/service_config/domain/service_endpoint_resolver.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/json_value_parsers.dart';
 import 'package:sickandflutter/shared/models/model_utils.dart';

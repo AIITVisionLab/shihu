@@ -49,4 +49,13 @@ class AppPalette {
 
   /// 深色阴影基色。
   static const Color pineShadow = Color(0xFF16231C);
+
+  /// 将强调色轻混到纸感底色，生成统一的浅色面。
+  static Color blendOnPaper(
+    Color accent, {
+    double opacity = 0.14,
+    Color base = paperSnow,
+  }) {
+    return Color.alphaBlend(accent.withValues(alpha: opacity), base);
+  }
 }

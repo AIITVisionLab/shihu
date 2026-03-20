@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_form_mode.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_form/auth_feedback_banner.dart';
@@ -8,6 +9,7 @@ import 'package:sickandflutter/features/auth/widgets/auth_form/auth_mode_selecto
 import 'package:sickandflutter/features/auth/widgets/auth_form/auth_register_rule_panel.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_form/auth_remember_account_tile.dart';
 import 'package:sickandflutter/features/auth/widgets/auth_form/auth_text_field.dart';
+import 'package:sickandflutter/shared/widgets/feature_surface.dart';
 
 /// 认证表单卡片，统一承载登录、注册、提示和本地记住用户名交互。
 class AuthFormCard extends StatelessWidget {
@@ -27,6 +29,8 @@ class AuthFormCard extends StatelessWidget {
     required this.onToggleConfirmPasswordVisibility,
     required this.onSelectMode,
     required this.onSubmit,
+    this.onEnterPreview,
+    this.showPreviewEntry = false,
     this.helperMessage,
     this.helperTone,
     super.key,
@@ -79,6 +83,12 @@ class AuthFormCard extends StatelessWidget {
 
   /// 提交表单。
   final Future<void> Function() onSubmit;
+
+  /// 进入界面预览。
+  final Future<void> Function()? onEnterPreview;
+
+  /// 是否展示界面预览入口。
+  final bool showPreviewEntry;
 
   bool get _isRegisterMode => formMode.isRegister;
 
@@ -244,6 +254,74 @@ class AuthFormCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (showPreviewEntry && onEnterPreview != null) ...<Widget>[
+                const SizedBox(height: 16),
+                FeatureInsetPanel(
+                  padding: const EdgeInsets.all(16),
+                  borderRadius: 24,
+                  accentColor: AppPalette.softLavender,
+                  shadow: true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppPalette.softLavender.withValues(
+                                alpha: 0.26,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(
+                              Icons.visibility_rounded,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  AppCopy.authPreviewEntryTitle,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: colorScheme.onSurface,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  AppCopy.authPreviewEntryDescription,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: isSubmitting
+                              ? null
+                              : () async {
+                                  await onEnterPreview!();
+                                },
+                          icon: const Icon(Icons.auto_awesome_mosaic_rounded),
+                          label: const Text(AppCopy.authPreviewEnter),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 14),
               if (!isMockMode)
                 Center(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 
 /// 通用加载视图，可用于全页或局部加载状态。
@@ -26,8 +27,16 @@ class LoadingView extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: <Color>[
-                  colorScheme.surfaceBright.withValues(alpha: 0.995),
-                  colorScheme.surfaceContainerLow.withValues(alpha: 0.97),
+                  AppPalette.blendOnPaper(
+                    AppPalette.softPine,
+                    opacity: 0.1,
+                    base: colorScheme.surfaceBright,
+                  ).withValues(alpha: 0.995),
+                  AppPalette.blendOnPaper(
+                    AppPalette.mistMint,
+                    opacity: 0.12,
+                    base: colorScheme.surfaceContainerLow,
+                  ).withValues(alpha: 0.97),
                 ],
               ),
               borderRadius: BorderRadius.circular(24),

@@ -5,8 +5,8 @@ import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/app/app_workspace_destination.dart';
 import 'package:sickandflutter/app/routes.dart';
 import 'package:sickandflutter/app/widgets/app_workspace_scaffold.dart';
+import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/about/widgets/about_help_hero.dart';
-import 'package:sickandflutter/features/about/widgets/about_information_section.dart';
 import 'package:sickandflutter/features/about/widgets/about_usage_tracks_section.dart';
 import 'package:sickandflutter/features/auth/application/current_user_label_provider.dart';
 import 'package:sickandflutter/features/auth/auth_controller.dart';
@@ -26,7 +26,6 @@ class AboutPage extends ConsumerWidget {
       title: '使用帮助',
       subtitle: '把日常查看、值守和账号设置说清楚。',
       currentUser: currentUser,
-      maxContentWidth: 1120,
       backgroundGradient: const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -37,6 +36,20 @@ class AboutPage extends ConsumerWidget {
         ],
       ),
       headerActions: <Widget>[
+        if (!authState.isAuthenticated)
+          OutlinedButton.icon(
+            onPressed: () async {
+              await ref
+                  .read(authControllerProvider.notifier)
+                  .enterPreviewWorkspace();
+              if (!context.mounted) {
+                return;
+              }
+              context.goNamed(AppRoutes.home);
+            },
+            icon: const Icon(Icons.auto_awesome_mosaic_outlined),
+            label: const Text(AppCopy.aboutPreviewEnter),
+          ),
         if (authState.isAuthenticated)
           OutlinedButton.icon(
             onPressed: () => context.goNamed(AppRoutes.settings),
@@ -63,8 +76,6 @@ class AboutPage extends ConsumerWidget {
           AboutHelpHero(),
           SizedBox(height: 18),
           AboutUsageTracksSection(),
-          SizedBox(height: 18),
-          AboutInformationSection(),
         ],
       ),
     );

@@ -5,7 +5,12 @@ import 'package:sickandflutter/shared/widgets/feature_surface.dart';
 /// 视频页信息块。
 class VideoInfoTile extends StatelessWidget {
   /// 创建视频页信息块。
-  const VideoInfoTile({required this.label, required this.value, super.key});
+  const VideoInfoTile({
+    required this.label,
+    required this.value,
+    this.accentColor = AppPalette.mistMint,
+    super.key,
+  });
 
   /// 标题。
   final String label;
@@ -13,44 +18,18 @@ class VideoInfoTile extends StatelessWidget {
   /// 值文案。
   final String value;
 
+  /// 强调色。
+  final Color accentColor;
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 22,
-      accentColor: AppPalette.mistMint,
+    return FeatureSummaryTile(
+      label: label,
+      value: value,
+      accentColor: accentColor,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 20,
       shadow: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            width: 30,
-            height: 3,
-            decoration: BoxDecoration(
-              color: colorScheme.secondary.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(999),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            label,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -99,7 +78,11 @@ class VideoStatusChip extends StatelessWidget {
         const Color(0xFF6C654E),
       ),
       VideoStatusChipTone.muted => (
-        colorScheme.surfaceContainerHigh.withValues(alpha: 0.82),
+        AppPalette.blendOnPaper(
+          AppPalette.softLavender,
+          opacity: 0.08,
+          base: colorScheme.surfaceContainerHigh,
+        ),
         colorScheme.onSurfaceVariant,
       ),
     };

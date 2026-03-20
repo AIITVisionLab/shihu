@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
 import 'package:sickandflutter/core/network/api_client.dart';
 import 'package:sickandflutter/core/network/api_exception.dart';
-import 'package:sickandflutter/features/settings/service_health_repository.dart';
+import 'package:sickandflutter/features/service_config/infrastructure/service_health_repository.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
 

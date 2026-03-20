@@ -30,4 +30,17 @@ void main() {
       );
     },
   );
+
+  test('supportsDirectVideoPlaybackOnPlatform marks desktop platforms', () {
+    expect(supportsDirectVideoPlaybackOnPlatform(PlatformType.windows), isTrue);
+    expect(supportsDirectVideoPlaybackOnPlatform(PlatformType.linux), isTrue);
+    expect(supportsDirectVideoPlaybackOnPlatform(PlatformType.web), isFalse);
+    expect(
+      supportsDirectVideoPlaybackOnPlatform(PlatformType.android),
+      isFalse,
+    );
+    expect(supportsDirectVideoPlaybackOnPlatform(PlatformType.ios), isFalse);
+    expect(supportsDirectVideoPlaybackOnPlatform(PlatformType.macos), isFalse);
+    expect(supportsDirectVideoPlaybackOnPlatform(PlatformType.ohos), isFalse);
+  });
 }

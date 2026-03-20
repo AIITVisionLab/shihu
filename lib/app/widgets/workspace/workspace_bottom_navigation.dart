@@ -21,25 +21,27 @@ class WorkspaceBottomNavigation extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: <Color>[
-            colorScheme.surfaceContainerLowest.withValues(alpha: 0.995),
-            AppPalette.frost.withValues(alpha: 0.98),
-            colorScheme.surfaceContainerLow.withValues(alpha: 0.95),
+            AppPalette.blendOnPaper(
+              AppPalette.softPine,
+              opacity: 0.1,
+              base: colorScheme.surfaceContainerLowest,
+            ).withValues(alpha: 0.985),
+            AppPalette.blendOnPaper(
+              AppPalette.mistMint,
+              opacity: 0.08,
+              base: colorScheme.surfaceContainerLow,
+            ).withValues(alpha: 0.96),
           ],
         ),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.88),
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: AppPalette.pineGreen.withValues(alpha: 0.08),
-            blurRadius: 28,
-            offset: const Offset(0, 14),
-          ),
-          BoxShadow(
-            color: AppPalette.pineShadow.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: AppPalette.pineShadow.withValues(alpha: 0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -80,6 +82,21 @@ class _WorkspaceDockItem extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppPalette.blendOnPaper(
+                  item.accentColor,
+                  opacity: 0.18,
+                  base: colorScheme.surfaceContainerLowest,
+                )
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected
+                ? item.accentColor.withValues(alpha: 0.22)
+                : Colors.transparent,
+          ),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
@@ -90,15 +107,24 @@ class _WorkspaceDockItem extends StatelessWidget {
               height: 42,
               decoration: BoxDecoration(
                 color: selected
-                    ? item.accentColor.withValues(alpha: 0.52)
-                    : Colors.transparent,
+                    ? AppPalette.blendOnPaper(
+                        item.accentColor,
+                        opacity: 0.28,
+                        base: colorScheme.surfaceContainerLowest,
+                      )
+                    : item.accentColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: selected
+                      ? item.accentColor.withValues(alpha: 0.32)
+                      : item.accentColor.withValues(alpha: 0.16),
+                ),
               ),
               child: Icon(
                 selected ? item.selectedIcon : item.icon,
                 size: 22,
                 color: selected
-                    ? AppPalette.pineGreen
+                    ? AppPalette.deepPine
                     : colorScheme.onSurfaceVariant,
               ),
             ),

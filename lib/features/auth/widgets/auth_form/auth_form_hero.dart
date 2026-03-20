@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/features/auth/auth_form_mode.dart';
 
 /// 认证表单顶部导语区。
@@ -22,11 +23,31 @@ class AuthFormHero extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          label,
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: colorScheme.primary,
-            fontWeight: FontWeight.w800,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+          decoration: BoxDecoration(
+            color: AppPalette.blendOnPaper(
+              formMode.isRegister
+                  ? AppPalette.softLavender
+                  : AppPalette.softPine,
+              opacity: 0.16,
+              base: colorScheme.surfaceContainerLowest,
+            ),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color:
+                  (formMode.isRegister
+                          ? AppPalette.softLavender
+                          : AppPalette.softPine)
+                      .withValues(alpha: 0.24),
+            ),
+          ),
+          child: Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: AppPalette.deepPine,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
         const SizedBox(height: 10),

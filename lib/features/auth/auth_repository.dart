@@ -3,7 +3,7 @@ import 'package:sickandflutter/core/config/env_config.dart';
 import 'package:sickandflutter/features/auth/auth_session.dart';
 import 'package:sickandflutter/features/auth/mock_auth_repository.dart';
 import 'package:sickandflutter/features/auth/real_auth_repository.dart';
-import 'package:sickandflutter/features/settings/settings_controller.dart';
+import 'package:sickandflutter/features/service_config/application/service_config_providers.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 
 /// 登录仓储入口。
@@ -19,11 +19,8 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
   return RealAuthRepository(
     envConfig: envConfig,
-    currentSettingsBuilder: () {
-      final settings = ref.read(effectiveAppSettingsProvider);
-      final serviceEndpoints = ref.read(resolvedServiceEndpointsProvider);
-      return settings.copyWith(baseUrl: serviceEndpoints.deviceBaseUrl);
-    },
+    currentSettingsBuilder: () =>
+        ref.read(resolvedDeviceServiceSettingsProvider),
   );
 });
 

@@ -107,6 +107,19 @@ class AppCopy {
   /// 登录页服务地址恢复成功提示。
   static const String authResetServiceConfigSuccess = '已恢复默认服务地址，请重新尝试登录。';
 
+  /// 登录页界面预览入口标题。
+  static const String authPreviewEntryTitle = '界面预览入口';
+
+  /// 登录页界面预览入口说明。
+  static const String authPreviewEntryDescription =
+      '后端暂时不可用时，也能先查看总览、值守、视频和我的的完整界面编排。';
+
+  /// 登录页进入界面预览按钮。
+  static const String authPreviewEnter = '直接预览界面';
+
+  /// 使用帮助页界面预览按钮。
+  static const String aboutPreviewEnter = '打开界面预览';
+
   /// 登录页自定义服务地址提示。
   static const String authCustomServiceConfigHint =
       '当前检测到自定义服务地址。如果这不是你主动切换的后端，请先恢复默认地址再重试。';
@@ -283,29 +296,17 @@ class AppCopy {
   /// 设置加载失败提示。
   static String settingsLoadFailed(Object error) => '设置加载失败：$error';
 
-  /// 环境类型。
-  static const String settingsEnvironmentType = '环境类型';
+  /// 设置页账号与本机卡标题。
+  static const String settingsProfileTitle = '账号与本机';
 
-  /// 当前平台。
-  static const String settingsCurrentPlatform = '当前平台';
+  /// 设置页账号与本机卡说明。
+  static const String settingsProfileSubtitle = '把当前账号、记住账号和常用操作收在同一处处理。';
 
-  /// 应用版本。
-  static const String settingsAppVersion = '应用版本';
+  /// 设置页常用操作标题。
+  static const String settingsActionsTitle = '常用操作';
 
-  /// 服务配置标题。
-  static const String settingsServiceConfigTitle = '服务配置';
-
-  /// 服务健康检查标题。
-  static const String settingsHealthTitle = '服务健康检查';
-
-  /// 本地数据标题。
-  static const String settingsLocalDataTitle = '本地偏好';
-
-  /// 登录会话标题。
-  static const String settingsSessionTitle = '当前账号';
-
-  /// 项目说明标题。
-  static const String settingsProjectTitle = '使用帮助';
+  /// 设置页常用操作说明。
+  static const String settingsActionsHint = '常用操作收在这里，避免页面里再拆出多张独立功能卡。';
 
   /// 退出登录标题。
   static const String settingsLogoutTitle = '退出登录';
@@ -329,92 +330,34 @@ class AppCopy {
   /// 恢复默认设置完成提示。
   static const String settingsResetDefaultsDone = '已恢复默认。';
 
-  /// 修改设备服务地址标题。
-  static const String settingsEditBaseUrlTitle = '修改设备服务地址';
-
-  /// 修改按钮。
-  static const String settingsEdit = '修改';
-
-  /// 设备服务地址字段标题。
-  static const String settingsDeviceBaseUrl = '设备服务地址';
-
-  /// 连接超时字段标题。
-  static const String settingsConnectTimeout = '连接超时';
-
-  /// 接收超时字段标题。
-  static const String settingsReceiveTimeout = '接收超时';
-
-  /// 设备服务地址示例提示。
-  static const String settingsBaseUrlHint = '例如：http://101.35.79.76:8082';
-
-  /// 服务状态检查中提示。
-  static const String settingsCheckingHealth = '正在检查服务状态...';
-
-  /// 服务状态检查失败提示。
-  static String settingsHealthCheckFailed(Object error) => '服务健康检查失败：$error';
-
-  /// 重新检查按钮。
-  static const String settingsRecheck = '重新检查';
-
-  /// 服务正常。
-  static const String settingsServiceUp = '服务正常';
-
-  /// 服务不可用。
-  static const String settingsServiceDown = '服务不可用';
-
-  /// 服务未知。
-  static const String settingsServiceUnknown = '服务未知';
-
-  /// 健康检查原始响应字段标题。
-  static const String settingsHealthResponse = '接口响应';
-
-  /// 健康检查完成时间字段标题。
-  static const String settingsHealthCheckedAt = '检查时间';
-
-  /// 模型就绪。
-  static const String settingsModelReady = '模型就绪';
-
-  /// 模型加载中。
-  static const String settingsModelLoading = '模型加载中';
-
-  /// 模型异常。
-  static const String settingsModelError = '模型异常';
-
-  /// 模型未知。
-  static const String settingsModelUnknown = '模型未知';
-
   /// 当前未登录。
   static const String settingsUnauthenticated = '当前未登录。';
 
   /// 当前账号字段标题。
   static const String settingsCurrentAccount = '当前账号';
 
-  /// 显示名称字段标题。
-  static const String settingsDisplayName = '显示名称';
+  /// 当前账号说明。
+  static const String settingsProfileAccountHint = '当前保持登录状态，需要更换账号时再从这里退出。';
 
-  /// 登录模式字段标题。
-  static const String settingsLoginMode = '登录模式';
+  /// 账号操作处理中提示。
+  static const String settingsProfileStatusSubmitting = '正在处理账号操作。';
 
-  /// 角色字段标题。
-  static const String settingsRole = '角色';
+  /// 登录态可继续使用提示。
+  static const String settingsProfileStatusReady = '当前已登录，可以直接继续使用。';
 
-  /// 到期时间字段标题。
-  static const String settingsExpiry = '到期时间';
+  /// 本机支持长期保持时的说明。
+  static const String settingsProfilePersistenceSupportedHint =
+      '本机支持长期保存登录态和回填信息。';
 
-  /// 未返回到期时间。
-  static const String settingsExpiryMissing = '未返回';
+  /// 本机安全存储能力受限时的说明。
+  static const String settingsProfilePersistenceLimitedHint =
+      '本机安全存储能力受限，需要关注登录态保留方式。';
 
   /// 退出中。
   static const String settingsLoggingOut = '退出中...';
 
   /// 退出登录。
   static const String settingsLogout = '退出登录';
-
-  /// 当前没有可用登录态。
-  static const String settingsNoSession = '当前没有可用登录态。';
-
-  /// 当前会话说明。
-  static const String settingsSessionSubtitle = '查看当前登录账号，并在需要时退出。';
 
   /// 当前平台登录态不会持久化提示标题。
   static const String settingsSessionPersistenceWarningTitle = '本机不会长期保留登录状态';
@@ -423,37 +366,23 @@ class AppCopy {
   static const String settingsSessionPersistenceWarningMessage =
       '当前平台暂不支持安全保存登录状态。关闭应用、清理后台或系统回收进程后，需要重新登录。';
 
-  /// 服务配置：开发/测试环境提示。
-  static const String settingsServiceConfigEditable =
-      '当前构建允许调整设备服务地址，修改后会立即影响登录、巡检和设备控制链路。';
-
-  /// 服务配置：正式环境提示。
-  static const String settingsServiceConfigReadonly = '正式环境默认隐藏高风险配置项。';
-
-  /// 本地数据说明。
-  static const String settingsLocalDataSubtitle = '这里只保留账号回填和恢复默认这两个本机操作。';
-
-  /// 当前使用概览说明。
-  static const String settingsOverviewSubtitle = '先确认当前设备、账号和版本，再处理后续操作。';
-
-  /// 健康检查说明。
-  static const String settingsHealthSubtitle =
-      '当前后端只返回 `/api/health` 的原始结果，页面仅展示真实响应和检查时间。';
-
-  /// 服务名称字段标题。
-  static const String settingsServiceName = '服务名称';
-
-  /// 服务版本字段标题。
-  static const String settingsServiceVersion = '服务版本';
-
-  /// 服务时间字段标题。
-  static const String settingsServiceTime = '服务时间';
+  /// 设置页界面预览提示。
+  static const String settingsPreviewModeNotice =
+      '当前为界面预览，设备状态、视频和服务结果使用本地样例数据，不依赖在线接口。';
 
   /// 记住账号字段标题。
   static const String settingsRememberedAccount = '记住的账号';
 
   /// 未保存记住账号。
   static const String settingsRememberedAccountMissing = '当前未保存';
+
+  /// 已保存记住账号时的说明。
+  static const String settingsRememberedAccountSavedHint =
+      '当前设备会在下次登录时自动回填这个账号。';
+
+  /// 未保存记住账号时的说明。
+  static const String settingsRememberedAccountEmptyHint =
+      '当前没有保存登录账号，需要时可以重新勾选记住账号。';
 
   /// 清除记住账号标题。
   static const String settingsClearRememberedAccountTitle = '清除记住的账号';
@@ -492,5 +421,5 @@ class AppCopy {
 
   /// 当前平台不支持软件内播放说明。
   static const String videoPlaybackUnsupportedMessage =
-      '当前平台还没有接入内嵌视频能力。请优先在 Android、iOS、macOS 或 Web 端使用视频中心。';
+      '当前平台还没有接入软件内视频能力。请优先在 Android、iOS、macOS、Windows、Linux 或 Web 端使用视频中心。';
 }

@@ -8,28 +8,7 @@ class AppBackdrop extends StatelessWidget {
   /// 创建背景层。
   const AppBackdrop({
     this.baseGradient,
-    this.orbs = const <BackdropOrbData>[
-      BackdropOrbData(
-        alignment: Alignment(-1.02, -0.96),
-        size: 320,
-        color: Color(0x16518463),
-      ),
-      BackdropOrbData(
-        alignment: Alignment(1.06, -0.18),
-        size: 300,
-        color: Color(0x14CBF2E0),
-      ),
-      BackdropOrbData(
-        alignment: Alignment(0.96, 1.04),
-        size: 260,
-        color: Color(0x14CEBBD8),
-      ),
-      BackdropOrbData(
-        alignment: Alignment(-0.88, 1.08),
-        size: 240,
-        color: Color(0x12D2C8AC),
-      ),
-    ],
+    this.orbs = const <BackdropOrbData>[],
     this.showGrid = false,
     super.key,
   });
@@ -66,10 +45,38 @@ class AppBackdrop extends StatelessWidget {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  center: const Alignment(-0.76, -0.92),
-                  radius: 1.08,
+                  center: const Alignment(-0.9, -1.0),
+                  radius: 0.9,
                   colors: <Color>[
-                    AppPalette.softPine.withValues(alpha: 0.1),
+                    AppPalette.softPine.withValues(alpha: 0.08),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0.98, -0.86),
+                  radius: 0.82,
+                  colors: <Color>[
+                    AppPalette.mistMint.withValues(alpha: 0.07),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0.8, 0.92),
+                  radius: 0.86,
+                  colors: <Color>[
+                    AppPalette.softLavender.withValues(alpha: 0.035),
                     Colors.transparent,
                   ],
                 ),
@@ -83,20 +90,12 @@ class AppBackdrop extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: <Color>[
-                    Colors.white.withValues(alpha: 0.22),
-                    AppPalette.mistMint.withValues(alpha: 0.08),
-                    AppPalette.linenOlive.withValues(alpha: 0.05),
+                    Colors.white.withValues(alpha: 0.14),
+                    AppPalette.mistMint.withValues(alpha: 0.04),
+                    AppPalette.linenOlive.withValues(alpha: 0.02),
                     Colors.transparent,
                   ],
                 ),
-              ),
-            ),
-          ),
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _BackdropPaperTexturePainter(
-                fiberColor: AppPalette.fogMint.withValues(alpha: 0.18),
-                fleckColor: AppPalette.outlineSoft.withValues(alpha: 0.14),
               ),
             ),
           ),
@@ -138,9 +137,9 @@ class AppBackdrop extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: <Color>[
-                    Colors.white.withValues(alpha: 0.08),
+                    Colors.white.withValues(alpha: 0.04),
                     Colors.transparent,
-                    colorScheme.surface.withValues(alpha: 0.16),
+                    colorScheme.surface.withValues(alpha: 0.08),
                   ],
                 ),
               ),
@@ -213,55 +212,5 @@ class _BackdropGridPainter extends CustomPainter {
   bool shouldRepaint(covariant _BackdropGridPainter oldDelegate) {
     return oldDelegate.lineColor != lineColor ||
         oldDelegate.emphasisColor != emphasisColor;
-  }
-}
-
-class _BackdropPaperTexturePainter extends CustomPainter {
-  const _BackdropPaperTexturePainter({
-    required this.fiberColor,
-    required this.fleckColor,
-  });
-
-  final Color fiberColor;
-  final Color fleckColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final fiberPaint = Paint()
-      ..color = fiberColor
-      ..strokeWidth = 0.7
-      ..strokeCap = StrokeCap.round;
-    final fleckPaint = Paint()..color = fleckColor;
-
-    for (double x = 14; x < size.width; x += 36) {
-      final offsetSeed = (x * 0.37) % 28;
-      for (double y = offsetSeed + 8; y < size.height; y += 94) {
-        final drift = ((x + y) % 11) - 5;
-        final length = 16 + ((x + y) % 22);
-        final endY = (y + length).clamp(0.0, size.height).toDouble();
-        canvas.drawLine(
-          Offset(x, y),
-          Offset(x + drift * 0.2, endY),
-          fiberPaint,
-        );
-      }
-    }
-
-    for (double x = 20; x < size.width; x += 58) {
-      final offsetSeed = (x * 0.19) % 32;
-      for (double y = offsetSeed + 10; y < size.height; y += 110) {
-        canvas.drawCircle(
-          Offset(x, y),
-          0.7 + (((x + y) % 4) * 0.12),
-          fleckPaint,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _BackdropPaperTexturePainter oldDelegate) {
-    return oldDelegate.fiberColor != fiberColor ||
-        oldDelegate.fleckColor != fleckColor;
   }
 }

@@ -16,7 +16,7 @@ const List<String> _displayFontFallback = _bodyFontFallback;
 class AppTheme {
   /// 返回当前应用使用的主题。
   static ThemeData light() {
-    const colorScheme = ColorScheme(
+    final colorScheme = ColorScheme(
       brightness: Brightness.light,
       primary: AppPalette.pineGreen,
       onPrimary: AppPalette.paperSnow,
@@ -27,24 +27,52 @@ class AppTheme {
       surface: AppPalette.paperSnow,
       onSurface: AppPalette.pineInk,
       onSurfaceVariant: Color(0xFF5D6E63),
-      primaryContainer: Color(0xFFD9E7DE),
+      primaryContainer: AppPalette.blendOnPaper(
+        AppPalette.softPine,
+        opacity: 0.36,
+        base: AppPalette.paper,
+      ),
       onPrimaryContainer: Color(0xFF2B4435),
-      secondaryContainer: Color(0xFFE4F0EA),
+      secondaryContainer: AppPalette.blendOnPaper(
+        AppPalette.mistMint,
+        opacity: 0.34,
+        base: AppPalette.paperWarm,
+      ),
       onSecondaryContainer: Color(0xFF294536),
-      tertiary: AppPalette.softLavender,
-      onTertiary: Color(0xFF4C4453),
-      tertiaryContainer: Color(0xFFF1E8F5),
-      onTertiaryContainer: Color(0xFF5B5161),
+      tertiary: AppPalette.linenOlive,
+      onTertiary: Color(0xFF4A4434),
+      tertiaryContainer: AppPalette.blendOnPaper(
+        AppPalette.linenOlive,
+        opacity: 0.3,
+        base: AppPalette.paperWarm,
+      ),
+      onTertiaryContainer: Color(0xFF5A533E),
       errorContainer: Color(0xFFF5E7E4),
       onErrorContainer: Color(0xFF74443D),
       surfaceDim: AppPalette.paperShade,
       surfaceBright: AppPalette.paperSnow,
-      surfaceContainerLowest: Color(0xFFFFFFFF),
-      surfaceContainerLow: Color(0xFFF8FBF8),
-      surfaceContainer: Color(0xFFF1F6F2),
-      surfaceContainerHigh: Color(0xFFEAF1EB),
-      surfaceContainerHighest: Color(0xFFE3EBE4),
-      outline: Color(0xFF9FB0A4),
+      surfaceContainerLowest: AppPalette.paperSnow,
+      surfaceContainerLow: AppPalette.blendOnPaper(
+        AppPalette.softPine,
+        opacity: 0.09,
+        base: AppPalette.paperWarm,
+      ),
+      surfaceContainer: AppPalette.blendOnPaper(
+        AppPalette.mistMint,
+        opacity: 0.13,
+        base: AppPalette.paper,
+      ),
+      surfaceContainerHigh: AppPalette.blendOnPaper(
+        AppPalette.softPine,
+        opacity: 0.17,
+        base: AppPalette.paperMist,
+      ),
+      surfaceContainerHighest: AppPalette.blendOnPaper(
+        AppPalette.mistMint,
+        opacity: 0.18,
+        base: AppPalette.fogMint,
+      ),
+      outline: Color(0xFF98A99E),
       outlineVariant: AppPalette.outlineSoft,
       shadow: AppPalette.pineShadow,
       scrim: Color(0xFF000000),
@@ -148,9 +176,9 @@ class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         surfaceTintColor: Colors.transparent,
-        shadowColor: const Color(0x14243228),
+        shadowColor: const Color(0x16243228),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(28),
           side: BorderSide(
             color: colorScheme.outlineVariant.withValues(alpha: 0.86),
           ),
@@ -251,7 +279,11 @@ class AppTheme {
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: colorScheme.surfaceBright.withValues(alpha: 0.98),
+        backgroundColor: AppPalette.blendOnPaper(
+          AppPalette.softPine,
+          opacity: 0.06,
+          base: colorScheme.surfaceBright,
+        ).withValues(alpha: 0.98),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         height: 72,

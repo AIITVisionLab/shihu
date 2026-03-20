@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/features/device/application/device_status_view_data.dart';
+import 'package:sickandflutter/features/device/domain/device_status.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_controller.dart';
 import 'package:sickandflutter/features/realtime/realtime_view_utils.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
@@ -12,6 +13,7 @@ class RealtimeControlsSection extends StatelessWidget {
   const RealtimeControlsSection({
     required this.state,
     required this.onToggleLed,
+    this.compactDesktop = false,
     super.key,
   });
 
@@ -20,6 +22,9 @@ class RealtimeControlsSection extends StatelessWidget {
 
   /// LED 开关切换回调。
   final Future<void> Function(bool ledOn) onToggleLed;
+
+  /// 是否启用桌面端紧凑排布。
+  final bool compactDesktop;
 
   @override
   Widget build(BuildContext context) {
@@ -30,138 +35,178 @@ class RealtimeControlsSection extends StatelessWidget {
 
     return CommonCard(
       title: '设备与补光',
-      subtitle: '把设备摘要和补光控制收在一起，避免在不同卡片来回切换。',
+      accentColor: AppPalette.mistMint,
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          FeatureInsetPanel(
-            padding: const EdgeInsets.all(18),
-            borderRadius: 24,
-            accentColor: AppPalette.softPine,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  '当前操作面板',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  viewData?.alertTitle ?? '等待状态返回',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  deviceState == null
-                      ? '设备状态接入后，补光控制会在这里变为可用。'
-                      : '先确认设备状态与补光状态，再决定是否切换 LED。',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    height: 1.56,
-                  ),
-                ),
-              ],
-            ),
+          _StatusOverviewPanel(
+            deviceState: deviceState,
+            viewData: viewData,
+            compact: compactDesktop,
           ),
-          const SizedBox(height: 16),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final columns = constraints.maxWidth >= 720 ? 2 : 1;
-              final itemWidth =
-                  (constraints.maxWidth - ((columns - 1) * 12)) / columns;
-
-              return Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: <Widget>[
-                  _DetailTile(
-                    width: itemWidth,
-                    label: '设备名称',
-                    value: formatRealtimeDisplayText(deviceState?.deviceName),
-                  ),
-                  _DetailTile(
-                    width: itemWidth,
-                    label: '当前状态',
-                    value: viewData?.alertTitle ?? '等待状态返回',
-                  ),
-                  _DetailTile(
-                    width: itemWidth,
-                    label: '补光状态',
-                    value: viewData?.ledLabel ?? '待同步',
-                  ),
-                  _DetailTile(
-                    width: itemWidth,
-                    label: '最近同步',
-                    value: formatRealtimeTimestamp(deviceState?.updatedAtTime),
-                  ),
-                ],
-              );
-            },
+          SizedBox(height: compactDesktop ? 14 : 16),
+          _LedControlPanel(
+            state: state,
+            compact: compactDesktop,
+            onToggleLed: onToggleLed,
           ),
-          const SizedBox(height: 16),
-          _LedControlPanel(state: state, onToggleLed: onToggleLed),
         ],
       ),
     );
   }
 }
 
-class _DetailTile extends StatelessWidget {
-  const _DetailTile({
-    required this.width,
-    required this.label,
-    required this.value,
+class _StatusOverviewPanel extends StatelessWidget {
+  const _StatusOverviewPanel({
+    required this.deviceState,
+    required this.viewData,
+    this.compact = false,
   });
 
-  final double width;
+  final DeviceStatus? deviceState;
+  final DeviceStatusViewData? viewData;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final palette = resolveRealtimeAlertPalette(deviceState?.alertLevel);
+    final deviceName = formatRealtimeDisplayText(deviceState?.deviceName);
+
+    return FeatureInsetPanel(
+      padding: EdgeInsets.all(compact ? 14 : 16),
+      borderRadius: 24,
+      accentColor: palette.foregroundColor,
+      shadow: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Container(
+                width: compact ? 42 : 46,
+                height: compact ? 42 : 46,
+                decoration: BoxDecoration(
+                  color: palette.foregroundColor.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  Icons.eco_outlined,
+                  color: palette.foregroundColor,
+                  size: compact ? 20 : 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      deviceName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      viewData?.alertTitle ?? '等待状态返回',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            deviceState == null ? '等待设备状态后再决定是否补光。' : '状态、同步和补光都收在这里。',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              _OverviewBadge(
+                icon: Icons.schedule_rounded,
+                label: viewData?.freshnessLabel ?? '等待同步',
+              ),
+              _OverviewBadge(
+                icon: Icons.lightbulb_outline_rounded,
+                label: viewData?.ledLabel ?? '补光待同步',
+              ),
+              _OverviewBadge(
+                icon: Icons.gpp_good_outlined,
+                label: viewData?.alertTitle ?? '待确认',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OverviewBadge extends StatelessWidget {
+  const _OverviewBadge({required this.icon, required this.label});
+
+  final IconData icon;
   final String label;
-  final String value;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return SizedBox(
-      width: width,
-      child: FeatureInsetPanel(
-        padding: const EdgeInsets.all(14),
-        borderRadius: 18,
-        accentColor: AppPalette.mistMint,
-        shadow: true,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              label,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              value,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppPalette.blendOnPaper(
+          AppPalette.softPine,
+          opacity: 0.12,
+          base: colorScheme.surfaceContainerLowest,
         ),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppPalette.softPine.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 16, color: colorScheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _LedControlPanel extends StatelessWidget {
-  const _LedControlPanel({required this.state, required this.onToggleLed});
+  const _LedControlPanel({
+    required this.state,
+    required this.onToggleLed,
+    this.compact = false,
+  });
 
   final RealtimeDetectState state;
   final Future<void> Function(bool ledOn) onToggleLed;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -172,10 +217,47 @@ class _LedControlPanel extends StatelessWidget {
         ? null
         : DeviceStatusViewData.fromState(deviceState);
 
+    final action = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: AppPalette.blendOnPaper(
+          AppPalette.mistMint,
+          opacity: 0.12,
+          base: colorScheme.surfaceContainerLowest,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppPalette.mistMint.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Switch.adaptive(
+            value: deviceState?.ledOn ?? false,
+            onChanged:
+                deviceState == null ||
+                    !deviceState.canControlLed ||
+                    state.isSubmittingLed
+                ? null
+                : (value) {
+                    onToggleLed(value);
+                  },
+          ),
+          const SizedBox(width: 6),
+          Text(
+            viewData == null ? '当前已关闭' : '当前${viewData.ledLabel}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(compact ? 14 : 16),
       borderRadius: 24,
-      accentColor: AppPalette.softLavender,
+      accentColor: AppPalette.mistMint,
       shadow: true,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -189,69 +271,43 @@ class _LedControlPanel extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 deviceState == null
-                    ? '当前还没有设备状态，暂时无法下发控制命令。'
+                    ? '还没有设备状态，暂时无法下发补光指令。'
                     : !deviceState.canControlLed
-                    ? '当前还不能调整补光，请先等待状态稳定。'
-                    : '指令提交后界面会继续刷新，等待设备状态回写。',
-                style: theme.textTheme.bodyMedium?.copyWith(
+                    ? '当前还不能调整补光，请先等状态稳定。'
+                    : '切换后会自动回刷。',
+                style: theme.textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
-                  height: 1.54,
+                  height: 1.5,
                 ),
               ),
             ],
           );
 
-          final action = Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: colorScheme.outlineVariant),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Switch.adaptive(
-                  value: deviceState?.ledOn ?? false,
-                  onChanged:
-                      deviceState == null ||
-                          !deviceState.canControlLed ||
-                          state.isSubmittingLed
-                      ? null
-                      : (value) {
-                          onToggleLed(value);
-                        },
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  viewData == null ? '当前已关闭' : '当前${viewData.ledLabel}',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          );
-
-          final stateTag = Container(
+          final tag = Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: AppPalette.softPine.withValues(alpha: 0.24),
+              color: AppPalette.blendOnPaper(
+                AppPalette.linenOlive,
+                opacity: 0.12,
+                base: colorScheme.surfaceContainerLowest,
+              ),
               borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: AppPalette.linenOlive.withValues(alpha: 0.22),
+              ),
             ),
             child: Text(
-              state.isSubmittingLed ? '指令提交中' : '可以随时切换',
+              state.isSubmittingLed ? '指令提交中' : '状态稳定后可切换',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: colorScheme.onSurface,
               ),
             ),
           );
 
-          if (constraints.maxWidth < 580) {
+          if (constraints.maxWidth < 620) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -259,7 +315,7 @@ class _LedControlPanel extends StatelessWidget {
                 const SizedBox(height: 14),
                 action,
                 const SizedBox(height: 12),
-                stateTag,
+                tag,
               ],
             );
           }
@@ -270,12 +326,8 @@ class _LedControlPanel extends StatelessWidget {
               Expanded(child: description),
               const SizedBox(width: 16),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  action,
-                  const SizedBox(height: 12),
-                  stateTag,
-                ],
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: <Widget>[action, const SizedBox(height: 12), tag],
               ),
             ],
           );

@@ -8,10 +8,17 @@ import 'package:sickandflutter/shared/widgets/feature_surface.dart';
 /// 实时监控页环境指标区。
 class RealtimeMetricsSection extends StatelessWidget {
   /// 创建实时监控页环境指标区。
-  const RealtimeMetricsSection({required this.deviceState, super.key});
+  const RealtimeMetricsSection({
+    required this.deviceState,
+    this.compactDesktop = false,
+    super.key,
+  });
 
   /// 当前设备状态。
   final DeviceStatus? deviceState;
+
+  /// 是否启用桌面端紧凑排布。
+  final bool compactDesktop;
 
   @override
   Widget build(BuildContext context) {
@@ -44,141 +51,115 @@ class RealtimeMetricsSection extends StatelessWidget {
         accent: AppPalette.softLavender,
       ),
     ];
+    final metricGrid = LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = switch (constraints.maxWidth) {
+          >= 720 => 4,
+          >= 560 when compactDesktop => 4,
+          >= 420 => 2,
+          _ => 1,
+        };
+        final gap = compactDesktop ? 10.0 : 12.0;
+        final itemWidth =
+            (constraints.maxWidth - ((columns - 1) * gap)) / columns;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: items
+              .map(
+                (item) => SizedBox(
+                  width: itemWidth,
+                  child: FeatureSummaryTile(
+                    icon: item.icon,
+                    label: item.title,
+                    value: item.value,
+                    accentColor: item.accent,
+                    padding: EdgeInsets.all(compactDesktop ? 14 : 16),
+                    borderRadius: compactDesktop ? 18 : 20,
+                  ),
+                ),
+              )
+              .toList(growable: false),
+        );
+      },
+    );
+
+    final cardBody = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        metricGrid,
+        SizedBox(height: compactDesktop ? 12 : 14),
+        FeatureInsetPanel(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          borderRadius: 20,
+          accentColor: AppPalette.linenOlive,
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: <Widget>[
+              _MetricFooterPill(
+                icon: Icons.schedule_rounded,
+                label: '最近同步',
+                value: deviceState == null ? '等待同步' : '已接入',
+              ),
+              _MetricFooterPill(
+                icon: Icons.lightbulb_outline_rounded,
+                label: '补光',
+                value: viewData?.ledLabel ?? '待同步',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
 
     return CommonCard(
       title: '环境指标',
-      subtitle: '核心指标集中成矩阵，进入值守后先横向读数，再决定是否处理。',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          FeatureInsetPanel(
-            padding: const EdgeInsets.all(18),
-            borderRadius: 24,
-            accentColor: AppPalette.linenOlive,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppPalette.linenOlive.withValues(alpha: 0.34),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(Icons.grid_3x3_rounded),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    deviceState == null
-                        ? '设备接入后会在这里显示四项核心指标。'
-                        : '四项主指标保持固定矩阵，值守时先横向对比，再决定是否处理。',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      height: 1.56,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final columns = constraints.maxWidth >= 860
-                  ? 2
-                  : constraints.maxWidth >= 420
-                  ? 2
-                  : 1;
-              final itemWidth =
-                  (constraints.maxWidth - ((columns - 1) * 14)) / columns;
-
-              return Wrap(
-                spacing: 14,
-                runSpacing: 14,
-                children: items
-                    .map(
-                      (item) => SizedBox(
-                        width: itemWidth,
-                        child: _MetricTile(
-                          icon: item.icon,
-                          title: item.title,
-                          value: item.value,
-                          accentColor: item.accent,
-                        ),
-                      ),
-                    )
-                    .toList(growable: false),
-              );
-            },
-          ),
-        ],
-      ),
+      accentColor: AppPalette.softPine,
+      padding: const EdgeInsets.all(18),
+      child: cardBody,
     );
   }
 }
 
-class _MetricTile extends StatelessWidget {
-  const _MetricTile({
+class _MetricFooterPill extends StatelessWidget {
+  const _MetricFooterPill({
     required this.icon,
-    required this.title,
+    required this.label,
     required this.value,
-    required this.accentColor,
   });
 
   final IconData icon;
-  final String title;
+  final String label;
   final String value;
-  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return FeatureInsetPanel(
-      padding: const EdgeInsets.all(18),
-      borderRadius: 22,
-      accentColor: accentColor,
-      shadow: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      decoration: BoxDecoration(
+        color: AppPalette.blendOnPaper(
+          AppPalette.linenOlive,
+          opacity: 0.12,
+          base: colorScheme.surfaceContainerLowest,
+        ),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppPalette.linenOlive.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(icon, color: accentColor),
-              ),
-              const Spacer(),
-              Container(
-                width: 28,
-                height: 3,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.82),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
+          Icon(icon, size: 16, color: colorScheme.primary),
+          const SizedBox(width: 8),
           Text(
-            title,
+            '$label · $value',
             style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: theme.textTheme.headlineSmall?.copyWith(
               color: colorScheme.onSurface,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

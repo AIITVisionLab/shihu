@@ -22,81 +22,76 @@ class HomeSummaryBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final statusTitle = viewData?.alertTitle ?? '等待状态';
+    final statusDescription = deviceStatus == null
+        ? '等待设备上报后再展示当前结论。'
+        : '状态依据最新上报结果生成，可直接作为值守判断基线。';
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       borderRadius: 28,
       accentColor: AppPalette.softLavender,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            '值守摘要',
+            '后端状态摘要',
             style: theme.textTheme.labelLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 12),
-          FeatureInsetPanel(
-            padding: const EdgeInsets.all(18),
-            borderRadius: 22,
-            accentColor: AppPalette.softPine,
-            child: Row(
-              children: <Widget>[
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: AppPalette.softPine.withValues(alpha: 0.42),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(Icons.eco_outlined, color: AppPalette.pineGreen),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        viewData?.alertTitle ?? '等待状态',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        deviceStatus == null
-                            ? '等待数据返回'
-                            : '把当前状态、同步和补光收成一眼可读的摘要。',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          height: 1.58,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          const SizedBox(height: 10),
+          Text(
+            statusTitle,
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 16),
-          HomeSummaryValueCard(
-            title: '最近同步',
-            value: deviceStatus == null ? '等待数据' : viewData!.freshnessLabel,
-            accentColor: AppPalette.linenOlive,
+          const SizedBox(height: 6),
+          Text(
+            statusDescription,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.58,
+            ),
           ),
-          const SizedBox(height: 12),
-          HomeSummaryValueCard(
-            title: '补光状态',
-            value: deviceStatus == null ? '待同步' : viewData!.ledLabel,
-            accentColor: AppPalette.softLavender,
-          ),
-          const SizedBox(height: 12),
-          HomeSummaryValueCard(
-            title: '下一步',
-            value: deviceStatus == null ? '等待设备接入' : '先看值守台，再决定操作',
-            accentColor: AppPalette.mistMint,
+          const SizedBox(height: 14),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 320 ? 3 : 1;
+              final gap = 10.0;
+              final itemWidth = columns == 1
+                  ? constraints.maxWidth
+                  : (constraints.maxWidth - ((columns - 1) * gap)) / columns;
+
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: <Widget>[
+                  HomeSummaryValueCard(
+                    width: itemWidth,
+                    title: '最近同步',
+                    value: deviceStatus == null
+                        ? '等待数据'
+                        : viewData!.freshnessLabel,
+                    accentColor: AppPalette.linenOlive,
+                  ),
+                  HomeSummaryValueCard(
+                    width: itemWidth,
+                    title: '补光状态',
+                    value: deviceStatus == null ? '待同步' : viewData!.ledLabel,
+                    accentColor: AppPalette.softLavender,
+                  ),
+                  HomeSummaryValueCard(
+                    width: itemWidth,
+                    title: '当前结论',
+                    value: statusTitle,
+                    accentColor: AppPalette.mistMint,
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -108,11 +103,15 @@ class HomeSummaryBoard extends StatelessWidget {
 class HomeSummaryValueCard extends StatelessWidget {
   /// 创建首页 Hero 指标值卡片。
   const HomeSummaryValueCard({
+    required this.width,
     required this.title,
     required this.value,
     required this.accentColor,
     super.key,
   });
+
+  /// 宽度。
+  final double width;
 
   /// 标题。
   final String title;
@@ -125,31 +124,15 @@ class HomeSummaryValueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 18,
-      accentColor: accentColor,
-      shadow: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            title,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: theme.colorScheme.onSurface,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
+    return SizedBox(
+      width: width,
+      child: FeatureSummaryTile(
+        label: title,
+        value: value,
+        accentColor: accentColor,
+        padding: const EdgeInsets.all(14),
+        borderRadius: 18,
+        shadow: false,
       ),
     );
   }

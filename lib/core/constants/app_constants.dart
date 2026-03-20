@@ -30,11 +30,35 @@ class AppConstants {
   /// 登录页记住用户名的本地存储键。
   static const String rememberedAccountStorageKey = 'remembered_account';
 
-  /// 默认基础服务地址。
+  /// 当前默认公网业务服务地址。
   ///
-  /// 当前仓库默认对接已部署的在线设备服务，
-  /// 避免开发环境误连到本机无关端口。
-  static const String defaultBaseUrl = 'http://101.35.79.76:8082';
+  /// Flutter 客户端正式接入 `iot-onenet-refact-main` 这套业务后端，
+  /// 默认优先指向当前已部署的公网反向代理入口。
+  static const String defaultBaseUrl = 'http://101.35.79.76';
+
+  /// 本地联调时使用的业务服务地址。
+  ///
+  /// 如需切回本机 Spring Boot 服务，可通过 `--dart-define=BASE_URL=...`
+  /// 或设置页把地址改回这里。
+  static const String localDevelopmentBaseUrl = 'http://127.0.0.1:8085';
+
+  /// 当前默认公网视频网关地址。
+  static const String defaultVideoGatewayUrl = 'http://101.35.79.76:1984';
+
+  /// 当前默认视频流标识。
+  static const String defaultVideoStreamId = 'k230';
+
+  /// 当前默认视频流展示名称。
+  static const String defaultVideoDisplayName = 'K230 实时视频流';
+
+  /// 当前默认视频优先播放模式。
+  static const String defaultVideoPreferredMode = 'webrtc';
+
+  /// 当前默认视频回退播放模式。
+  static const String defaultVideoFallbackMode = 'mse';
+
+  /// 当前默认视频 WebRTC 端口。
+  static const int defaultVideoWebrtcPort = 8555;
 
   /// 默认连接超时时间。
   static const int defaultConnectTimeoutMs = 10000;

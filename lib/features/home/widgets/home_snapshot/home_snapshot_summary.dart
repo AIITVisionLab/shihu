@@ -45,7 +45,7 @@ class HomeSnapshotSummary extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Wrap(
           spacing: 10,
           runSpacing: 10,
@@ -58,12 +58,49 @@ class HomeSnapshotSummary extends StatelessWidget {
             HomeSnapshotBasicChip(label: 'LED ${viewData.ledLabel}'),
           ],
         ),
-        const SizedBox(height: 16),
-        HomeSnapshotInfoBlock(label: '当前结论', value: viewData.alertDescription),
-        const SizedBox(height: 12),
-        HomeSnapshotInfoBlock(
-          label: '最近上报',
-          value: formatHomeSnapshotDateTime(deviceState.updatedAtTime),
+        const SizedBox(height: 14),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 520) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  HomeSnapshotInfoBlock(
+                    label: '当前结论',
+                    value: viewData.alertDescription,
+                  ),
+                  const SizedBox(height: 10),
+                  HomeSnapshotInfoBlock(
+                    label: '最近上报',
+                    value: formatHomeSnapshotDateTime(
+                      deviceState.updatedAtTime,
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Expanded(
+                  child: HomeSnapshotInfoBlock(
+                    label: '当前结论',
+                    value: viewData.alertDescription,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: HomeSnapshotInfoBlock(
+                    label: '最近上报',
+                    value: formatHomeSnapshotDateTime(
+                      deviceState.updatedAtTime,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -92,7 +129,7 @@ class HomeSnapshotInfoBlock extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(16),
@@ -109,7 +146,7 @@ class HomeSnapshotInfoBlock extends StatelessWidget {
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             value,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -135,7 +172,7 @@ class HomeSnapshotBasicChip extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(999),
@@ -165,7 +202,7 @@ class HomeSnapshotStatusChip extends StatelessWidget {
     final colors = _chipColors(context, level);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
         color: colors.$1,
         borderRadius: BorderRadius.circular(999),
@@ -200,7 +237,7 @@ class HomeSnapshotFreshnessChip extends StatelessWidget {
         : colorScheme.inversePrimary;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(999),

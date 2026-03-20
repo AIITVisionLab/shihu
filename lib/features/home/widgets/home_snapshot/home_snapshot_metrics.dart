@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/features/device/application/device_status_view_data.dart';
+import 'package:sickandflutter/shared/widgets/feature_surface.dart';
 
 /// 首页设备快照指标区。
 class HomeSnapshotMetrics extends StatelessWidget {
@@ -14,13 +15,18 @@ class HomeSnapshotMetrics extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 420 ? 2 : 1;
+        final columns = switch (constraints.maxWidth) {
+          >= 760 => 4,
+          >= 420 => 2,
+          _ => 1,
+        };
+        final gap = 10.0;
         final itemWidth =
-            (constraints.maxWidth - ((columns - 1) * 12)) / columns;
+            (constraints.maxWidth - ((columns - 1) * gap)) / columns;
 
         return Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: gap,
+          runSpacing: gap,
           children: <Widget>[
             HomeSnapshotMetricTile(
               width: itemWidth,
@@ -78,54 +84,15 @@ class HomeSnapshotMetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return SizedBox(
       width: width,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: <Color>[
-              accentColor.withValues(alpha: 0.16),
-              colorScheme.surfaceContainerLowest,
-            ],
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.24),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Container(
-              width: 34,
-              height: 3,
-              decoration: BoxDecoration(
-                color: accentColor,
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              label,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
+      child: FeatureSummaryTile(
+        label: label,
+        value: value,
+        accentColor: accentColor,
+        padding: const EdgeInsets.all(14),
+        borderRadius: 18,
+        shadow: false,
       ),
     );
   }

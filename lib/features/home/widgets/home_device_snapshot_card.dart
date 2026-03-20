@@ -6,7 +6,6 @@ import 'package:sickandflutter/features/device/domain/device_status.dart';
 import 'package:sickandflutter/features/home/widgets/home_snapshot/home_snapshot_metrics.dart';
 import 'package:sickandflutter/features/home/widgets/home_snapshot/home_snapshot_summary.dart';
 import 'package:sickandflutter/shared/widgets/common_card.dart';
-import 'package:sickandflutter/shared/widgets/feature_surface.dart';
 
 /// 首页设备快照卡片。
 class HomeDeviceSnapshotCard extends StatelessWidget {
@@ -28,6 +27,10 @@ class HomeDeviceSnapshotCard extends StatelessWidget {
     return CommonCard(
       title: '环境速览',
       subtitle: '把当前指标收在一处，需要处理时再进入值守台。',
+      padding: const EdgeInsets.all(18),
+      accentColor: AppPalette.mistMint,
+      headerIcon: Icons.analytics_outlined,
+      headerTag: '状态快照',
       child: deviceStateAsync.when(
         loading: () => const Padding(
           padding: EdgeInsets.symmetric(vertical: 20),
@@ -50,31 +53,6 @@ class HomeDeviceSnapshotCard extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              FeatureInsetPanel(
-                padding: const EdgeInsets.all(16),
-                borderRadius: 24,
-                accentColor: AppPalette.linenOlive,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      '环境矩阵',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.secondary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '把当前结论和四项关键指标收进同一个观察面板。',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        height: 1.56,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
               LayoutBuilder(
                 builder: (context, constraints) {
                   final summary = HomeSnapshotSummary(
@@ -89,7 +67,7 @@ class HomeDeviceSnapshotCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         summary,
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
                         metrics,
                       ],
                     );

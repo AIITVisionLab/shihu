@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sickandflutter/core/config/env_config.dart';
-import 'package:sickandflutter/core/config/service_endpoint_resolver.dart';
 import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/core/storage/local_storage.dart';
 import 'package:sickandflutter/core/utils/platform_utils.dart';
+import 'package:sickandflutter/features/service_config/domain/service_endpoint_resolver.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 import 'package:sickandflutter/shared/models/app_settings.dart';
 
@@ -42,18 +42,6 @@ final effectiveAppSettingsProvider = Provider<AppSettings>((ref) {
       );
 });
 
-/// 当前实际使用的设备服务端点。
-final resolvedServiceEndpointsProvider = Provider<ResolvedServiceEndpoints>((
-  ref,
-) {
-  final envConfig = ref.watch(envConfigProvider);
-  final settings = ref.watch(effectiveAppSettingsProvider);
-  return ServiceEndpointResolver.resolve(
-    configuredBaseUrl: settings.baseUrl,
-    fallbackBaseUrl: envConfig.baseUrl,
-  );
-});
-
 /// 管理本地设置的加载、更新和恢复默认值。
 class SettingsController extends AsyncNotifier<AppSettings> {
   @override
@@ -63,10 +51,21 @@ class SettingsController extends AsyncNotifier<AppSettings> {
     final storedJson = storage.readJson(AppConstants.settingsStorageKey);
 
     if (storedJson != null) {
-      return AppSettings.fromJson(<String, dynamic>{
+      final storedSettings = AppSettings.fromJson(<String, dynamic>{
         ...storedJson,
         'buildFlavor': envConfig.flavor.value,
       });
+      final migratedSettings = _migrateLegacySettings(
+        storedSettings,
+        envConfig: envConfig,
+      );
+      if (migratedSettings.baseUrl != storedSettings.baseUrl) {
+        await storage.writeJson(
+          AppConstants.settingsStorageKey,
+          migratedSettings.toJson(),
+        );
+      }
+      return migratedSettings;
     }
 
     return AppSettings.defaults(
@@ -111,5 +110,19 @@ class SettingsController extends AsyncNotifier<AppSettings> {
       throw FormatException('$fieldLabel格式不正确，请输入 http://host:port 这类完整地址。');
     }
     return normalized;
+  }
+
+  AppSettings _migrateLegacySettings(
+    AppSettings settings, {
+    required EnvConfig envConfig,
+  }) {
+    final migratedBaseUrl = ServiceEndpointResolver.migrateLegacyBaseUrl(
+      storedBaseUrl: settings.baseUrl,
+      envBaseUrl: envConfig.baseUrl,
+    );
+    if (migratedBaseUrl == settings.baseUrl) {
+      return settings;
+    }
+    return settings.copyWith(baseUrl: migratedBaseUrl);
   }
 }

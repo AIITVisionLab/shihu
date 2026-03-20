@@ -3,7 +3,6 @@ import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/features/device/application/device_status_view_data.dart';
 import 'package:sickandflutter/features/device/domain/device_status.dart';
 import 'package:sickandflutter/features/realtime/realtime_detect_controller.dart';
-import 'package:sickandflutter/features/realtime/realtime_view_utils.dart';
 import 'package:sickandflutter/shared/widgets/feature_surface.dart';
 
 /// 值守 Hero 左侧摘要区。
@@ -44,13 +43,16 @@ class RealtimeMonitorSummary extends StatelessWidget {
     final deviceName = deviceStatus?.deviceName.trim().isNotEmpty == true
         ? deviceStatus!.deviceName
         : '等待设备状态上报';
+    final summaryText = deviceStatus == null
+        ? '系统正在等待设备状态。'
+        : viewData!.alertDescription;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Wrap(
-          spacing: 10,
-          runSpacing: 10,
+          spacing: 8,
+          runSpacing: 8,
           children: <Widget>[
             _RealtimeMetaChip(
               icon: Icons.monitor_heart_rounded,
@@ -62,99 +64,26 @@ class RealtimeMonitorSummary extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 18),
-        Text(
-          '当前值守',
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: colorScheme.secondary,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Text(
           deviceName,
-          style: theme.textTheme.headlineMedium?.copyWith(
+          style: theme.textTheme.headlineSmall?.copyWith(
             color: colorScheme.onSurface,
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 10),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 620),
-          child: Text(
-            deviceStatus == null ? '系统正在等待设备状态。' : '先看当前判断和最近同步，再决定是否处理补光。',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              height: 1.58,
-            ),
+        const SizedBox(height: 8),
+        Text(
+          summaryText,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            height: 1.56,
           ),
         ),
-        const SizedBox(height: 18),
-        FeatureInsetPanel(
-          padding: const EdgeInsets.all(18),
-          borderRadius: 26,
-          accentColor: AppPalette.mistMint,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 640;
-              final summary = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    '当前判断',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    viewData?.alertTitle ?? '等待状态返回',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    deviceStatus == null
-                        ? '设备接入后会在这里显示当前判断。'
-                        : viewData!.alertDescription,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.56,
-                    ),
-                  ),
-                ],
-              );
-              final facts = _RealtimeFactGrid(
-                deviceStatus: deviceStatus,
-                viewData: viewData,
-              );
-
-              if (compact) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    summary,
-                    const SizedBox(height: 16),
-                    facts,
-                  ],
-                );
-              }
-
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Expanded(flex: 9, child: summary),
-                  const SizedBox(width: 16),
-                  Expanded(flex: 8, child: facts),
-                ],
-              );
-            },
-          ),
-        ),
+        const SizedBox(height: 14),
+        _RealtimeFactGrid(deviceStatus: deviceStatus, viewData: viewData),
         if (errorMessage != null) ...<Widget>[
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           FeatureInsetPanel(
             padding: const EdgeInsets.all(14),
             borderRadius: 18,
@@ -182,7 +111,7 @@ class RealtimeMonitorSummary extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         RealtimeHeroActionStrip(
           state: state,
           onRefresh: onRefresh,
@@ -204,8 +133,8 @@ class _RealtimeFactGrid extends StatelessWidget {
     final facts = <({String label, String value, Color accent})>[
       (
         label: '最近同步',
-        value: formatRealtimeTimestamp(deviceStatus?.updatedAtTime),
-        accent: AppPalette.softPine,
+        value: viewData?.freshnessLabel ?? '等待同步',
+        accent: AppPalette.linenOlive,
       ),
       (
         label: '补光状态',
@@ -215,24 +144,29 @@ class _RealtimeFactGrid extends StatelessWidget {
       (
         label: '状态判断',
         value: viewData?.alertTitle ?? '等待状态',
-        accent: AppPalette.linenOlive,
+        accent: AppPalette.mistMint,
       ),
       (
         label: '当前温度',
         value: viewData?.temperatureLabel ?? '--',
-        accent: AppPalette.mistMint,
+        accent: AppPalette.softPine,
       ),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 320 ? 2 : 1;
+        final columns = switch (constraints.maxWidth) {
+          >= 720 => 4,
+          >= 360 => 2,
+          _ => 1,
+        };
+        final gap = 10.0;
         final itemWidth =
-            (constraints.maxWidth - ((columns - 1) * 12)) / columns;
+            (constraints.maxWidth - ((columns - 1) * gap)) / columns;
 
         return Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: gap,
+          runSpacing: gap,
           children: facts
               .map(
                 (item) => SizedBox(
@@ -272,33 +206,13 @@ class RealtimeFactTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return FeatureInsetPanel(
-      padding: const EdgeInsets.all(14),
-      borderRadius: 18,
+    return FeatureSummaryTile(
+      label: label,
+      value: value,
       accentColor: accentColor,
-      shadow: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            label,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.all(12),
+      borderRadius: 18,
+      shadow: false,
     );
   }
 }
@@ -328,9 +242,9 @@ class RealtimeHeroActionStrip extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 22,
-      accentColor: AppPalette.softLavender,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 20,
+      accentColor: AppPalette.mistMint,
       shadow: true,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -346,7 +260,7 @@ class RealtimeHeroActionStrip extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                '保持自动更新，必要时再手动刷新，不把操作放在页面最前面。',
+                '保持自动更新，必要时再手动刷新。',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   height: 1.52,
@@ -366,11 +280,15 @@ class RealtimeHeroActionStrip extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerLowest.withValues(
-                    alpha: 0.92,
+                  color: AppPalette.blendOnPaper(
+                    AppPalette.mistMint,
+                    opacity: 0.12,
+                    base: colorScheme.surfaceContainerLowest,
                   ),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: colorScheme.outlineVariant),
+                  border: Border.all(
+                    color: AppPalette.mistMint.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -438,18 +356,15 @@ class _RealtimeMetaChip extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.9),
+        color: AppPalette.blendOnPaper(
+          AppPalette.softPine,
+          opacity: 0.12,
+          base: colorScheme.surfaceContainerLowest,
+        ),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: colorScheme.outlineVariant),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: AppPalette.softPine.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: AppPalette.softPine.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

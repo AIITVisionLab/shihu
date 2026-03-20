@@ -9,15 +9,39 @@ ThemeData buildAuthFormTheme(ThemeData baseTheme) {
     surface: AppPalette.paperSnow,
     onSurface: AppPalette.pineInk,
     onSurfaceVariant: const Color(0xFF66746A),
-    surfaceContainerLowest: Color(0xFFFCFDF9),
-    surfaceContainerLow: Color(0xFFF3F6F1),
-    surfaceContainer: Color(0xFFEDEFEA),
-    surfaceContainerHighest: Color(0xFFDDE4DB),
-    primaryContainer: Color(0xFFDCE9DD),
+    surfaceContainerLowest: AppPalette.paperSnow,
+    surfaceContainerLow: AppPalette.blendOnPaper(
+      AppPalette.softPine,
+      opacity: 0.08,
+      base: AppPalette.paperWarm,
+    ),
+    surfaceContainer: AppPalette.blendOnPaper(
+      AppPalette.mistMint,
+      opacity: 0.12,
+      base: AppPalette.paper,
+    ),
+    surfaceContainerHighest: AppPalette.blendOnPaper(
+      AppPalette.softPine,
+      opacity: 0.18,
+      base: AppPalette.fogMint,
+    ),
+    primaryContainer: AppPalette.blendOnPaper(
+      AppPalette.softPine,
+      opacity: 0.28,
+      base: AppPalette.paper,
+    ),
     onPrimaryContainer: const Color(0xFF32503A),
-    secondaryContainer: Color(0xFFE3EEE6),
+    secondaryContainer: AppPalette.blendOnPaper(
+      AppPalette.mistMint,
+      opacity: 0.24,
+      base: AppPalette.paperWarm,
+    ),
     onSecondaryContainer: const Color(0xFF33483A),
-    tertiaryContainer: Color(0xFFEEE5F0),
+    tertiaryContainer: AppPalette.blendOnPaper(
+      AppPalette.softLavender,
+      opacity: 0.22,
+      base: AppPalette.paperWarm,
+    ),
     onTertiaryContainer: const Color(0xFF5A4F62),
     outlineVariant: const Color(0xFFD5DCD3),
     errorContainer: const Color(0xFFF5E7E3),
@@ -62,9 +86,17 @@ ThemeData buildAuthFormTheme(ThemeData baseTheme) {
         ),
         backgroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const Color(0xFFDCE9DD);
+            return AppPalette.blendOnPaper(
+              AppPalette.softPine,
+              opacity: 0.24,
+              base: AppPalette.paperSnow,
+            );
           }
-          return AppPalette.paperSnow;
+          return AppPalette.blendOnPaper(
+            AppPalette.mistMint,
+            opacity: 0.06,
+            base: AppPalette.paperSnow,
+          );
         }),
         foregroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {

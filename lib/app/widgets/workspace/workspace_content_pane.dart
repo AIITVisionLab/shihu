@@ -43,17 +43,23 @@ class WorkspaceContentPane extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        SizedBox(
-          width: double.infinity,
-          child: WorkspaceHeaderCard(
-            title: title,
-            subtitle: subtitle,
-            currentUser: currentUser,
-            showCurrentUserChip: showCurrentUserChip,
-            actions: headerActions,
+        Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxContentWidth),
+            child: SizedBox(
+              width: double.infinity,
+              child: WorkspaceHeaderCard(
+                title: title,
+                subtitle: subtitle,
+                currentUser: currentUser,
+                showCurrentUserChip: showCurrentUserChip,
+                actions: headerActions,
+              ),
+            ),
           ),
         ),
-        SizedBox(height: screenWidth < 720 ? 14 : 18),
+        SizedBox(height: screenWidth < 720 ? 8 : 12),
         Expanded(
           child: Align(
             alignment: Alignment.topCenter,

@@ -5,19 +5,16 @@ import 'package:sickandflutter/app/widgets/workspace/workspace_bottom_navigation
 import 'package:sickandflutter/app/widgets/workspace/workspace_content_pane.dart';
 import 'package:sickandflutter/app/widgets/workspace/workspace_rail_pane.dart';
 import 'package:sickandflutter/shared/widgets/app_backdrop.dart';
+import 'package:sickandflutter/shared/widgets/workspace_layout.dart';
 
 /// 根据屏幕宽度返回工作台主体内容区的统一留白。
 EdgeInsets resolveWorkspacePagePadding(
   BuildContext context, {
-  double top = 4,
-  double bottom = 32,
+  double top = 0,
+  double bottom = 24,
 }) {
   final width = MediaQuery.sizeOf(context).width;
-  final horizontal = switch (width) {
-    < 560 => 12.0,
-    < 1240 => 16.0,
-    _ => 20.0,
-  };
+  final horizontal = resolveWorkspaceHorizontalPadding(width);
 
   return EdgeInsets.fromLTRB(horizontal, top, horizontal, bottom);
 }
@@ -34,31 +31,10 @@ class AppWorkspaceScaffold extends StatelessWidget {
     required this.currentUser,
     required this.child,
     this.headerActions = const <Widget>[],
-    this.maxContentWidth = 1100,
+    this.maxContentWidth = kWorkspaceContentMaxWidth,
     this.backgroundGradient,
-    this.backgroundOrbs = const <BackdropOrbData>[
-      BackdropOrbData(
-        alignment: Alignment(-1.0, -0.96),
-        size: 360,
-        color: Color(0x18518463),
-      ),
-      BackdropOrbData(
-        alignment: Alignment(1.02, -0.12),
-        size: 300,
-        color: Color(0x18CBF2E0),
-      ),
-      BackdropOrbData(
-        alignment: Alignment(0.94, 1.1),
-        size: 260,
-        color: Color(0x16CEBBD8),
-      ),
-      BackdropOrbData(
-        alignment: Alignment(-0.84, 1.0),
-        size: 250,
-        color: Color(0x12D2C8AC),
-      ),
-    ],
-    this.showGrid = true,
+    this.backgroundOrbs = const <BackdropOrbData>[],
+    this.showGrid = false,
     super.key,
   });
 
@@ -95,14 +71,10 @@ class AppWorkspaceScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final useRail = screenWidth >= 1240;
-    final shellMaxWidth = useRail ? 1460.0 : 980.0;
-    final horizontalPadding = switch (screenWidth) {
-      < 560 => 12.0,
-      < 1240 => 16.0,
-      _ => 20.0,
-    };
-    final topPadding = screenWidth < 560 ? 12.0 : 18.0;
+    final useRail = useWorkspaceRailLayout(screenWidth);
+    final shellMaxWidth = useRail ? kWorkspaceDesktopShellMaxWidth : 1040.0;
+    final horizontalPadding = resolveWorkspaceHorizontalPadding(screenWidth);
+    final topPadding = resolveWorkspaceTopPadding(screenWidth);
     final contentPane = WorkspaceContentPane(
       title: title,
       subtitle: subtitle,
@@ -121,7 +93,9 @@ class AppWorkspaceScaffold extends StatelessWidget {
               top: false,
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 760),
+                  constraints: const BoxConstraints(
+                    maxWidth: kWorkspaceBottomNavigationMaxWidth,
+                  ),
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(
                       horizontalPadding,
@@ -145,7 +119,7 @@ class AppWorkspaceScaffold extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: <Color>[
                       AppPalette.paperSnow,
-                      AppPalette.frost,
+                      AppPalette.paperMist,
                       AppPalette.paper,
                     ],
                   ),
@@ -163,20 +137,20 @@ class AppWorkspaceScaffold extends StatelessWidget {
                     horizontalPadding,
                     topPadding,
                     horizontalPadding,
-                    useRail ? 18 : 8,
+                    useRail ? 14 : 6,
                   ),
                   child: useRail
                       ? Row(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: <Widget>[
                             SizedBox(
-                              width: 232,
+                              width: kWorkspaceDesktopRailWidth,
                               child: WorkspaceRailPane(
                                 destination: destination,
                                 currentUser: currentUser,
                               ),
                             ),
-                            const SizedBox(width: 18),
+                            const SizedBox(width: 24),
                             Expanded(child: contentPane),
                           ],
                         )

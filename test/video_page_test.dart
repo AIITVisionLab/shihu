@@ -59,17 +59,16 @@ void main() {
             ],
           ),
         ],
-        child: const MaterialApp(home: VideoPage()),
+        child: const MaterialApp(home: VideoPage(enableInlinePlayback: false)),
       ),
     );
     await tester.pumpAndSettle();
 
     expect(find.text('视频中心'), findsWidgets);
     expect(find.text('K230 实时视频流'), findsWidgets);
-    expect(find.text('打开画面'), findsOneWidget);
-    expect(find.text('查看提示'), findsOneWidget);
+    expect(find.text('当前主画面'), findsOneWidget);
+    expect(find.text('放大查看'), findsOneWidget);
     expect(find.text('在线'), findsWidgets);
-    expect(find.text('可查看'), findsWidgets);
   });
 
   testWidgets('VideoPage renders mobile layout without overflow', (
@@ -120,7 +119,7 @@ void main() {
             ],
           ),
         ],
-        child: const MaterialApp(home: VideoPage()),
+        child: const MaterialApp(home: VideoPage(enableInlinePlayback: false)),
       ),
     );
     await tester.pumpAndSettle();

@@ -4,6 +4,7 @@ import 'package:sickandflutter/core/constants/app_constants.dart';
 import 'package:sickandflutter/shared/widgets/app_backdrop.dart';
 import 'package:sickandflutter/shared/widgets/app_brand_mark.dart';
 import 'package:sickandflutter/shared/widgets/feature_surface.dart';
+import 'package:sickandflutter/shared/widgets/workspace_layout.dart';
 
 /// 认证入口页通用壳层，统一背景与跨端布局。
 class AuthEntryShell extends StatelessWidget {
@@ -31,7 +32,7 @@ class AuthEntryShell extends StatelessWidget {
     final compact = width < 720;
     final horizontalPadding = width < 480
         ? 16.0
-        : (useSplitLayout ? 28.0 : 20.0);
+        : resolveWorkspaceHorizontalPadding(width);
 
     return Scaffold(
       backgroundColor: AppPalette.paperSnow,
@@ -62,7 +63,7 @@ class AuthEntryShell extends StatelessWidget {
                   24,
                 ),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1220),
+                  constraints: const BoxConstraints(maxWidth: 1320),
                   child: useSplitLayout
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -75,9 +76,13 @@ class AuthEntryShell extends StatelessWidget {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                const Expanded(child: _DesktopIntroPanel()),
+                                const Expanded(
+                                  flex: 12,
+                                  child: _DesktopIntroPanel(),
+                                ),
                                 const SizedBox(width: 24),
                                 Expanded(
+                                  flex: 11,
                                   child: _AuthFormColumn(
                                     compact: false,
                                     formPanel: formPanel,
@@ -192,33 +197,10 @@ class _IntroStage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      width: double.infinity,
+    return FeatureHeroCard(
       padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[
-            colorScheme.surfaceBright.withValues(alpha: 0.995),
-            AppPalette.paperWarm.withValues(alpha: 0.97),
-            AppPalette.softLavender.withValues(alpha: 0.14),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(34),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.84),
-        ),
-        boxShadow: const <BoxShadow>[
-          BoxShadow(
-            color: Color(0x120F1712),
-            blurRadius: 20,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
+      borderRadius: 34,
+      accentColor: AppPalette.softPine,
       child: child,
     );
   }
@@ -254,9 +236,6 @@ class _MobileRouteHint extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       borderRadius: 24,
       accentColor: AppPalette.mistMint,
-      backgroundColor: colorScheme.surfaceContainerLowest.withValues(
-        alpha: 0.92,
-      ),
       showHighlightLine: false,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,33 +370,10 @@ class _FormStage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      width: double.infinity,
+    return FeatureHeroCard(
       padding: EdgeInsets.all(compact ? 22 : 28),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[
-            colorScheme.surfaceBright.withValues(alpha: 0.995),
-            colorScheme.surfaceContainerLow.withValues(alpha: 0.97),
-            AppPalette.paperMist.withValues(alpha: 0.92),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(compact ? 28 : 34),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.84),
-        ),
-        boxShadow: const <BoxShadow>[
-          BoxShadow(
-            color: Color(0x120F1712),
-            blurRadius: 20,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
+      borderRadius: compact ? 28 : 34,
+      accentColor: AppPalette.mistMint,
       child: child,
     );
   }
@@ -431,18 +387,10 @@ class _OverviewStage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      width: double.infinity,
+    return FeatureInsetPanel(
       padding: EdgeInsets.all(compact ? 16 : 18),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(compact ? 24 : 28),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.84),
-        ),
-      ),
+      borderRadius: compact ? 24 : 28,
+      accentColor: AppPalette.linenOlive,
       child: child,
     );
   }
@@ -468,9 +416,6 @@ class _IntroFocusPanel extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       borderRadius: 24,
       accentColor: AppPalette.mistMint,
-      backgroundColor: colorScheme.surfaceContainerLowest.withValues(
-        alpha: 0.9,
-      ),
       showHighlightLine: false,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -563,11 +508,13 @@ class _IntroTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: AppPalette.paperSnow.withValues(alpha: 0.84),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.82),
+        color: AppPalette.blendOnPaper(
+          AppPalette.softPine,
+          opacity: 0.12,
+          base: colorScheme.surfaceContainerLowest,
         ),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppPalette.softPine.withValues(alpha: 0.22)),
       ),
       child: Text(
         label,

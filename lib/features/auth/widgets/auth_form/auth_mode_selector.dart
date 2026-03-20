@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
 import 'package:sickandflutter/core/constants/app_copy.dart';
 import 'package:sickandflutter/features/auth/auth_form_mode.dart';
 
@@ -29,9 +30,13 @@ class AuthModeSelector extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest,
+        color: AppPalette.blendOnPaper(
+          AppPalette.softPine,
+          opacity: 0.08,
+          base: colorScheme.surfaceContainerLowest,
+        ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outlineVariant),
+        border: Border.all(color: AppPalette.softPine.withValues(alpha: 0.18)),
       ),
       child: SegmentedButton<AuthFormMode>(
         showSelectedIcon: false,

@@ -28,6 +28,7 @@ class VideoStreamCard extends StatelessWidget {
 
     return CommonCard(
       padding: const EdgeInsets.all(22),
+      accentColor: AppPalette.linenOlive,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -53,6 +54,12 @@ class VideoStreamCard extends StatelessWidget {
                 label: _modeLabel(),
                 tone: VideoStatusChipTone.secondary,
               ),
+              VideoStatusChip(
+                label: stream.aiResultForwarded ? 'AI 已联动' : 'AI 待联动',
+                tone: stream.aiResultForwarded
+                    ? VideoStatusChipTone.info
+                    : VideoStatusChipTone.muted,
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -74,37 +81,61 @@ class VideoStreamCard extends StatelessWidget {
           const SizedBox(height: 16),
           LayoutBuilder(
             builder: (context, constraints) {
-              final infoTiles = <Widget>[
-                VideoInfoTile(label: '观看方式', value: _modeLabel()),
-                VideoInfoTile(
-                  label: '备用入口',
-                  value: stream.hasGatewayPageUrl ? '已提供' : '暂无',
-                ),
-                VideoInfoTile(
-                  label: '当前状态',
-                  value: stream.available ? '可查看' : '等待恢复',
-                ),
-              ];
+              final modeTile = VideoInfoTile(
+                label: '观看方式',
+                value: _modeLabel(),
+                accentColor: AppPalette.linenOlive,
+              );
+              final backupTile = VideoInfoTile(
+                label: '备用入口',
+                value: stream.hasGatewayPageUrl ? '已提供' : '暂无',
+                accentColor: AppPalette.softLavender,
+              );
+              final stateTile = VideoInfoTile(
+                label: '当前状态',
+                value: stream.available ? '可查看' : '等待恢复',
+                accentColor: AppPalette.mistMint,
+              );
+              final aiTile = VideoInfoTile(
+                label: 'AI 联动',
+                value: stream.aiResultForwarded ? '已收到结果' : '等待上送',
+                accentColor: AppPalette.softLavender,
+              );
 
               if (constraints.maxWidth < 720) {
                 return Column(
                   children: <Widget>[
-                    infoTiles[0],
+                    modeTile,
                     const SizedBox(height: 12),
-                    infoTiles[1],
+                    backupTile,
                     const SizedBox(height: 12),
-                    infoTiles[2],
+                    stateTile,
+                    const SizedBox(height: 12),
+                    aiTile,
                   ],
                 );
               }
 
-              return Row(
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
                 children: <Widget>[
-                  Expanded(child: infoTiles[0]),
-                  const SizedBox(width: 12),
-                  Expanded(child: infoTiles[1]),
-                  const SizedBox(width: 12),
-                  Expanded(child: infoTiles[2]),
+                  SizedBox(
+                    width: (constraints.maxWidth - 12) / 2,
+                    child: modeTile,
+                  ),
+                  SizedBox(
+                    width: (constraints.maxWidth - 12) / 2,
+                    child: backupTile,
+                  ),
+                  SizedBox(
+                    width: (constraints.maxWidth - 12) / 2,
+                    child: stateTile,
+                  ),
+                  SizedBox(
+                    width: (constraints.maxWidth - 12) / 2,
+                    child: aiTile,
+                  ),
                 ],
               );
             },
@@ -119,6 +150,8 @@ class VideoStreamCard extends StatelessWidget {
                         context,
                         title: stream.displayName,
                         url: primaryUrl,
+                        streamId: stream.streamId,
+                        gatewayPageUrl: stream.gatewayPageUrl,
                         sourceLabel: stream.hasPlayerUrl ? '主画面' : '备用入口',
                       )
                     : null,
@@ -131,6 +164,8 @@ class VideoStreamCard extends StatelessWidget {
                         context,
                         title: stream.displayName,
                         url: stream.gatewayPageUrl,
+                        streamId: stream.streamId,
+                        gatewayPageUrl: stream.gatewayPageUrl,
                         sourceLabel: '备用入口',
                       )
                     : null,
@@ -164,6 +199,9 @@ class VideoStreamCard extends StatelessWidget {
   }
 
   String _buildDescription() {
+    if (stream.aiResultForwarded && stream.available) {
+      return '当前画面可正常查看，后端最近也已经收到了对应 AI 结果。';
+    }
     if (!stream.available) {
       return '当前暂未连通，稍后刷新后再看。';
     }
@@ -188,6 +226,8 @@ class VideoStreamCard extends StatelessWidget {
     BuildContext context, {
     required String title,
     required String url,
+    required String streamId,
+    required String gatewayPageUrl,
     required String sourceLabel,
   }) async {
     if (!context.mounted) {
@@ -199,6 +239,8 @@ class VideoStreamCard extends StatelessWidget {
         builder: (context) => VideoPlaybackPage(
           title: title,
           initialUrl: url,
+          streamId: streamId,
+          gatewayPageUrl: gatewayPageUrl,
           sourceLabel: sourceLabel,
         ),
       ),
@@ -224,6 +266,9 @@ class VideoScreenStage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final stageAccent = stream.available
+        ? AppPalette.mistMint
+        : AppPalette.softLavender;
 
     return AspectRatio(
       aspectRatio: 16 / 9,
@@ -233,11 +278,18 @@ class VideoScreenStage extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: <Color>[
-              stream.available
-                  ? AppPalette.mistMint.withValues(alpha: 0.32)
-                  : colorScheme.surfaceContainer,
-              colorScheme.surfaceContainerLowest,
-              colorScheme.surface,
+              AppPalette.blendOnPaper(
+                stageAccent,
+                opacity: 0.14,
+                base: stream.available
+                    ? colorScheme.surfaceContainerLowest
+                    : colorScheme.surfaceContainerLow,
+              ),
+              AppPalette.blendOnPaper(
+                AppPalette.linenOlive,
+                opacity: 0.06,
+                base: colorScheme.surfaceContainer,
+              ),
             ],
           ),
           borderRadius: BorderRadius.circular(24),
@@ -245,8 +297,8 @@ class VideoScreenStage extends StatelessWidget {
           boxShadow: <BoxShadow>[
             BoxShadow(
               color: AppPalette.pineShadow.withValues(alpha: 0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 12),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -254,16 +306,6 @@ class VideoScreenStage extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           child: Stack(
             children: <Widget>[
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: VideoScreenGridPainter(
-                    lineColor: colorScheme.outlineVariant.withValues(
-                      alpha: 0.18,
-                    ),
-                    accentColor: colorScheme.secondary.withValues(alpha: 0.18),
-                  ),
-                ),
-              ),
               Positioned(
                 top: 14,
                 left: 14,
@@ -272,19 +314,6 @@ class VideoScreenStage extends StatelessWidget {
                   tone: stream.available
                       ? VideoStatusChipTone.active
                       : VideoStatusChipTone.muted,
-                ),
-              ),
-              Positioned(
-                top: 14,
-                right: 14,
-                child: Row(
-                  children: <Widget>[
-                    VideoSignalDot(active: stream.available),
-                    const SizedBox(width: 6),
-                    VideoSignalDot(active: hasPrimaryAction),
-                    const SizedBox(width: 6),
-                    VideoSignalDot(active: stream.hasGatewayPageUrl),
-                  ],
                 ),
               ),
               Center(
@@ -308,8 +337,10 @@ class VideoScreenStage extends StatelessWidget {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerLowest.withValues(
-                      alpha: 0.88,
+                    color: AppPalette.blendOnPaper(
+                      stageAccent,
+                      opacity: 0.14,
+                      base: colorScheme.surfaceContainerLowest,
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(

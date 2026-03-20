@@ -29,9 +29,23 @@ class RealtimeDecisionPanel extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    final chips = <({String label, IconData icon, bool active})>[
+      (label: '先看结论', icon: Icons.visibility_outlined, active: true),
+      (
+        label: deviceStatus?.ledOn == true ? '补光已开启' : '补光未开启',
+        icon: Icons.lightbulb_outline_rounded,
+        active: deviceStatus?.ledOn == true,
+      ),
+      (
+        label: viewData?.freshnessLabel ?? '等待同步',
+        icon: Icons.schedule_rounded,
+        active: viewData?.isFresh == true,
+      ),
+    ];
+
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(20),
-      borderRadius: 28,
+      padding: const EdgeInsets.all(16),
+      borderRadius: 24,
       accentColor: palette.foregroundColor,
       shadow: true,
       child: Column(
@@ -43,66 +57,59 @@ class RealtimeDecisionPanel extends StatelessWidget {
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: palette.backgroundColor,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: <Color>[
+                  palette.backgroundColor.withValues(alpha: 0.98),
+                  palette.backgroundColor.withValues(alpha: 0.84),
+                ],
+              ),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
                 color: palette.foregroundColor.withValues(alpha: 0.22),
               ),
-              boxShadow: <BoxShadow>[
-                BoxShadow(
-                  color: palette.foregroundColor.withValues(alpha: 0.12),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
                   viewData?.alertTitle ?? '等待状态返回',
-                  style: theme.textTheme.headlineSmall?.copyWith(
+                  style: theme.textTheme.titleLarge?.copyWith(
                     color: palette.foregroundColor,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Text(
                   deviceStatus == null ? '暂无结论。' : viewData!.alertDescription,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: palette.foregroundColor.withValues(alpha: 0.9),
-                    height: 1.58,
+                    color: palette.foregroundColor.withValues(alpha: 0.92),
+                    height: 1.56,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          const _DecisionStep(
-            index: '01',
-            title: '先读结论',
-            description: '确认当前是正常、注意还是严重，再决定操作。',
-          ),
-          const SizedBox(height: 12),
-          _DecisionStep(
-            index: '02',
-            title: '确认补光',
-            description: deviceStatus == null
-                ? '等待设备状态后再决定是否调整补光。'
-                : '结合当前补光状态和环境指标，避免无效切换。',
-          ),
-          const SizedBox(height: 12),
-          _DecisionStep(
-            index: '03',
-            title: '等待回写',
-            description: deviceStatus == null
-                ? '状态接入后会继续同步。'
-                : '下发指令后等待状态回写，再看是否继续处理。',
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: chips
+                .map(
+                  (chip) => _DecisionChip(
+                    label: chip.label,
+                    icon: chip.icon,
+                    active: chip.active,
+                    foregroundColor: palette.foregroundColor,
+                  ),
+                )
+                .toList(growable: false),
           ),
         ],
       ),
@@ -110,16 +117,18 @@ class RealtimeDecisionPanel extends StatelessWidget {
   }
 }
 
-class _DecisionStep extends StatelessWidget {
-  const _DecisionStep({
-    required this.index,
-    required this.title,
-    required this.description,
+class _DecisionChip extends StatelessWidget {
+  const _DecisionChip({
+    required this.label,
+    required this.icon,
+    required this.active,
+    required this.foregroundColor,
   });
 
-  final String index;
-  final String title;
-  final String description;
+  final String label;
+  final IconData icon;
+  final bool active;
+  final Color foregroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -127,60 +136,36 @@ class _DecisionStep extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: AppPalette.softPine.withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: active
+            ? AppPalette.blendOnPaper(
+                foregroundColor,
+                opacity: 0.14,
+                base: colorScheme.surfaceContainerLowest,
+              )
+            : AppPalette.blendOnPaper(
+                AppPalette.softLavender,
+                opacity: 0.08,
+                base: colorScheme.surfaceContainerLowest,
+              ),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: active
+              ? foregroundColor.withValues(alpha: 0.28)
+              : AppPalette.softLavender.withValues(alpha: 0.18),
+        ),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              index,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: colorScheme.onSurface,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  description,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    height: 1.54,
-                  ),
-                ),
-              ],
+          Icon(icon, size: 16, color: foregroundColor),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

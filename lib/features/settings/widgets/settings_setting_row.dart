@@ -39,27 +39,13 @@ class SettingsSettingRow extends StatelessWidget {
               color: colorScheme.onSurfaceVariant,
             ),
           );
-          final valueWidget = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                width: 30,
-                height: 3,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.72),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-              const SizedBox(height: 10),
-              SelectableText(
-                value,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onSurface,
-                  fontWeight: FontWeight.w700,
-                  height: 1.45,
-                ),
-              ),
-            ],
+          final valueWidget = SelectableText(
+            value,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w700,
+              height: 1.45,
+            ),
           );
 
           if (stacked) {

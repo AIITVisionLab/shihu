@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sickandflutter/app/app_palette.dart';
 
 /// 记住账号开关项。
 class AuthRememberAccountTile extends StatelessWidget {
@@ -27,9 +28,13 @@ class AuthRememberAccountTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.72),
+        color: AppPalette.blendOnPaper(
+          AppPalette.mistMint,
+          opacity: 0.08,
+          base: colorScheme.surfaceContainerLowest,
+        ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outlineVariant),
+        border: Border.all(color: AppPalette.mistMint.withValues(alpha: 0.18)),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),

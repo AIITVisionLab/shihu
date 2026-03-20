@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sickandflutter/app/app_palette.dart';
-import 'package:sickandflutter/core/constants/app_constants.dart';
-import 'package:sickandflutter/shared/widgets/feature_surface.dart';
 
 /// 工作台页面标题头。
 class WorkspaceHeaderCard extends StatelessWidget {
@@ -33,105 +31,134 @@ class WorkspaceHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final hasUser = currentUser.isNotEmpty && currentUser != '--';
+    final borderRadius = BorderRadius.circular(28);
 
-    return SizedBox(
-      width: double.infinity,
-      child: FeatureHeroCard(
-        padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
-        accentColor: AppPalette.mistMint,
-        showPaletteBands: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isCompact = constraints.maxWidth < 820;
-            final titleBlock = Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: <Widget>[
-                    const _WorkspaceHeaderEyebrow(),
-                    if (hasUser && showCurrentUserChip)
-                      WorkspaceHeaderChip(
-                        icon: Icons.person_outline_rounded,
-                        label: currentUser,
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  title,
-                  style: theme.textTheme.headlineLarge?.copyWith(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: isCompact ? constraints.maxWidth : 560,
-                  ),
-                  child: Text(
-                    subtitle,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      height: 1.56,
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[
+              AppPalette.blendOnPaper(
+                AppPalette.softPine,
+                opacity: 0.035,
+                base: colorScheme.surfaceBright,
+              ).withValues(alpha: 0.985),
+              AppPalette.blendOnPaper(
+                AppPalette.mistMint,
+                opacity: 0.015,
+                base: colorScheme.surfaceContainerLowest,
+              ).withValues(alpha: 0.965),
+            ],
+          ),
+          borderRadius: borderRadius,
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.76),
+          ),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: AppPalette.pineShadow.withValues(alpha: 0.03),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: <Widget>[
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(-0.92, -0.95),
+                      radius: 1.02,
+                      colors: <Color>[
+                        AppPalette.softPine.withValues(alpha: 0.04),
+                        Colors.transparent,
+                      ],
                     ),
                   ),
                 ),
-              ],
-            );
-
-            if (isCompact || actions.isEmpty) {
-              return SizedBox(
-                width: double.infinity,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: isCompact ? constraints.maxWidth : 660,
-                  ),
-                  child: Column(
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isCompact = constraints.maxWidth < 820;
+                  final titleBlock = Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      titleBlock,
-                      if (actions.isNotEmpty) ...<Widget>[
-                        const SizedBox(height: 18),
-                        Wrap(spacing: 10, runSpacing: 10, children: actions),
+                      if (hasUser && showCurrentUserChip) ...<Widget>[
+                        WorkspaceHeaderChip(
+                          icon: Icons.person_outline_rounded,
+                          label: currentUser,
+                        ),
+                        const SizedBox(height: 12),
                       ],
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Expanded(child: titleBlock),
-                const SizedBox(width: 18),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 320),
-                  child: FeatureInsetPanel(
-                    padding: const EdgeInsets.all(10),
-                    borderRadius: 22,
-                    accentColor: AppPalette.mistMint,
-                    backgroundColor: theme.colorScheme.surfaceContainerLowest
-                        .withValues(alpha: 0.9),
-                    showHighlightLine: false,
-                    child: Align(
-                      alignment: Alignment.topRight,
-                      child: Wrap(
-                        alignment: WrapAlignment.end,
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: actions,
+                      Text(
+                        title,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
+                      const SizedBox(height: 6),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: isCompact ? constraints.maxWidth : 520,
+                        ),
+                        child: Text(
+                          subtitle,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+
+                  if (isCompact || actions.isEmpty) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        titleBlock,
+                        if (actions.isNotEmpty) ...<Widget>[
+                          const SizedBox(height: 14),
+                          Wrap(spacing: 10, runSpacing: 10, children: actions),
+                        ],
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: <Widget>[
+                      Expanded(child: titleBlock),
+                      const SizedBox(width: 16),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 320),
+                        child: Align(
+                          alignment: Alignment.bottomRight,
+                          child: Wrap(
+                            alignment: WrapAlignment.end,
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: actions,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -161,48 +188,26 @@ class WorkspaceHeaderChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceBright.withValues(alpha: 0.86),
+        color: AppPalette.blendOnPaper(
+          AppPalette.softPine,
+          opacity: 0.14,
+          base: colorScheme.surfaceContainerLowest,
+        ),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: colorScheme.outlineVariant),
+        border: Border.all(color: AppPalette.softPine.withValues(alpha: 0.26)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, size: 16, color: colorScheme.primary),
+          Icon(icon, size: 16, color: AppPalette.deepPine),
           const SizedBox(width: 8),
           Text(
             label,
             style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.onSurface,
+              color: AppPalette.deepPine,
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _WorkspaceHeaderEyebrow extends StatelessWidget {
-  const _WorkspaceHeaderEyebrow();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppPalette.softPine.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppPalette.softPine.withValues(alpha: 0.28)),
-      ),
-      child: Text(
-        '${AppConstants.appName}客户端',
-        style: theme.textTheme.labelLarge?.copyWith(
-          color: colorScheme.secondary,
-          fontWeight: FontWeight.w800,
-        ),
       ),
     );
   }
