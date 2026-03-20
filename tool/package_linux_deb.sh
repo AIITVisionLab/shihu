@@ -34,6 +34,7 @@ Section: utils
 Priority: optional
 Architecture: ${DEB_ARCH}
 Maintainer: AIITVisionLab
+Depends: libc6, libstdc++6, libgtk-3-0, libsecret-1-0, libasound2, libpulse0, libgl1, libx11-6
 Description: 斛生跨平台客户端
 EOF
 

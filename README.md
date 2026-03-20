@@ -140,6 +140,7 @@ flutter run --dart-define=USE_MOCK_AUTH=true
 - Linux `rpm`
 - Linux `pacman`
 - Linux `AppImage`
+- Linux `Flatpak`
 - Linux 便携二进制包 `tar.gz`
 - Windows 安装器 `exe`
 - macOS 安装盘镜像 `dmg`
@@ -161,6 +162,13 @@ iOS 说明：
 
 - 当前工作流会生成未签名 `IPA`
 - 如需直接安装到真机或对外分发，仍需要按你的 Apple 分发流程重新签名
+
+冷门 Linux 架构说明：
+
+- 当前 Flutter 官方工具链只能直接构建 `linux-x64`、`linux-arm64`
+- `loong64`、`riscv64` 这类冷门架构不能在当前官方 Flutter 发行版上直接交叉构建
+- 仓库已补 `tool/package_linux_all.sh`，如果你有对应架构机器上产出的原生 Linux bundle，可继续一键封装成 `deb`、`rpm`、`pacman`、`portable`
+- `AppImage`、`Flatpak` 目前只在仓库脚本里支持 `x86_64`、`aarch64`
 
 ## 当前验证结果
 

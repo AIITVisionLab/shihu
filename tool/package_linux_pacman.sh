@@ -49,6 +49,9 @@ license = Proprietary
 depend = glibc
 depend = gtk3
 depend = libsecret
+depend = alsa-lib
+depend = libpulse
+depend = libglvnd
 EOF
 
 cat > "${PKG_ROOT}/.BUILDINFO" <<EOF
