@@ -25,6 +25,7 @@ static void AppData_ResetSnapshot(void)
     g_snapshot.slave1.last_error = APP_DATA_ERROR_NONE;
     g_snapshot.slave2.last_error = APP_DATA_ERROR_NONE;
     g_snapshot.slave3.last_error = APP_DATA_ERROR_NONE;
+    g_snapshot.slave4.last_error = APP_DATA_ERROR_NONE;
 }
 
 BaseType_t AppData_Init(void)
@@ -88,6 +89,38 @@ void AppData_UpdateSlave3(uint16_t mq2_ppm, uint32_t now_ms)
     xSemaphoreGive(g_xDataMutex);
 }
 
+void AppData_UpdateSlave4(uint16_t status_word,
+                          uint16_t fault_word,
+                          uint16_t last_command_seq,
+                          uint16_t last_command_result_code,
+                          uint16_t pump_state,
+                          uint16_t stepper_state,
+                          int32_t position_pulse,
+                          uint32_t now_ms)
+{
+    if (xSemaphoreTake(g_xDataMutex, pdMS_TO_TICKS(100U)) != pdTRUE)
+    {
+        return;
+    }
+
+    g_snapshot.slave4.online = 1U;
+    g_snapshot.slave4.valid = 1U;
+    g_snapshot.slave4.last_error = APP_DATA_ERROR_NONE;
+    g_snapshot.slave4.last_update_ms = now_ms;
+    g_snapshot.slave4.status_word = status_word;
+    g_snapshot.slave4.fault_word = fault_word;
+    g_snapshot.slave4.last_command_seq = last_command_seq;
+    g_snapshot.slave4.last_command_result_code = last_command_result_code;
+    g_snapshot.slave4.pump_state = pump_state;
+    g_snapshot.slave4.stepper_state = stepper_state;
+    g_snapshot.slave4.position_pulse = position_pulse;
+    g_snapshot.slave4.homed = ((status_word & (1U << 0)) != 0U) ? 1U : 0U;
+    g_snapshot.slave4.busy = ((status_word & (1U << 1)) != 0U) ? 1U : 0U;
+    g_snapshot.slave4.pump_on = ((status_word & (1U << 2)) != 0U) ? 1U : 0U;
+
+    xSemaphoreGive(g_xDataMutex);
+}
+
 void AppData_SetSlaveError(uint8_t slave_addr, AppDataError_TypeDef error_code)
 {
     if (xSemaphoreTake(g_xDataMutex, pdMS_TO_TICKS(100U)) != pdTRUE)
@@ -110,6 +143,11 @@ void AppData_SetSlaveError(uint8_t slave_addr, AppDataError_TypeDef error_code)
     case 3U:
         g_snapshot.slave3.online = 0U;
         g_snapshot.slave3.last_error = error_code;
+        break;
+
+    case 4U:
+        g_snapshot.slave4.online = 0U;
+        g_snapshot.slave4.last_error = error_code;
         break;
 
     default:

@@ -62,15 +62,42 @@ typedef struct
 
 typedef struct
 {
+    uint8_t online;
+    uint8_t valid;
+    AppDataError_TypeDef last_error;
+    uint32_t last_update_ms;
+    uint8_t homed;
+    uint8_t busy;
+    uint8_t pump_on;
+    uint16_t status_word;
+    uint16_t fault_word;
+    uint16_t pump_state;
+    uint16_t stepper_state;
+    int32_t position_pulse;
+    uint16_t last_command_seq;
+    uint16_t last_command_result_code;
+} AppDataSlave4Snapshot_TypeDef;
+
+typedef struct
+{
     AppDataSlave1Snapshot_TypeDef slave1;
     AppDataSlave2Snapshot_TypeDef slave2;
     AppDataSlave3Snapshot_TypeDef slave3;
+    AppDataSlave4Snapshot_TypeDef slave4;
 } AppDataSnapshot_TypeDef;
 
 BaseType_t AppData_Init(void);
 void AppData_UpdateSlave1(uint16_t light_adc, uint32_t now_ms);
 void AppData_UpdateSlave2(uint16_t temperature, uint16_t humidity, uint32_t now_ms);
 void AppData_UpdateSlave3(uint16_t mq2_ppm, uint32_t now_ms);
+void AppData_UpdateSlave4(uint16_t status_word,
+                          uint16_t fault_word,
+                          uint16_t last_command_seq,
+                          uint16_t last_command_result_code,
+                          uint16_t pump_state,
+                          uint16_t stepper_state,
+                          int32_t position_pulse,
+                          uint32_t now_ms);
 void AppData_SetSlaveError(uint8_t slave_addr, AppDataError_TypeDef error_code);
 void AppData_GetSnapshot(AppDataSnapshot_TypeDef *pSnapshot);
 const char *AppData_ErrorToString(AppDataError_TypeDef error_code);

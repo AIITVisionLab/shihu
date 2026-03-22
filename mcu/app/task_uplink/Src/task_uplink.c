@@ -12,6 +12,8 @@
 
 #include "task_uplink.h"
 
+#include "app_control.h"
+
 #include <string.h>
 
 uplink_t g_uplink;
@@ -22,6 +24,15 @@ static void Task_Uplink_Log(void *user_ctx, uplink_log_level_t level, const char
     (void)user_ctx;
     (void)level;
     (void)message;
+}
+
+static void Task_Uplink_OnHttpResponse(void *user_ctx,
+                                       const char *body,
+                                       size_t body_len,
+                                       uint16_t http_status)
+{
+    (void)user_ctx;
+    AppControl_HandleUplinkResponse(body, body_len, http_status);
 }
 
 static void Task_Uplink_SetStr(char *dst, size_t dst_size, const char *src)
@@ -56,6 +67,7 @@ BaseType_t Task_Uplink_Init(void)
     (void)memset(&platform, 0, sizeof(platform));
     platform.user_ctx = NULL;
     platform.log = Task_Uplink_Log;
+    platform.on_http_response = Task_Uplink_OnHttpResponse;
 
     err = uplink_init(&g_uplink, &cfg, &platform);
     if (err != UPLINK_OK)

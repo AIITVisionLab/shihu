@@ -1,4 +1,4 @@
-﻿# HTTP 上报格式
+# HTTP 上报格式
 
 ## 事件类型
 
@@ -42,7 +42,51 @@
     "lastError": "TIMEOUT",
     "lastUpdateMs": 1220,
     "mq2Ppm": 350
+  },
+  "slave4": {
+    "online": 1,
+    "valid": 1,
+    "lastError": "NONE",
+    "lastUpdateMs": 1234,
+    "homed": 1,
+    "busy": 0,
+    "pumpOn": 1,
+    "statusWord": 5,
+    "faultWord": 0,
+    "pumpState": 1,
+    "stepperState": "IDLE",
+    "positionPulse": 3200,
+    "lastCommandSeq": 7,
+    "lastCommandResult": "DONE",
+    "lastCommandResultCode": 3
   }
+}
+```
+
+## HTTP 响应扩展
+
+RK3568 会在 `POST /api/uplink` 的成功响应中按需附带待执行命令：
+
+```json
+{
+  "code": 0,
+  "msg": "accepted",
+  "pendingCommand": {
+    "seq": 7,
+    "code": 2,
+    "arg1": 3200,
+    "arg2": 1200,
+    "arg3": 0
+  }
+}
+```
+
+没有待执行命令时仅返回：
+
+```json
+{
+  "code": 0,
+  "msg": "accepted"
 }
 ```
 

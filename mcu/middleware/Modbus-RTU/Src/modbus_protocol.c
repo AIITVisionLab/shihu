@@ -68,3 +68,63 @@ ModbusProtocolStatus_TypeDef ModbusProtocol_ParseReadHoldingResponse(const uint8
 
     return MODBUS_PROTOCOL_STATUS_OK;
 }
+
+ModbusProtocolStatus_TypeDef ModbusProtocol_ParseWriteMultipleRegistersResponse(const uint8_t *adu,
+                                                                                uint16_t adu_length,
+                                                                                uint8_t expected_slave,
+                                                                                uint16_t expected_start_addr,
+                                                                                uint16_t expected_quantity,
+                                                                                uint8_t *out_exception_code)
+{
+    uint16_t start_addr;
+    uint16_t quantity;
+
+    if (adu == NULL)
+    {
+        return MODBUS_PROTOCOL_STATUS_INVALID_ARG;
+    }
+
+    if (out_exception_code != NULL)
+    {
+        *out_exception_code = 0U;
+    }
+
+    if (adu_length < 3U)
+    {
+        return MODBUS_PROTOCOL_STATUS_LENGTH_ERROR;
+    }
+
+    if (adu[0] != expected_slave)
+    {
+        return MODBUS_PROTOCOL_STATUS_RESPONSE_MISMATCH;
+    }
+
+    if (adu[1] == (uint8_t)(MODBUS_FUNCTION_WRITE_MULTIPLE_REGISTERS | 0x80U))
+    {
+        if ((adu_length >= 3U) && (out_exception_code != NULL))
+        {
+            *out_exception_code = adu[2];
+        }
+        return MODBUS_PROTOCOL_STATUS_EXCEPTION;
+    }
+
+    if (adu[1] != MODBUS_FUNCTION_WRITE_MULTIPLE_REGISTERS)
+    {
+        return MODBUS_PROTOCOL_STATUS_FUNCTION_ERROR;
+    }
+
+    if (adu_length != 6U)
+    {
+        return MODBUS_PROTOCOL_STATUS_LENGTH_ERROR;
+    }
+
+    start_addr = (uint16_t)(((uint16_t)adu[2] << 8U) | (uint16_t)adu[3]);
+    quantity = (uint16_t)(((uint16_t)adu[4] << 8U) | (uint16_t)adu[5]);
+
+    if ((start_addr != expected_start_addr) || (quantity != expected_quantity))
+    {
+        return MODBUS_PROTOCOL_STATUS_RESPONSE_MISMATCH;
+    }
+
+    return MODBUS_PROTOCOL_STATUS_OK;
+}

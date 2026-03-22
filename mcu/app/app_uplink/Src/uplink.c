@@ -371,6 +371,14 @@ void uplink_poll(uplink_t *u)
         ack.app_code = code;
     }
 
+    if (u->platform.on_http_response != NULL)
+    {
+        u->platform.on_http_response(u->platform.user_ctx,
+                                     u->response_body,
+                                     body_len,
+                                     ack.http_status);
+    }
+
     {
         uint8_t http_ok = ((ack.http_status >= 200U) && (ack.http_status < 300U)) ? 1U : 0U;
         uint8_t app_ok = ((ack.app_code == 0) || (ack.app_code == UPLINK_APP_CODE_UNKNOWN)) ? 1U : 0U;

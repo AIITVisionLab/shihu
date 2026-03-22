@@ -46,6 +46,11 @@ ModbusMasterStatus_TypeDef ModbusMaster_ReadHoldingRegisters(uint8_t slave_addr,
                                                              uint16_t quantity,
                                                              uint16_t *out_registers,
                                                              uint8_t *out_exception_code);
+ModbusMasterStatus_TypeDef ModbusMaster_WriteMultipleRegisters(uint8_t slave_addr,
+                                                               uint16_t start_addr,
+                                                               uint16_t quantity,
+                                                               const uint16_t *registers,
+                                                               uint8_t *out_exception_code);
 const char *ModbusMaster_StatusToString(ModbusMasterStatus_TypeDef status);
 
 #ifdef __cplusplus

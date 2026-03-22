@@ -1,4 +1,4 @@
-﻿{
+{
     // C/C++ IntelliSense 配置文件
     // 用于配置 VS Code 的代码提示、语法检查和跳转路径
     "configurations": [
@@ -25,6 +25,7 @@
                 "${workspaceFolder}/mcu/app/app_uplink/Inc",
                 "${workspaceFolder}/mcu/app/task_uplink/Inc",
                 "${workspaceFolder}/mcu/app/task_modbus_master/Inc",
+                "${workspaceFolder}/mcu/app/app_control/Inc",
 
                 // 工具库
                 "${workspaceFolder}/mcu/libx",

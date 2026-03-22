@@ -20,6 +20,7 @@
 #include "bsp_usart.h"
 
 #include "app_data.h"
+#include "app_control.h"
 #include "task_modbus_master.h"
 #include "task_uplink.h"
 
@@ -90,6 +91,12 @@ static void AppTaskCreate(void *pvParameters)
     LwIP_Init();
 
     xReturn = AppData_Init();
+    if (pdPASS != xReturn)
+    {
+        goto error_no_critical;
+    }
+
+    xReturn = AppControl_Init();
     if (pdPASS != xReturn)
     {
         goto error_no_critical;

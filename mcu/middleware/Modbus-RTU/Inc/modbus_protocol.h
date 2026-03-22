@@ -27,6 +27,7 @@ typedef enum
 } ModbusProtocolStatus_TypeDef;
 
 #define MODBUS_FUNCTION_READ_HOLDING_REGISTERS 0x03U
+#define MODBUS_FUNCTION_WRITE_MULTIPLE_REGISTERS 0x10U
 
 ModbusProtocolStatus_TypeDef ModbusProtocol_ParseReadHoldingResponse(const uint8_t *adu,
                                                                     uint16_t adu_length,
@@ -34,6 +35,12 @@ ModbusProtocolStatus_TypeDef ModbusProtocol_ParseReadHoldingResponse(const uint8
                                                                     uint16_t expected_quantity,
                                                                     uint16_t *out_registers,
                                                                     uint8_t *out_exception_code);
+ModbusProtocolStatus_TypeDef ModbusProtocol_ParseWriteMultipleRegistersResponse(const uint8_t *adu,
+                                                                                uint16_t adu_length,
+                                                                                uint8_t expected_slave,
+                                                                                uint16_t expected_start_addr,
+                                                                                uint16_t expected_quantity,
+                                                                                uint8_t *out_exception_code);
 
 #ifdef __cplusplus
 }
