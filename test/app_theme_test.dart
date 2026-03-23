@@ -10,11 +10,11 @@ void main() {
 
     expect(
       filledStyle?.minimumSize?.resolve(<WidgetState>{}),
-      const Size(0, 48),
+      const Size(0, 44),
     );
     expect(
       outlinedStyle?.minimumSize?.resolve(<WidgetState>{}),
-      const Size(0, 48),
+      const Size(0, 44),
     );
   });
 }

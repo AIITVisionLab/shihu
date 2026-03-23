@@ -137,6 +137,10 @@ void main() {
     expect(find.byType(WorkspaceBottomNavigation), findsOneWidget);
     expect(find.text('使用帮助'), findsWidgets);
     expect(find.text('进入值守'), findsOneWidget);
+    expect(
+      tester.getSize(find.widgetWithText(FilledButton, '进入值守')).height,
+      lessThanOrEqualTo(48),
+    );
     expect(tester.takeException(), isNull);
   });
 }

@@ -44,8 +44,8 @@ class RealtimeDecisionPanel extends StatelessWidget {
     ];
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 24,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 22,
       accentColor: palette.foregroundColor,
       shadow: true,
       child: Column(
@@ -57,10 +57,10 @@ class RealtimeDecisionPanel extends StatelessWidget {
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -70,7 +70,7 @@ class RealtimeDecisionPanel extends StatelessWidget {
                   palette.backgroundColor.withValues(alpha: 0.84),
                 ],
               ),
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: palette.foregroundColor.withValues(alpha: 0.22),
               ),
@@ -80,26 +80,26 @@ class RealtimeDecisionPanel extends StatelessWidget {
               children: <Widget>[
                 Text(
                   viewData?.alertTitle ?? '等待状态返回',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     color: palette.foregroundColor,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   deviceStatus == null ? '暂无结论。' : viewData!.alertDescription,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: palette.foregroundColor.withValues(alpha: 0.92),
-                    height: 1.56,
+                    height: 1.52,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 8,
             children: chips
                 .map(
                   (chip) => _DecisionChip(
@@ -136,7 +136,7 @@ class _DecisionChip extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: active
             ? AppPalette.blendOnPaper(
@@ -159,11 +159,11 @@ class _DecisionChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, size: 16, color: foregroundColor),
-          const SizedBox(width: 8),
+          Icon(icon, size: 15, color: foregroundColor),
+          const SizedBox(width: 7),
           Text(
             label,
-            style: theme.textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.w700,
             ),

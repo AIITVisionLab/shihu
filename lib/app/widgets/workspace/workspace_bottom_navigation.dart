@@ -23,30 +23,30 @@ class WorkspaceBottomNavigation extends StatelessWidget {
           colors: <Color>[
             AppPalette.blendOnPaper(
               AppPalette.softPine,
-              opacity: 0.1,
+              opacity: 0.085,
               base: colorScheme.surfaceContainerLowest,
             ).withValues(alpha: 0.985),
             AppPalette.blendOnPaper(
               AppPalette.mistMint,
-              opacity: 0.08,
+              opacity: 0.06,
               base: colorScheme.surfaceContainerLow,
             ).withValues(alpha: 0.96),
           ],
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.88),
         ),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: AppPalette.pineShadow.withValues(alpha: 0.05),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
+            color: AppPalette.pineShadow.withValues(alpha: 0.035),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+        padding: const EdgeInsets.all(6),
         child: Row(
           children: AppWorkspaceDestination.values
               .map(
@@ -76,24 +76,24 @@ class _WorkspaceDockItem extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(18),
       onTap: () => navigateToWorkspaceDestination(context, item),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         decoration: BoxDecoration(
           color: selected
               ? AppPalette.blendOnPaper(
                   item.accentColor,
-                  opacity: 0.18,
+                  opacity: 0.14,
                   base: colorScheme.surfaceContainerLowest,
                 )
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: selected
-                ? item.accentColor.withValues(alpha: 0.22)
+                ? item.accentColor.withValues(alpha: 0.18)
                 : Colors.transparent,
           ),
         ),
@@ -103,41 +103,41 @@ class _WorkspaceDockItem extends StatelessWidget {
             AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               curve: Curves.easeOutCubic,
-              width: 42,
-              height: 42,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 color: selected
                     ? AppPalette.blendOnPaper(
                         item.accentColor,
-                        opacity: 0.28,
+                        opacity: 0.24,
                         base: colorScheme.surfaceContainerLowest,
                       )
                     : item.accentColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: selected
-                      ? item.accentColor.withValues(alpha: 0.32)
+                      ? item.accentColor.withValues(alpha: 0.26)
                       : item.accentColor.withValues(alpha: 0.16),
                 ),
               ),
               child: Icon(
                 selected ? item.selectedIcon : item.icon,
-                size: 22,
+                size: 20,
                 color: selected
                     ? AppPalette.deepPine
                     : colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               item.label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelMedium?.copyWith(
+              style: theme.textTheme.labelSmall?.copyWith(
                 color: selected
                     ? AppPalette.deepPine
                     : colorScheme.onSurfaceVariant,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
               ),
             ),
           ],

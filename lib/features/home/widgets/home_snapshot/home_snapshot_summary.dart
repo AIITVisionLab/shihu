@@ -39,6 +39,15 @@ class HomeSnapshotSummary extends StatelessWidget {
               ),
             ),
             TextButton.icon(
+              style: TextButton.styleFrom(
+                minimumSize: Size.zero,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
               onPressed: onRefresh,
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('同步'),

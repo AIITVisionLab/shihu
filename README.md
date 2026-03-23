@@ -157,6 +157,8 @@ OpenHarmony / 鸿蒙说明：
 - GitHub 官方 runner 不自带 `flutter-ohos` 与 HarmonyOS SDK
 - 如需把 `HAP` 一起发到 Release，需要启用带 `self-hosted`、`linux`、`ohos` 标签的自托管 runner
 - 需要额外配置仓库变量 `ENABLE_OHOS_RELEASE=true`、`FLUTTER_OHOS_HOME`、`OHOS_SDK_HOME`
+- 当前 OpenHarmony Flutter 官方分支最高到 `3.35.x-ohos`，仍基于 Dart `3.9`；仓库已补 `tool/build_ohos_release.sh`，会在临时工作区裁掉仅用于开发的依赖并固定 Dart `3.9` 可编译的运行时包版本
+- 本地或 CI 构建 HAP 时统一执行 `tool/build_ohos_release.sh <输出文件>`，不要再直接跑仓库根目录下的 `flutter build hap --release`
 
 iOS 说明：
 
@@ -169,6 +171,7 @@ iOS 说明：
 - `loong64`、`riscv64` 这类冷门架构不能在当前官方 Flutter 发行版上直接交叉构建
 - 仓库已补 `tool/package_linux_all.sh`，如果你有对应架构机器上产出的原生 Linux bundle，可继续一键封装成 `deb`、`rpm`、`pacman`、`portable`
 - `AppImage`、`Flatpak` 目前只在仓库脚本里支持 `x86_64`、`aarch64`
+- 仓库内 Linux runner 已固定 `PIE` 编译和链接参数，Fedora / RHEL 这类默认启用硬化策略的宿主机不需要再额外传 `CFLAGS`、`CXXFLAGS`、`LDFLAGS`
 
 ## 当前验证结果
 
@@ -180,6 +183,13 @@ iOS 说明：
 - `flutter build apk --release`
 - `flutter build web`
 - `flutter build linux --debug`
+
+以下结果已于 `2026-03-20` 在当前 Linux 开发环境补充验证通过：
+
+- `flutter build appbundle --release`
+- `flutter build apk --release --split-per-abi`
+- `flutter build linux --release`
+- `tool/package_linux_all.sh build/linux/x64/release/bundle bag 0.1.7+1 x64`
 
 未在当前环境验证的平台：
 

@@ -32,11 +32,14 @@ class SettingsOverviewCard extends StatelessWidget {
         final viewData = DeviceStatusViewData.fromState(deviceState);
 
         return FeatureHeroCard(
-          padding: const EdgeInsets.all(18),
-          borderRadius: 30,
+          padding: const EdgeInsets.all(16),
+          borderRadius: 28,
           accentColor: AppPalette.softPine,
           child: WorkspaceTwoPane(
-            breakpoint: 1020,
+            breakpoint: 980,
+            gap: 16,
+            stackSpacing: 16,
+            secondaryWidthFactor: 0.32,
             primary: _OverviewLead(
               deviceName: _resolveDeviceLabel(deviceState),
               alertTitle: viewData.alertTitle,
@@ -75,11 +78,11 @@ class _OverviewLoadingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FeatureHeroCard(
-      padding: const EdgeInsets.all(18),
-      borderRadius: 30,
+      padding: const EdgeInsets.all(16),
+      borderRadius: 28,
       accentColor: AppPalette.softPine,
       child: const Padding(
-        padding: EdgeInsets.symmetric(vertical: 28),
+        padding: EdgeInsets.symmetric(vertical: 22),
         child: Center(child: CircularProgressIndicator.adaptive()),
       ),
     );
@@ -92,8 +95,8 @@ class _OverviewErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FeatureHeroCard(
-      padding: const EdgeInsets.all(18),
-      borderRadius: 30,
+      padding: const EdgeInsets.all(16),
+      borderRadius: 28,
       accentColor: AppPalette.softPine,
       child: const SettingsSettingRow(title: '当前状态', value: '设备信息暂不可用'),
     );
@@ -118,41 +121,56 @@ class _OverviewLead extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          AppCopy.settingsOverviewTitle,
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: colorScheme.primary,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          deviceName,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          alertDescription,
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-            height: 1.58,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 600;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            _OverviewPill(label: '当前状态', value: alertTitle),
-            _OverviewPill(label: '数据状态', value: freshnessLabel),
+            Text(
+              AppCopy.settingsOverviewTitle,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              deviceName,
+              style:
+                  (isCompact
+                          ? theme.textTheme.titleLarge
+                          : theme.textTheme.headlineSmall)
+                      ?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                        height: 1.12,
+                      ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              alertDescription,
+              style:
+                  (isCompact
+                          ? theme.textTheme.bodyMedium
+                          : theme.textTheme.bodyLarge)
+                      ?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.56,
+                      ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: <Widget>[
+                _OverviewPill(label: '当前状态', value: alertTitle),
+                _OverviewPill(label: '数据状态', value: freshnessLabel),
+              ],
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -175,8 +193,8 @@ class _OverviewBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(18),
-      borderRadius: 28,
+      padding: const EdgeInsets.all(16),
+      borderRadius: 24,
       accentColor: AppPalette.softLavender,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -246,15 +264,15 @@ class _OverviewPill extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer.withValues(alpha: 0.48),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: colorScheme.primary.withValues(alpha: 0.14)),
       ),
       child: RichText(
         text: TextSpan(
-          style: theme.textTheme.bodyMedium?.copyWith(
+          style: theme.textTheme.labelMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
             height: 1.4,
           ),
@@ -262,7 +280,7 @@ class _OverviewPill extends StatelessWidget {
             TextSpan(text: '$label  '),
             TextSpan(
               text: value,
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style: theme.textTheme.labelMedium?.copyWith(
                 color: colorScheme.onSurface,
                 fontWeight: FontWeight.w800,
               ),
@@ -291,8 +309,8 @@ class _OverviewBoardTile extends StatelessWidget {
       label: title,
       value: value,
       accentColor: accentColor,
-      padding: const EdgeInsets.all(14),
-      borderRadius: 20,
+      padding: const EdgeInsets.all(12),
+      borderRadius: 18,
       shadow: false,
     );
   }

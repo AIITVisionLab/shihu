@@ -56,7 +56,7 @@ class AboutPage extends ConsumerWidget {
             icon: const Icon(Icons.settings_outlined),
             label: const Text('返回我的'),
           ),
-        FilledButton.icon(
+        FilledButton.tonalIcon(
           onPressed: () => context.goNamed(
             authState.isAuthenticated
                 ? AppRoutes.realtimeDetect
@@ -74,7 +74,7 @@ class AboutPage extends ConsumerWidget {
         padding: resolveWorkspacePagePadding(context),
         children: const <Widget>[
           AboutHelpHero(),
-          SizedBox(height: 18),
+          SizedBox(height: 16),
           AboutUsageTracksSection(),
         ],
       ),

@@ -23,7 +23,7 @@ class VideoGallery extends StatelessWidget {
       children: <Widget>[
         Text(
           '其它画面',
-          style: theme.textTheme.titleLarge?.copyWith(
+          style: theme.textTheme.titleMedium?.copyWith(
             color: colorScheme.onSurface,
             fontWeight: FontWeight.w800,
           ),
@@ -31,12 +31,12 @@ class VideoGallery extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           '其它流收成紧凑入口，需要切换时再打开，不再重复堆整张大卡。',
-          style: theme.textTheme.bodyMedium?.copyWith(
+          style: theme.textTheme.bodySmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
-            height: 1.56,
+            height: 1.52,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         Column(
           children: <Widget>[
             for (int index = 0; index < streams.length; index++) ...<Widget>[
@@ -69,8 +69,8 @@ class _VideoGalleryRow extends StatelessWidget {
         stream.gatewayPageUrl != stream.playerUrl;
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 22,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 20,
       accentColor: AppPalette.linenOlive,
       shadow: true,
       child: LayoutBuilder(
@@ -82,15 +82,15 @@ class _VideoGalleryRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Container(
-                    width: 42,
-                    height: 42,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
                       color: AppPalette.blendOnPaper(
                         AppPalette.linenOlive,
                         opacity: 0.14,
                         base: colorScheme.surfaceContainerLowest,
                       ),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: AppPalette.linenOlive.withValues(alpha: 0.18),
                       ),
@@ -115,9 +115,9 @@ class _VideoGalleryRow extends StatelessWidget {
                         const SizedBox(height: 6),
                         Text(
                           _buildDescription(),
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                          style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
-                            height: 1.5,
+                            height: 1.48,
                           ),
                         ),
                       ],
@@ -125,7 +125,7 @@ class _VideoGalleryRow extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -196,7 +196,7 @@ class _VideoGalleryRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 detailBlock,
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 actions,
               ],
             );
@@ -206,7 +206,7 @@ class _VideoGalleryRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Expanded(child: detailBlock),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 240),
                 child: Align(alignment: Alignment.topRight, child: actions),

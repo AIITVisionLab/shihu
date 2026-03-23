@@ -168,6 +168,10 @@ void main() {
     expect(find.byType(WorkspaceBottomNavigation), findsOneWidget);
     expect(find.text('值守台'), findsWidgets);
     expect(find.text('查看实时状态，必要时处理补光。'), findsOneWidget);
+    expect(
+      tester.getSize(find.widgetWithText(FilledButton, '刷新')).height,
+      lessThanOrEqualTo(48),
+    );
     expect(tester.takeException(), isNull);
   });
 

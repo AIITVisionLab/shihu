@@ -59,7 +59,7 @@ class WorkspaceContentPane extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: screenWidth < 720 ? 8 : 12),
+        SizedBox(height: screenWidth < 720 ? 6 : 10),
         Expanded(
           child: Align(
             alignment: Alignment.topCenter,

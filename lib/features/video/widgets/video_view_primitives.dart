@@ -27,8 +27,8 @@ class VideoInfoTile extends StatelessWidget {
       label: label,
       value: value,
       accentColor: accentColor,
-      padding: const EdgeInsets.all(14),
-      borderRadius: 20,
+      padding: const EdgeInsets.all(12),
+      borderRadius: 18,
       shadow: true,
     );
   }
@@ -88,7 +88,7 @@ class VideoStatusChip extends StatelessWidget {
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(999),
@@ -96,7 +96,7 @@ class VideoStatusChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: theme.textTheme.labelLarge?.copyWith(
+        style: theme.textTheme.labelMedium?.copyWith(
           color: foregroundColor,
           fontWeight: FontWeight.w700,
         ),

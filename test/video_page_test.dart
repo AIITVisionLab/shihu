@@ -128,6 +128,10 @@ void main() {
     expect(find.text('视频中心'), findsWidgets);
     expect(find.text('查看当前画面是否在线，必要时直接在软件内观看。'), findsOneWidget);
     expect(find.text('刷新画面'), findsOneWidget);
+    expect(
+      tester.getSize(find.widgetWithText(OutlinedButton, '刷新画面')).height,
+      lessThanOrEqualTo(48),
+    );
     expect(tester.takeException(), isNull);
   });
 }

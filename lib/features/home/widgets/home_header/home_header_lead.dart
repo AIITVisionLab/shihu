@@ -33,62 +33,73 @@ class HomeHeaderLead extends StatelessWidget {
     final description =
         viewData?.alertDescription ?? '设备接入后，这里会显示当前判断、同步状态和补光建议。';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          '当前值守基线',
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: colorScheme.secondary,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          title,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          description,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-            height: 1.58,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 600;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            HomeHeaderQuickPill(
-              icon: Icons.sensors_outlined,
-              label: deviceName,
-              accentColor: AppPalette.softPine,
+            Text(
+              '当前值守基线',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: colorScheme.secondary,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-            HomeHeaderQuickPill(
-              icon: Icons.timeline_rounded,
-              label: deviceStatus == null
-                  ? '等待第一条设备上报'
-                  : viewData!.freshnessLabel,
-              accentColor: AppPalette.mistMint,
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style:
+                  (isCompact
+                          ? theme.textTheme.titleLarge
+                          : theme.textTheme.headlineSmall)
+                      ?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                        height: 1.12,
+                      ),
             ),
-            HomeHeaderQuickPill(
-              icon: Icons.lightbulb_outline_rounded,
-              label: deviceStatus == null ? '补光待同步' : viewData!.ledLabel,
-              accentColor: AppPalette.softLavender,
+            const SizedBox(height: 6),
+            Text(
+              description,
+              style:
+                  (isCompact
+                          ? theme.textTheme.bodySmall
+                          : theme.textTheme.bodyMedium)
+                      ?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.56,
+                      ),
             ),
-            FilledButton.icon(
-              onPressed: onRefresh,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('刷新总览'),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: <Widget>[
+                HomeHeaderQuickPill(
+                  icon: Icons.sensors_outlined,
+                  label: deviceName,
+                  accentColor: AppPalette.softPine,
+                ),
+                HomeHeaderQuickPill(
+                  icon: Icons.timeline_rounded,
+                  label: deviceStatus == null
+                      ? '等待第一条设备上报'
+                      : viewData!.freshnessLabel,
+                  accentColor: AppPalette.mistMint,
+                ),
+                HomeHeaderQuickPill(
+                  icon: Icons.lightbulb_outline_rounded,
+                  label: deviceStatus == null ? '补光待同步' : viewData!.ledLabel,
+                  accentColor: AppPalette.softLavender,
+                ),
+                HomeHeaderActionPill(onPressed: onRefresh),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -118,28 +129,79 @@ class HomeHeaderQuickPill extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: (accentColor ?? colorScheme.surfaceContainerHigh).withValues(
-          alpha: 0.24,
+          alpha: 0.2,
         ),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.72),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.62),
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, size: 16, color: accentColor ?? colorScheme.primary),
-          const SizedBox(width: 8),
+          Icon(icon, size: 15, color: accentColor ?? colorScheme.primary),
+          const SizedBox(width: 7),
           Text(
             label,
-            style: theme.textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 首页 Hero 刷新操作标签。
+class HomeHeaderActionPill extends StatelessWidget {
+  /// 创建首页 Hero 刷新操作标签。
+  const HomeHeaderActionPill({required this.onPressed, super.key});
+
+  /// 点击回调。
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onPressed,
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppPalette.blendOnPaper(
+              AppPalette.pineGreen,
+              opacity: 0.14,
+              base: colorScheme.surfaceContainerLowest,
+            ),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: AppPalette.pineGreen.withValues(alpha: 0.24),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(Icons.refresh_rounded, size: 15, color: AppPalette.deepPine),
+              const SizedBox(width: 7),
+              Text(
+                '刷新总览',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: AppPalette.deepPine,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

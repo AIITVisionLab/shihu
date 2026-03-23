@@ -35,12 +35,14 @@ class HomeHeaderCard extends StatelessWidget {
         : DeviceStatusViewData.fromState(deviceStatus);
 
     return FeatureHeroCard(
-      padding: const EdgeInsets.all(18),
-      borderRadius: 30,
+      padding: const EdgeInsets.all(16),
+      borderRadius: 28,
       accentColor: AppPalette.pineGreen,
       child: WorkspaceTwoPane(
-        breakpoint: 1020,
-        gap: 18,
+        breakpoint: 980,
+        gap: 16,
+        stackSpacing: 16,
+        secondaryWidthFactor: 0.32,
         primary: HomeHeaderLead(
           deviceStatus: deviceStatus,
           viewData: viewData,

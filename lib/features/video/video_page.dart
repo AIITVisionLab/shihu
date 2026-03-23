@@ -41,7 +41,7 @@ class VideoPage extends ConsumerWidget {
         ],
       ),
       headerActions: <Widget>[
-        FilledButton.tonalIcon(
+        OutlinedButton.icon(
           onPressed: () => _refresh(ref),
           icon: const Icon(Icons.refresh_rounded),
           label: const Text('刷新画面'),
@@ -54,11 +54,11 @@ class VideoPage extends ConsumerWidget {
           padding: resolveWorkspacePagePadding(context),
           children: streamListAsync.when(
             loading: () => const <Widget>[
-              SizedBox(height: 120),
+              SizedBox(height: 96),
               LoadingView(message: '正在加载画面...'),
             ],
             error: (error, stackTrace) => <Widget>[
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
               VideoErrorCard(onRetry: () => _refresh(ref)),
             ],
             data: (streams) => <Widget>[
@@ -103,7 +103,7 @@ class VideoPage extends ConsumerWidget {
         enableInlinePlayback: enableInlinePlayback && !previewWorkspaceEnabled,
       ),
       if (secondaryStreams.isNotEmpty) ...<Widget>[
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         VideoGallery(streams: secondaryStreams),
       ],
     ];

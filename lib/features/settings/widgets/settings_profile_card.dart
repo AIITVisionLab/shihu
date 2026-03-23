@@ -45,7 +45,7 @@ class SettingsProfileCard extends StatelessWidget {
       title: AppCopy.settingsProfileTitle,
       subtitle: AppCopy.settingsProfileSubtitle,
       accentColor: AppPalette.softLavender,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       headerIcon: Icons.manage_accounts_outlined,
       headerTag: snapshot.headerTag,
       child: Column(
@@ -53,6 +53,8 @@ class SettingsProfileCard extends StatelessWidget {
         children: <Widget>[
           WorkspaceTwoPane(
             breakpoint: 980,
+            gap: 16,
+            stackSpacing: 16,
             secondaryMinWidth: 312,
             secondaryMaxWidth: 360,
             secondaryWidthFactor: 0.32,
@@ -69,7 +71,7 @@ class SettingsProfileCard extends StatelessWidget {
             ),
           ),
           if (snapshot.showPreviewNotice) ...<Widget>[
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             _NoticePanel(
               accentColor: AppPalette.softLavender,
               icon: Icons.visibility_outlined,
@@ -77,7 +79,7 @@ class SettingsProfileCard extends StatelessWidget {
             ),
           ],
           if (snapshot.showPersistenceWarning) ...<Widget>[
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             _NoticePanel(
               accentColor: AppPalette.linenOlive,
               icon: Icons.info_outline_rounded,
@@ -102,8 +104,8 @@ class _ProfileLeadPanel extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(18),
-      borderRadius: 24,
+      padding: const EdgeInsets.all(16),
+      borderRadius: 22,
       accentColor: AppPalette.softLavender,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,15 +114,15 @@ class _ProfileLeadPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Container(
-                width: 48,
-                height: 48,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
                   color: AppPalette.blendOnPaper(
                     AppPalette.softLavender,
                     opacity: 0.18,
                     base: colorScheme.surfaceContainerLowest,
                   ),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(15),
                   border: Border.all(
                     color: AppPalette.softLavender.withValues(alpha: 0.18),
                   ),
@@ -141,20 +143,20 @@ class _ProfileLeadPanel extends StatelessWidget {
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       snapshot.accountLabel,
-                      style: theme.textTheme.headlineSmall?.copyWith(
+                      style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: colorScheme.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       snapshot.accountHint,
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
-                        height: 1.54,
+                        height: 1.5,
                       ),
                     ),
                   ],
@@ -162,10 +164,10 @@ class _ProfileLeadPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 8,
             children: <Widget>[
               _ProfileBadge(
                 label: snapshot.sessionLabel,
@@ -181,21 +183,21 @@ class _ProfileLeadPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           FeatureInsetPanel(
-            padding: const EdgeInsets.all(14),
-            borderRadius: 22,
+            padding: const EdgeInsets.all(12),
+            borderRadius: 20,
             accentColor: AppPalette.softPine,
             backgroundColor: colorScheme.surfaceContainerLowest,
             child: Column(
               children: <Widget>[
                 SettingsSettingRow(title: '当前状态', value: snapshot.sessionLabel),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 SettingsSettingRow(
                   title: AppCopy.settingsRememberedAccount,
                   value: snapshot.rememberedLabel,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 SettingsSettingRow(
                   title: '本机状态',
                   value: snapshot.persistenceLabel,
@@ -203,7 +205,7 @@ class _ProfileLeadPanel extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             snapshot.statusMessage,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -212,20 +214,20 @@ class _ProfileLeadPanel extends StatelessWidget {
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             snapshot.rememberedHint,
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
-              height: 1.54,
+              height: 1.5,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             snapshot.persistenceHint,
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
-              height: 1.54,
+              height: 1.5,
             ),
           ),
         ],
@@ -254,8 +256,8 @@ class _ProfileActionsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 24,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 22,
       accentColor: AppPalette.linenOlive,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,7 +276,7 @@ class _ProfileActionsPanel extends StatelessWidget {
               height: 1.54,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           _ActionButtonList(
             isSubmitting: isSubmitting,
             hasRememberedAccount: hasRememberedAccount,
@@ -392,7 +394,7 @@ class _ProfileBadge extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: AppPalette.blendOnPaper(
           accentColor,
@@ -404,7 +406,7 @@ class _ProfileBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: theme.textTheme.labelLarge?.copyWith(
+        style: theme.textTheme.labelMedium?.copyWith(
           color: colorScheme.onSurface,
           fontWeight: FontWeight.w700,
         ),
@@ -429,22 +431,22 @@ class _NoticePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(14),
-      borderRadius: 20,
+      padding: const EdgeInsets.all(12),
+      borderRadius: 18,
       accentColor: accentColor,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Container(
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: AppPalette.blendOnPaper(
                 accentColor,
                 opacity: 0.16,
                 base: Theme.of(context).colorScheme.surfaceContainerLowest,
               ),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: accentColor.withValues(alpha: 0.24)),
             ),
             child: Icon(icon, color: Theme.of(context).colorScheme.primary),
@@ -465,9 +467,9 @@ class _NoticePanel extends StatelessWidget {
                 ],
                 Text(
                   message,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    height: 1.54,
+                    height: 1.5,
                   ),
                 ),
               ],

@@ -14,6 +14,7 @@ class AboutUsageTracksSection extends StatelessWidget {
       title: '软件怎么用',
       subtitle: '把常用页面收成固定顺序，平时照着这个顺序看就够了。',
       accentColor: AppPalette.softLavender,
+      padding: const EdgeInsets.all(16),
       headerIcon: Icons.route_rounded,
       headerTag: '固定顺序',
       child: Column(
@@ -61,19 +62,19 @@ class AboutUsageTracksSection extends StatelessWidget {
                       index++
                     ) ...<Widget>[
                       tiles[index],
-                      if (index != tiles.length - 1) const SizedBox(height: 14),
+                      if (index != tiles.length - 1) const SizedBox(height: 12),
                     ],
                   ],
                 );
               }
 
               return Wrap(
-                spacing: 14,
-                runSpacing: 14,
+                spacing: 12,
+                runSpacing: 12,
                 children: tiles
                     .map(
                       (tile) => SizedBox(
-                        width: (constraints.maxWidth - 14) / 2,
+                        width: (constraints.maxWidth - 12) / 2,
                         child: tile,
                       ),
                     )
@@ -81,14 +82,14 @@ class AboutUsageTracksSection extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Text(
             '平时重点看这些信息',
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           LayoutBuilder(
             builder: (context, constraints) {
               final items = const <Widget>[
@@ -123,7 +124,7 @@ class AboutUsageTracksSection extends StatelessWidget {
                       index++
                     ) ...<Widget>[
                       items[index],
-                      if (index != items.length - 1) const SizedBox(height: 12),
+                      if (index != items.length - 1) const SizedBox(height: 10),
                     ],
                   ],
                 );
@@ -182,14 +183,14 @@ class AboutTrackTile extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(18),
-      borderRadius: 24,
+      padding: const EdgeInsets.all(16),
+      borderRadius: 22,
       accentColor: accentColor,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: 0.22),
               borderRadius: BorderRadius.circular(999),
@@ -204,11 +205,11 @@ class AboutTrackTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Container(
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: colorScheme.onSurface),
           ),
@@ -224,12 +225,12 @@ class AboutTrackTile extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   description,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
-                    height: 1.58,
+                    height: 1.52,
                   ),
                 ),
               ],
@@ -258,8 +259,8 @@ class _AboutFocusInfo extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 22,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 20,
       accentColor: accentColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,12 +272,12 @@ class _AboutFocusInfo extends StatelessWidget {
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             description,
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
-              height: 1.54,
+              height: 1.5,
             ),
           ),
         ],

@@ -27,21 +27,21 @@ class SettingsSettingRow extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 20,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 18,
       accentColor: AppPalette.softPine,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final stacked = constraints.maxWidth < 520 && trailing != null;
           final titleWidget = Text(
             title,
-            style: theme.textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           );
           final valueWidget = SelectableText(
             value,
-            style: theme.textTheme.bodyLarge?.copyWith(
+            style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.w700,
               height: 1.45,
@@ -53,9 +53,9 @@ class SettingsSettingRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 titleWidget,
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 valueWidget,
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 trailing!,
               ],
             );
@@ -69,7 +69,7 @@ class SettingsSettingRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     titleWidget,
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     valueWidget,
                   ],
                 ),

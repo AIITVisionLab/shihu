@@ -27,7 +27,7 @@ class RealtimeAiDetectionSection extends StatelessWidget {
       title: 'AI 巡检',
       subtitle: '直接读取后端汇总后的边缘识别结果，辅助值守时快速判断风险。',
       accentColor: AppPalette.softLavender,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       child: overviewAsync.when(
         loading: () => Row(
           children: <Widget>[
@@ -73,9 +73,9 @@ class RealtimeAiDetectionSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     latestPanel,
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     historyPanel,
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     refreshButton,
                   ],
                 );
@@ -88,11 +88,11 @@ class RealtimeAiDetectionSection extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Expanded(flex: 7, child: latestPanel),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 12),
                       Expanded(flex: 5, child: historyPanel),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                   refreshButton,
                 ],
               );
@@ -141,13 +141,13 @@ class _EmptyBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 24,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 22,
       accentColor: AppPalette.softLavender,
       shadow: true,
       child: Text(
         '后端尚未收到边缘 AI 上报。可以先去视频中心确认 AI 结果转发是否已经打开，再回到这里刷新。',
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.6),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.56),
       ),
     );
   }
@@ -159,13 +159,13 @@ class _EmptyLatestPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 24,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 22,
       accentColor: AppPalette.softLavender,
       shadow: true,
       child: Text(
         '当前还没有最新 AI 结果。',
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.6),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.56),
       ),
     );
   }
@@ -185,8 +185,8 @@ class _LatestPanel extends StatelessWidget {
     final primaryItems = latest.items.take(3).toList(growable: false);
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 24,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 22,
       accentColor: riskColor,
       shadow: true,
       child: Column(
@@ -209,9 +209,9 @@ class _LatestPanel extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       latest.summary.isEmpty ? '后端未返回总结文案。' : latest.summary,
-                      style: theme.textTheme.bodyLarge?.copyWith(
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
-                        height: 1.6,
+                        height: 1.56,
                       ),
                     ),
                   ],
@@ -291,14 +291,14 @@ class _DetectionItemTile extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppPalette.blendOnPaper(
           AppPalette.softLavender,
           opacity: 0.12,
           base: colorScheme.surfaceContainerLowest,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: AppPalette.softLavender.withValues(alpha: 0.18),
         ),
@@ -358,8 +358,8 @@ class _HistoryPanel extends StatelessWidget {
     final entries = history.take(4).toList(growable: false);
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 24,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 22,
       accentColor: AppPalette.linenOlive,
       shadow: true,
       child: Column(

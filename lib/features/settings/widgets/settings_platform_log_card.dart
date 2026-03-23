@@ -72,6 +72,7 @@ class _SettingsPlatformLogCardState
       title: '平台日志',
       subtitle: '查看后端近期接收到的设备上报、下发回写和 AI 事件。',
       accentColor: AppPalette.softLavender,
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -95,7 +96,7 @@ class _SettingsPlatformLogCardState
             onApply: _applyFilters,
             onReset: _resetFilters,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           widget.overviewAsync.when(
             loading: () => Row(
               children: <Widget>[
@@ -211,14 +212,14 @@ class _FilterPanel extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppPalette.blendOnPaper(
           AppPalette.softLavender,
           opacity: 0.12,
           base: colorScheme.surfaceContainerLowest,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: AppPalette.softLavender.withValues(alpha: 0.18),
         ),
@@ -235,12 +236,12 @@ class _FilterPanel extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '按关键字、事件类型和条数范围重新查询，直接复用后端 `/api/logs` 的筛选能力。',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
-              height: 1.5,
+              height: 1.48,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) {
               final wide = constraints.maxWidth >= 760;
@@ -304,9 +305,9 @@ class _FilterPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     keywordField,
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     typeField,
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     limitField,
                   ],
                 );
@@ -316,15 +317,15 @@ class _FilterPanel extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Expanded(flex: 7, child: keywordField),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(flex: 4, child: typeField),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(flex: 3, child: limitField),
                 ],
               );
             },
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) {
               final compact = constraints.maxWidth < 420;
@@ -344,7 +345,7 @@ class _FilterPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     SizedBox(width: double.infinity, child: applyButton),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     SizedBox(width: double.infinity, child: resetButton),
                   ],
                 );
@@ -353,7 +354,7 @@ class _FilterPanel extends StatelessWidget {
               return Row(
                 children: <Widget>[
                   applyButton,
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   resetButton,
                 ],
               );
@@ -384,7 +385,7 @@ class _StateBlock extends StatelessWidget {
             height: 1.5,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         CommonButton(
           label: '重新获取',
           tone: CommonButtonTone.secondary,
@@ -419,11 +420,11 @@ class _LogPanel extends StatelessWidget {
           builder: (context, constraints) {
             final columns = constraints.maxWidth >= 540 ? 2 : 1;
             final itemWidth =
-                (constraints.maxWidth - ((columns - 1) * 12)) / columns;
+                (constraints.maxWidth - ((columns - 1) * 10)) / columns;
 
             return Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: 10,
+              runSpacing: 10,
               children: <Widget>[
                 SizedBox(
                   width: itemWidth,
@@ -461,14 +462,14 @@ class _LogPanel extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         Text(
           '最近事件',
           style: Theme.of(
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         if (recentEntries.isEmpty)
           Text(
             query.hasFilter ? '当前筛选下没有匹配的平台事件。' : '当前没有可展示的平台事件。',
@@ -484,11 +485,11 @@ class _LogPanel extends StatelessWidget {
               ) ...<Widget>[
                 _LogEntryTile(entry: recentEntries[index]),
                 if (index != recentEntries.length - 1)
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
               ],
             ],
           ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         CommonButton(
           label: '刷新平台日志',
           tone: CommonButtonTone.secondary,
@@ -516,14 +517,14 @@ class _LogEntryTile extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppPalette.blendOnPaper(
           AppPalette.softLavender,
           opacity: 0.12,
           base: colorScheme.surfaceContainerLowest,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: AppPalette.softLavender.withValues(alpha: 0.18),
         ),
@@ -532,13 +533,13 @@ class _LogEntryTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Container(
-            width: 38,
-            height: 38,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               color: typeColor.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(_typeIcon(entry.type), color: typeColor, size: 20),
+            child: Icon(_typeIcon(entry.type), color: typeColor, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -554,16 +555,16 @@ class _LogEntryTile extends StatelessWidget {
                   ),
                 ),
                 if (description.isNotEmpty) ...<Widget>[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     description,
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                    style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
-                      height: 1.5,
+                      height: 1.48,
                     ),
                   ),
                 ],
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -592,7 +593,7 @@ class _LogTag extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
         color: AppPalette.blendOnPaper(
           AppPalette.softLavender,
@@ -606,7 +607,7 @@ class _LogTag extends StatelessWidget {
       ),
       child: Text(
         '$label · $value',
-        style: theme.textTheme.labelLarge?.copyWith(
+        style: theme.textTheme.labelMedium?.copyWith(
           color: colorScheme.onSurface,
           fontWeight: FontWeight.w700,
         ),

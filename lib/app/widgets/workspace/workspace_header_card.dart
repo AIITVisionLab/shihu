@@ -33,7 +33,7 @@ class WorkspaceHeaderCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final hasUser = currentUser.isNotEmpty && currentUser != '--';
-    final borderRadius = BorderRadius.circular(28);
+    final borderRadius = BorderRadius.circular(26);
 
     return ClipRRect(
       borderRadius: borderRadius,
@@ -61,9 +61,9 @@ class WorkspaceHeaderCard extends StatelessWidget {
           ),
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: AppPalette.pineShadow.withValues(alpha: 0.03),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+              color: AppPalette.pineShadow.withValues(alpha: 0.026),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -86,42 +86,76 @@ class WorkspaceHeaderCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final isCompact = constraints.maxWidth < 820;
-                  final titleBlock = Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      if (hasUser && showCurrentUserChip) ...<Widget>[
-                        WorkspaceHeaderChip(
-                          icon: Icons.person_outline_rounded,
-                          label: currentUser,
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      Text(
-                        title,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color: colorScheme.onSurface,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: isCompact ? constraints.maxWidth : 520,
-                        ),
-                        child: Text(
-                          subtitle,
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                  final titleStyle =
+                      (isCompact
+                              ? theme.textTheme.titleLarge
+                              : theme.textTheme.headlineSmall)
+                          ?.copyWith(
+                            color: colorScheme.onSurface,
+                            fontWeight: FontWeight.w800,
+                            height: isCompact ? 1.1 : null,
+                          );
+                  final subtitleStyle =
+                      (isCompact
+                              ? theme.textTheme.bodySmall
+                              : theme.textTheme.bodyMedium)
+                          ?.copyWith(
                             color: colorScheme.onSurfaceVariant,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
+                            height: 1.46,
+                          );
+                  final titleBlock = isCompact
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            if (hasUser && showCurrentUserChip)
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Expanded(
+                                    child: Text(title, style: titleStyle),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  WorkspaceHeaderChip(
+                                    icon: Icons.person_outline_rounded,
+                                    label: currentUser,
+                                  ),
+                                ],
+                              )
+                            else
+                              Text(title, style: titleStyle),
+                            const SizedBox(height: 6),
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: constraints.maxWidth,
+                              ),
+                              child: Text(subtitle, style: subtitleStyle),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            if (hasUser && showCurrentUserChip) ...<Widget>[
+                              WorkspaceHeaderChip(
+                                icon: Icons.person_outline_rounded,
+                                label: currentUser,
+                              ),
+                              const SizedBox(height: 10),
+                            ],
+                            Text(title, style: titleStyle),
+                            const SizedBox(height: 4),
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: constraints.maxWidth.clamp(0, 500),
+                              ),
+                              child: Text(subtitle, style: subtitleStyle),
+                            ),
+                          ],
+                        );
 
                   if (isCompact || actions.isEmpty) {
                     return Column(
@@ -129,7 +163,7 @@ class WorkspaceHeaderCard extends StatelessWidget {
                       children: <Widget>[
                         titleBlock,
                         if (actions.isNotEmpty) ...<Widget>[
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 12),
                           Wrap(spacing: 10, runSpacing: 10, children: actions),
                         ],
                       ],
@@ -186,7 +220,7 @@ class WorkspaceHeaderChip extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
         color: AppPalette.blendOnPaper(
           AppPalette.softPine,
@@ -194,16 +228,16 @@ class WorkspaceHeaderChip extends StatelessWidget {
           base: colorScheme.surfaceContainerLowest,
         ),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppPalette.softPine.withValues(alpha: 0.26)),
+        border: Border.all(color: AppPalette.softPine.withValues(alpha: 0.22)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, size: 16, color: AppPalette.deepPine),
-          const SizedBox(width: 8),
+          Icon(icon, size: 15, color: AppPalette.deepPine),
+          const SizedBox(width: 7),
           Text(
             label,
-            style: theme.textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.labelMedium?.copyWith(
               color: AppPalette.deepPine,
             ),
           ),

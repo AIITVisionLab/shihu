@@ -75,8 +75,8 @@ class RealtimeMetricsSection extends StatelessWidget {
                     label: item.title,
                     value: item.value,
                     accentColor: item.accent,
-                    padding: EdgeInsets.all(compactDesktop ? 14 : 16),
-                    borderRadius: compactDesktop ? 18 : 20,
+                    padding: EdgeInsets.all(compactDesktop ? 12 : 14),
+                    borderRadius: compactDesktop ? 16 : 18,
                   ),
                 ),
               )
@@ -91,8 +91,8 @@ class RealtimeMetricsSection extends StatelessWidget {
         metricGrid,
         SizedBox(height: compactDesktop ? 12 : 14),
         FeatureInsetPanel(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          borderRadius: 20,
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+          borderRadius: 18,
           accentColor: AppPalette.linenOlive,
           child: Wrap(
             spacing: 10,
@@ -117,7 +117,7 @@ class RealtimeMetricsSection extends StatelessWidget {
     return CommonCard(
       title: '环境指标',
       accentColor: AppPalette.softPine,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       child: cardBody,
     );
   }
@@ -140,7 +140,7 @@ class _MetricFooterPill extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: AppPalette.blendOnPaper(
           AppPalette.linenOlive,
@@ -153,11 +153,11 @@ class _MetricFooterPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, size: 16, color: colorScheme.primary),
-          const SizedBox(width: 8),
+          Icon(icon, size: 15, color: colorScheme.primary),
+          const SizedBox(width: 7),
           Text(
             '$label · $value',
-            style: theme.textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.w700,
             ),

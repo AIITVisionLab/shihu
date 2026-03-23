@@ -27,7 +27,7 @@ class HomeDeviceSnapshotCard extends StatelessWidget {
     return CommonCard(
       title: '环境速览',
       subtitle: '把当前指标收在一处，需要处理时再进入值守台。',
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       accentColor: AppPalette.mistMint,
       headerIcon: Icons.analytics_outlined,
       headerTag: '状态快照',
@@ -67,7 +67,7 @@ class HomeDeviceSnapshotCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         summary,
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 12),
                         metrics,
                       ],
                     );
@@ -77,7 +77,7 @@ class HomeDeviceSnapshotCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Expanded(flex: 7, child: summary),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 14),
                       Expanded(flex: 8, child: metrics),
                     ],
                   );

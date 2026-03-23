@@ -75,6 +75,12 @@ void main() {
       expect(find.byType(WorkspaceHeaderChip), findsOneWidget);
       expect(find.text('值守'), findsOneWidget);
       expect(tester.getTopLeft(find.text('值守台')).dy, lessThan(80));
+      final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
+      expect(scaffold.extendBody, isTrue);
+      expect(
+        tester.getSize(find.byType(WorkspaceBottomNavigation)).height,
+        lessThan(100),
+      );
       expect(
         tester.getTopLeft(find.byType(WorkspaceBottomNavigation)).dy,
         greaterThan(780),

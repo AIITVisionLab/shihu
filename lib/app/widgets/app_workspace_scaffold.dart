@@ -70,6 +70,7 @@ class AppWorkspaceScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final useRail = useWorkspaceRailLayout(screenWidth);
     final shellMaxWidth = useRail ? kWorkspaceDesktopShellMaxWidth : 1040.0;
@@ -86,7 +87,8 @@ class AppWorkspaceScaffold extends StatelessWidget {
     );
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: colorScheme.surface,
+      extendBody: !useRail,
       bottomNavigationBar: useRail
           ? null
           : SafeArea(
@@ -103,7 +105,7 @@ class AppWorkspaceScaffold extends StatelessWidget {
                       horizontalPadding,
                       0,
                       horizontalPadding,
-                      14,
+                      8,
                     ),
                     child: WorkspaceBottomNavigation(destination: destination),
                   ),
@@ -136,7 +138,7 @@ class AppWorkspaceScaffold extends StatelessWidget {
                 horizontalPadding,
                 topPadding,
                 horizontalPadding,
-                useRail ? 14 : 6,
+                useRail ? 14 : 4,
               ),
               child: LayoutBuilder(
                 builder: (context, constraints) {

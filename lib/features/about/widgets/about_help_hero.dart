@@ -14,42 +14,45 @@ class AboutHelpHero extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return FeatureHeroCard(
-      padding: const EdgeInsets.all(22),
-      borderRadius: 30,
+      padding: const EdgeInsets.all(16),
+      borderRadius: 28,
       accentColor: AppPalette.softLavender,
       child: WorkspaceTwoPane(
-        breakpoint: 1080,
+        breakpoint: 980,
+        gap: 16,
+        stackSpacing: 16,
+        secondaryWidthFactor: 0.32,
         primary: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
               '常用功能都在这四个入口里',
-              style: theme.textTheme.headlineSmall?.copyWith(
+              style: theme.textTheme.titleLarge?.copyWith(
                 color: colorScheme.onSurface,
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               '需要处理设备时直接进值守，需要看画面时直接进视频；账号和设置统一放在我的里。',
-              style: theme.textTheme.bodyLarge?.copyWith(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
-                height: 1.58,
+                height: 1.56,
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: 10,
+              runSpacing: 10,
               children: const <Widget>[
                 _AboutHeroPill(label: '入口顺序', value: '总览 / 值守 / 视频 / 我的'),
                 _AboutHeroPill(label: '帮助口径', value: '只保留查看重点和常用操作'),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: 10,
+              runSpacing: 10,
               children: <Widget>[
                 AboutHeroBadge(
                   index: '01',
@@ -114,16 +117,16 @@ class AboutHeroBadge extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 160),
+      constraints: const BoxConstraints(minWidth: 148),
       child: FeatureInsetPanel(
-        padding: const EdgeInsets.all(16),
-        borderRadius: 24,
+        padding: const EdgeInsets.all(14),
+        borderRadius: 22,
         accentColor: accentColor,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
               decoration: BoxDecoration(
                 color: accentColor.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(999),
@@ -136,10 +139,10 @@ class AboutHeroBadge extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               title,
-              style: theme.textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.titleSmall?.copyWith(
                 color: colorScheme.onSurface,
                 fontWeight: FontWeight.w800,
               ),
@@ -147,9 +150,9 @@ class AboutHeroBadge extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               description,
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style: theme.textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
-                height: 1.5,
+                height: 1.48,
               ),
             ),
           ],
@@ -170,19 +173,19 @@ class AboutGuideMonitor extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(20),
-      borderRadius: 28,
+      padding: const EdgeInsets.all(16),
+      borderRadius: 24,
       accentColor: AppPalette.softPine,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
             '查看顺序',
-            style: theme.textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           const _GuideStep(
             index: '01',
             title: '先看总览',
@@ -224,19 +227,19 @@ class _AboutHeroPill extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
         color: AppPalette.blendOnPaper(
           AppPalette.linenOlive,
           opacity: 0.12,
           base: colorScheme.surfaceContainerLowest,
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: AppPalette.linenOlive.withValues(alpha: 0.2)),
       ),
       child: RichText(
         text: TextSpan(
-          style: theme.textTheme.bodyMedium?.copyWith(
+          style: theme.textTheme.labelMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
             height: 1.4,
           ),
@@ -244,7 +247,7 @@ class _AboutHeroPill extends StatelessWidget {
             TextSpan(text: '$label  '),
             TextSpan(
               text: value,
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style: theme.textTheme.labelMedium?.copyWith(
                 color: colorScheme.onSurface,
                 fontWeight: FontWeight.w800,
               ),
@@ -273,14 +276,14 @@ class _GuideStep extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 20,
+      padding: const EdgeInsets.all(14),
+      borderRadius: 18,
       accentColor: AppPalette.softPine,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
             decoration: BoxDecoration(
               color: colorScheme.primaryContainer.withValues(alpha: 0.72),
               borderRadius: BorderRadius.circular(999),
@@ -308,9 +311,9 @@ class _GuideStep extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   description,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
-                    height: 1.52,
+                    height: 1.48,
                   ),
                 ),
               ],

@@ -470,10 +470,8 @@ jobs:
         run: |
           set -euo pipefail
           export PATH="${FLUTTER_OHOS_HOME}/bin:${PATH}"
-
-          flutter config --no-analytics
-          flutter pub get
-          flutter build hap --release
+          chmod +x tool/build_ohos_release.sh
+          tool/build_ohos_release.sh dist/斛生-ohos-arm64.hap
 
       - name: 整理 OHOS 平台产物
         shell: bash
@@ -481,7 +479,7 @@ jobs:
           set -euo pipefail
           mkdir -p dist
 
-          hap_path="$(find build ohos -type f -name '*.hap' | head -n 1)"
+          hap_path="$(find dist build ohos -type f -name '*.hap' | head -n 1)"
           if [[ -z "${hap_path}" ]]; then
             echo "未找到 HAP 产物。" >&2
             exit 1

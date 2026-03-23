@@ -12,6 +12,7 @@ import 'package:sickandflutter/features/auth/auth_user.dart';
 import 'package:sickandflutter/features/device/domain/device_status.dart';
 import 'package:sickandflutter/features/home/application/home_overview_device_status_provider.dart';
 import 'package:sickandflutter/features/home/home_page.dart';
+import 'package:sickandflutter/features/home/widgets/home_header/home_header_lead.dart';
 import 'package:sickandflutter/features/settings/settings_controller.dart';
 import 'package:sickandflutter/shared/models/app_enums.dart';
 
@@ -227,6 +228,11 @@ void main() {
 
     expect(find.byType(WorkspaceBottomNavigation), findsOneWidget);
     expect(find.text('环境速览'), findsOneWidget);
+    expect(find.byType(HomeHeaderActionPill), findsOneWidget);
+    expect(
+      tester.getSize(find.byType(HomeHeaderActionPill)).height,
+      lessThan(44),
+    );
     expect(tester.takeException(), isNull);
   });
 }

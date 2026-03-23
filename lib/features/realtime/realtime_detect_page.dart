@@ -41,7 +41,7 @@ class RealtimeDetectPage extends ConsumerWidget {
               onRefresh: controller.refreshNow,
               onToggleAutoRefresh: controller.setAutoRefreshEnabled,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             if (!state.hasDeviceState && state.isRefreshing)
               const CommonCard(
                 child: Padding(
@@ -63,7 +63,7 @@ class RealtimeDetectPage extends ConsumerWidget {
                       _handleToggleLed(context, controller, ledOn),
                 ),
               ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             RealtimeAiDetectionSection(
               overviewAsync: aiOverviewAsync,
               onRefresh: () => _refreshAiOverview(ref),

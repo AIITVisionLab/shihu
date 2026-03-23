@@ -28,8 +28,8 @@ class HomeSummaryBoard extends StatelessWidget {
         : '状态依据最新上报结果生成，可直接作为值守判断基线。';
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(18),
-      borderRadius: 28,
+      padding: const EdgeInsets.all(16),
+      borderRadius: 24,
       accentColor: AppPalette.softLavender,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +43,7 @@ class HomeSummaryBoard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             statusTitle,
-            style: theme.textTheme.titleLarge?.copyWith(
+            style: theme.textTheme.titleMedium?.copyWith(
               color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.w800,
             ),
@@ -51,16 +51,20 @@ class HomeSummaryBoard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             statusDescription,
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
-              height: 1.58,
+              height: 1.52,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) {
-              final columns = constraints.maxWidth >= 320 ? 3 : 1;
-              final gap = 10.0;
+              final columns = switch (constraints.maxWidth) {
+                >= 420 => 3,
+                >= 300 => 2,
+                _ => 1,
+              };
+              final gap = 8.0;
               final itemWidth = columns == 1
                   ? constraints.maxWidth
                   : (constraints.maxWidth - ((columns - 1) * gap)) / columns;
@@ -130,8 +134,8 @@ class HomeSummaryValueCard extends StatelessWidget {
         label: title,
         value: value,
         accentColor: accentColor,
-        padding: const EdgeInsets.all(14),
-        borderRadius: 18,
+        padding: const EdgeInsets.all(12),
+        borderRadius: 16,
         shadow: false,
       ),
     );

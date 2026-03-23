@@ -47,77 +47,92 @@ class RealtimeMonitorSummary extends StatelessWidget {
         ? '系统正在等待设备状态。'
         : viewData!.alertDescription;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 620;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            _RealtimeMetaChip(
-              icon: Icons.monitor_heart_rounded,
-              label: state.isAutoRefreshEnabled ? '自动更新中' : '手动刷新',
-            ),
-            _RealtimeMetaChip(
-              icon: Icons.sensors_outlined,
-              label: deviceStatus == null ? '等待设备接入' : '设备在线',
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Text(
-          deviceName,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          summaryText,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-            height: 1.56,
-          ),
-        ),
-        const SizedBox(height: 14),
-        _RealtimeFactGrid(deviceStatus: deviceStatus, viewData: viewData),
-        if (errorMessage != null) ...<Widget>[
-          const SizedBox(height: 14),
-          FeatureInsetPanel(
-            padding: const EdgeInsets.all(14),
-            borderRadius: 18,
-            backgroundColor: colorScheme.errorContainer,
-            accentColor: colorScheme.error,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: <Widget>[
-                Icon(
-                  Icons.error_outline_rounded,
-                  color: colorScheme.onErrorContainer,
-                  size: 20,
+                _RealtimeMetaChip(
+                  icon: Icons.monitor_heart_rounded,
+                  label: state.isAutoRefreshEnabled ? '自动更新中' : '手动刷新',
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    errorMessage!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onErrorContainer,
-                      height: 1.5,
-                    ),
-                  ),
+                _RealtimeMetaChip(
+                  icon: Icons.sensors_outlined,
+                  label: deviceStatus == null ? '等待设备接入' : '设备在线',
                 ),
               ],
             ),
-          ),
-        ],
-        const SizedBox(height: 14),
-        RealtimeHeroActionStrip(
-          state: state,
-          onRefresh: onRefresh,
-          onToggleAutoRefresh: onToggleAutoRefresh,
-        ),
-      ],
+            const SizedBox(height: 10),
+            Text(
+              deviceName,
+              style:
+                  (isCompact
+                          ? theme.textTheme.titleLarge
+                          : theme.textTheme.headlineSmall)
+                      ?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                        height: 1.12,
+                      ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              summaryText,
+              style:
+                  (isCompact
+                          ? theme.textTheme.bodySmall
+                          : theme.textTheme.bodyMedium)
+                      ?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.54,
+                      ),
+            ),
+            const SizedBox(height: 12),
+            _RealtimeFactGrid(deviceStatus: deviceStatus, viewData: viewData),
+            if (errorMessage != null) ...<Widget>[
+              const SizedBox(height: 12),
+              FeatureInsetPanel(
+                padding: const EdgeInsets.all(12),
+                borderRadius: 16,
+                backgroundColor: colorScheme.errorContainer,
+                accentColor: colorScheme.error,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Icon(
+                      Icons.error_outline_rounded,
+                      color: colorScheme.onErrorContainer,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        errorMessage!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onErrorContainer,
+                          height: 1.48,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            RealtimeHeroActionStrip(
+              state: state,
+              onRefresh: onRefresh,
+              onToggleAutoRefresh: onToggleAutoRefresh,
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -160,7 +175,7 @@ class _RealtimeFactGrid extends StatelessWidget {
           >= 360 => 2,
           _ => 1,
         };
-        final gap = 10.0;
+        final gap = 8.0;
         final itemWidth =
             (constraints.maxWidth - ((columns - 1) * gap)) / columns;
 
@@ -242,8 +257,8 @@ class RealtimeHeroActionStrip extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return FeatureInsetPanel(
-      padding: const EdgeInsets.all(14),
-      borderRadius: 20,
+      padding: const EdgeInsets.all(12),
+      borderRadius: 18,
       accentColor: AppPalette.mistMint,
       shadow: true,
       child: LayoutBuilder(
@@ -253,7 +268,7 @@ class RealtimeHeroActionStrip extends StatelessWidget {
             children: <Widget>[
               Text(
                 '值守节奏',
-                style: theme.textTheme.titleMedium?.copyWith(
+                style: theme.textTheme.titleSmall?.copyWith(
                   color: colorScheme.onSurface,
                   fontWeight: FontWeight.w800,
                 ),
@@ -275,10 +290,7 @@ class RealtimeHeroActionStrip extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                 decoration: BoxDecoration(
                   color: AppPalette.blendOnPaper(
                     AppPalette.mistMint,
@@ -299,7 +311,7 @@ class RealtimeHeroActionStrip extends StatelessWidget {
                     ),
                     Text(
                       state.isAutoRefreshEnabled ? '自动更新中' : '已暂停自动更新',
-                      style: theme.textTheme.labelLarge?.copyWith(
+                      style: theme.textTheme.labelMedium?.copyWith(
                         color: colorScheme.onSurface,
                       ),
                     ),
@@ -326,7 +338,7 @@ class RealtimeHeroActionStrip extends StatelessWidget {
           if (constraints.maxWidth < 760) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[summary, const SizedBox(height: 12), controls],
+              children: <Widget>[summary, const SizedBox(height: 10), controls],
             );
           }
 
@@ -356,7 +368,7 @@ class _RealtimeMetaChip extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: AppPalette.blendOnPaper(
           AppPalette.softPine,
@@ -369,11 +381,11 @@ class _RealtimeMetaChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, size: 16, color: colorScheme.primary),
-          const SizedBox(width: 8),
+          Icon(icon, size: 15, color: colorScheme.primary),
+          const SizedBox(width: 7),
           Text(
             label,
-            style: theme.textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
@@ -402,7 +414,7 @@ class RealtimeSyncChip extends StatelessWidget {
         : '已停止自动更新';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
         color: AppPalette.linenOlive.withValues(alpha: 0.28),
         borderRadius: BorderRadius.circular(999),
@@ -410,7 +422,7 @@ class RealtimeSyncChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: theme.textTheme.labelLarge?.copyWith(
+        style: theme.textTheme.labelMedium?.copyWith(
           color: colorScheme.onSurface,
           fontWeight: FontWeight.w700,
         ),

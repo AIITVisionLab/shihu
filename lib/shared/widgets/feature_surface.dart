@@ -88,8 +88,8 @@ class FeatureHeroCard extends StatelessWidget {
   /// 创建重点区块外壳。
   const FeatureHeroCard({
     required this.child,
-    this.padding = const EdgeInsets.all(26),
-    this.borderRadius = 34,
+    this.padding = const EdgeInsets.all(22),
+    this.borderRadius = 30,
     this.accentColor,
     this.showPaletteBands = false,
     super.key,
@@ -326,8 +326,8 @@ class FeatureSummaryTile extends StatelessWidget {
     required this.accentColor,
     this.icon,
     this.description,
-    this.padding = const EdgeInsets.all(18),
-    this.borderRadius = 22,
+    this.padding = const EdgeInsets.all(16),
+    this.borderRadius = 20,
     this.shadow = true,
     super.key,
   });

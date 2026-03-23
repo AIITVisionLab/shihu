@@ -16,6 +16,11 @@ add_executable(${BINARY_NAME}
 # that need different build settings.
 apply_standard_settings(${BINARY_NAME})
 
+# Fedora / RHEL 一类默认启用硬化链接策略的宿主机会要求桌面可执行文件
+# 以 PIE 方式编译和链接，否则 release 构建会在最终链接阶段失败。
+target_compile_options(${BINARY_NAME} PRIVATE -fPIE)
+target_link_options(${BINARY_NAME} PRIVATE -pie)
+
 # Add preprocessor definitions for the application ID.
 add_definitions(-DAPPLICATION_ID="${APPLICATION_ID}")
 

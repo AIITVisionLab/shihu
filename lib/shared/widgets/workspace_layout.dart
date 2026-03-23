@@ -34,9 +34,9 @@ double resolveWorkspaceHorizontalPadding(double width) {
 /// 根据窗口宽度返回工作台统一顶部留白。
 double resolveWorkspaceTopPadding(double width) {
   return switch (width) {
-    < 560 => 10,
-    < 920 => 14,
-    _ => 18,
+    < 560 => 8,
+    < 920 => 12,
+    _ => 16,
   };
 }
 

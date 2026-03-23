@@ -36,7 +36,7 @@ class RealtimeControlsSection extends StatelessWidget {
     return CommonCard(
       title: '设备与补光',
       accentColor: AppPalette.mistMint,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -76,8 +76,8 @@ class _StatusOverviewPanel extends StatelessWidget {
     final deviceName = formatRealtimeDisplayText(deviceState?.deviceName);
 
     return FeatureInsetPanel(
-      padding: EdgeInsets.all(compact ? 14 : 16),
-      borderRadius: 24,
+      padding: EdgeInsets.all(compact ? 12 : 14),
+      borderRadius: 22,
       accentColor: palette.foregroundColor,
       shadow: true,
       child: Column(
@@ -86,8 +86,8 @@ class _StatusOverviewPanel extends StatelessWidget {
           Row(
             children: <Widget>[
               Container(
-                width: compact ? 42 : 46,
-                height: compact ? 42 : 46,
+                width: compact ? 38 : 42,
+                height: compact ? 38 : 42,
                 decoration: BoxDecoration(
                   color: palette.foregroundColor.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(16),
@@ -95,7 +95,7 @@ class _StatusOverviewPanel extends StatelessWidget {
                 child: Icon(
                   Icons.eco_outlined,
                   color: palette.foregroundColor,
-                  size: compact ? 20 : 22,
+                  size: compact ? 18 : 20,
                 ),
               ),
               const SizedBox(width: 12),
@@ -108,6 +108,7 @@ class _StatusOverviewPanel extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleMedium?.copyWith(
+                        height: 1.12,
                         color: colorScheme.onSurface,
                         fontWeight: FontWeight.w800,
                       ),
@@ -115,7 +116,7 @@ class _StatusOverviewPanel extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       viewData?.alertTitle ?? '等待状态返回',
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -124,7 +125,7 @@ class _StatusOverviewPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             deviceState == null ? '等待设备状态后再决定是否补光。' : '状态、同步和补光都收在这里。',
             style: theme.textTheme.bodySmall?.copyWith(
@@ -132,7 +133,7 @@ class _StatusOverviewPanel extends StatelessWidget {
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -169,7 +170,7 @@ class _OverviewBadge extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: AppPalette.blendOnPaper(
           AppPalette.softPine,
@@ -182,11 +183,11 @@ class _OverviewBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, size: 16, color: colorScheme.primary),
+          Icon(icon, size: 15, color: colorScheme.primary),
           const SizedBox(width: 6),
           Text(
             label,
-            style: theme.textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.w700,
             ),
@@ -218,14 +219,14 @@ class _LedControlPanel extends StatelessWidget {
         : DeviceStatusViewData.fromState(deviceState);
 
     final action = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: AppPalette.blendOnPaper(
           AppPalette.mistMint,
           opacity: 0.12,
           base: colorScheme.surfaceContainerLowest,
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppPalette.mistMint.withValues(alpha: 0.2)),
       ),
       child: Row(
@@ -245,7 +246,7 @@ class _LedControlPanel extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             viewData == null ? '当前已关闭' : '当前${viewData.ledLabel}',
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.w700,
             ),
@@ -255,8 +256,8 @@ class _LedControlPanel extends StatelessWidget {
     );
 
     return FeatureInsetPanel(
-      padding: EdgeInsets.all(compact ? 14 : 16),
-      borderRadius: 24,
+      padding: EdgeInsets.all(compact ? 12 : 14),
+      borderRadius: 22,
       accentColor: AppPalette.mistMint,
       shadow: true,
       child: LayoutBuilder(
@@ -266,7 +267,7 @@ class _LedControlPanel extends StatelessWidget {
             children: <Widget>[
               Text(
                 'LED 补光控制',
-                style: theme.textTheme.titleMedium?.copyWith(
+                style: theme.textTheme.titleSmall?.copyWith(
                   color: colorScheme.onSurface,
                   fontWeight: FontWeight.w800,
                 ),
@@ -287,7 +288,7 @@ class _LedControlPanel extends StatelessWidget {
           );
 
           final tag = Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
               color: AppPalette.blendOnPaper(
                 AppPalette.linenOlive,
@@ -301,7 +302,7 @@ class _LedControlPanel extends StatelessWidget {
             ),
             child: Text(
               state.isSubmittingLed ? '指令提交中' : '状态稳定后可切换',
-              style: theme.textTheme.labelLarge?.copyWith(
+              style: theme.textTheme.labelMedium?.copyWith(
                 color: colorScheme.onSurface,
               ),
             ),
@@ -312,9 +313,9 @@ class _LedControlPanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 description,
-                const SizedBox(height: 14),
-                action,
                 const SizedBox(height: 12),
+                action,
+                const SizedBox(height: 10),
                 tag,
               ],
             );

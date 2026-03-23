@@ -9,7 +9,7 @@ class CommonCard extends StatelessWidget {
     required this.child,
     this.title,
     this.subtitle,
-    this.padding = const EdgeInsets.all(22),
+    this.padding = const EdgeInsets.all(20),
     this.accentColor = AppPalette.pineGreen,
     this.headerIcon,
     this.headerTag,
@@ -50,7 +50,7 @@ class CommonCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(26),
         child: DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -74,15 +74,15 @@ class CommonCard extends StatelessWidget {
                 ).withValues(alpha: 0.94),
               ],
             ),
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(26),
             border: Border.all(
               color: colorScheme.outlineVariant.withValues(alpha: 0.84),
             ),
             boxShadow: <BoxShadow>[
               BoxShadow(
                 color: AppPalette.pineShadow.withValues(alpha: 0.045),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
               ),
             ],
           ),

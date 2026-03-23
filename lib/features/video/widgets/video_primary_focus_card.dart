@@ -48,9 +48,12 @@ class VideoPrimaryFocusCard extends StatelessWidget {
 
     return CommonCard(
       accentColor: AppPalette.linenOlive,
+      padding: const EdgeInsets.all(16),
       child: WorkspaceTwoPane(
-        breakpoint: 1080,
-        gap: 18,
+        breakpoint: 980,
+        gap: 16,
+        stackSpacing: 16,
+        secondaryWidthFactor: 0.32,
         primary: enableInlinePlayback
             ? VideoInlinePlaybackStage(stream: stream)
             : VideoScreenStage(
@@ -164,23 +167,23 @@ class _VideoPrimaryControlPanel extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 14),
         Text(
           stream.displayName,
-          style: theme.textTheme.titleLarge?.copyWith(
+          style: theme.textTheme.titleMedium?.copyWith(
             color: colorScheme.onSurface,
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Text(
           _buildPrimaryDescription(stream),
-          style: theme.textTheme.bodyLarge?.copyWith(
+          style: theme.textTheme.bodyMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
-            height: 1.6,
+            height: 1.56,
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 14),
         LayoutBuilder(
           builder: (context, constraints) {
             final metrics = <Widget>[
@@ -210,23 +213,23 @@ class _VideoPrimaryControlPanel extends StatelessWidget {
               return Column(
                 children: <Widget>[
                   metrics[0],
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   metrics[1],
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   metrics[2],
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   metrics[3],
                 ],
               );
             }
 
             return Wrap(
-              spacing: 10,
-              runSpacing: 10,
+              spacing: 8,
+              runSpacing: 8,
               children: metrics
                   .map(
                     (metric) => SizedBox(
-                      width: (constraints.maxWidth - 10) / 2,
+                      width: (constraints.maxWidth - 8) / 2,
                       child: metric,
                     ),
                   )
@@ -234,7 +237,7 @@ class _VideoPrimaryControlPanel extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 14),
         LayoutBuilder(
           builder: (context, constraints) {
             final compact = constraints.maxWidth < 420;
@@ -254,7 +257,7 @@ class _VideoPrimaryControlPanel extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   SizedBox(width: double.infinity, child: primaryButton),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   SizedBox(width: double.infinity, child: secondaryButton),
                 ],
               );
@@ -263,20 +266,20 @@ class _VideoPrimaryControlPanel extends StatelessWidget {
             return Row(
               children: <Widget>[
                 Expanded(child: primaryButton),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(child: secondaryButton),
               ],
             );
           },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         Text(
           hasPrimaryAction
               ? '主画面放在最上面，值守时先看这里；只有主入口异常时再切备用入口。'
               : '当前主画面还没有可用入口，请先刷新状态，恢复后再进入。',
-          style: theme.textTheme.bodyMedium?.copyWith(
+          style: theme.textTheme.bodySmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
-            height: 1.55,
+            height: 1.52,
           ),
         ),
       ],
