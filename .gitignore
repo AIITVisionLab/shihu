@@ -1,0 +1,42 @@
+# Flutter / Dart 构建文件
+.dart_tool/
+.flatpak-builder/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+.packages
+devtools_options.yaml
+build/
+coverage/
+.hvigor/
+
+# ide产生的构建文件
+.idea/
+.vscode/
+*.iml
+
+# 平台构建文件
+android/.gradle/
+android/local.properties
+ios/Flutter/ephemeral/
+ios/Flutter/flutter_export_environment.sh
+linux/flutter/ephemeral/
+macos/Flutter/ephemeral/
+windows/flutter/ephemeral/
+ohos/.signing/
+
+# OS
+.DS_Store
+flutter_*.log
+
+# 本地协作与调试产物
+.cache/
+.playwright-cli/
+.kiro/
+bag/
+output/
+release/
+third_party/
+
+# 本地生成配置
+ohos/package-lock.json
