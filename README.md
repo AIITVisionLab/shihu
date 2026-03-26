@@ -128,6 +128,13 @@ flutter run --dart-define=USE_MOCK_AUTH=true
 
 ## GitHub Release 自动发布
 
+主分支提交约定：
+
+- 主分支只合并源码、必要工程文件和项目文档
+- 编译产物不入库，本地发包统一落到 `release/`
+- 本地编辑器配置和带机器路径的生成配置不提交
+- 正式对外交付统一走 GitHub Release，不把安装包直接提交到主分支
+
 仓库已补充 GitHub Actions 发布工作流：
 
 - 推送 `v*` 标签时自动构建并上传到 GitHub Release
@@ -158,7 +165,7 @@ OpenHarmony / 鸿蒙说明：
 - 如需把 `HAP` 一起发到 Release，需要启用带 `self-hosted`、`linux`、`ohos` 标签的自托管 runner
 - 需要额外配置仓库变量 `ENABLE_OHOS_RELEASE=true`、`FLUTTER_OHOS_HOME`、`OHOS_SDK_HOME`
 - 当前 OpenHarmony Flutter 官方分支最高到 `3.35.x-ohos`，仍基于 Dart `3.9`；仓库已补 `tool/build_ohos_release.sh`，会在临时工作区裁掉仅用于开发的依赖并固定 Dart `3.9` 可编译的运行时包版本
-- 本地或 CI 构建 HAP 时统一执行 `tool/build_ohos_release.sh <输出文件>`，不要再直接跑仓库根目录下的 `flutter build hap --release`
+- 本地或 CI 构建 HAP 时统一执行 `tool/build_ohos_release.sh <输出文件>`，默认输出到 `release/`，不要再直接跑仓库根目录下的 `flutter build hap --release`
 
 iOS 说明：
 
@@ -189,7 +196,7 @@ iOS 说明：
 - `flutter build appbundle --release`
 - `flutter build apk --release --split-per-abi`
 - `flutter build linux --release`
-- `tool/package_linux_all.sh build/linux/x64/release/bundle bag 0.1.7+1 x64`
+- `tool/package_linux_all.sh build/linux/x64/release/bundle release 0.1.7+1 x64`
 
 未在当前环境验证的平台：
 

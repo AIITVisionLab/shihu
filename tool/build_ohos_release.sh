@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-OUTPUT_FILE="${1:-${REPO_ROOT}/bag/斛生-ohos-arm64.hap}"
+OUTPUT_FILE="${1:-${REPO_ROOT}/release/斛生-ohos-arm64.hap}"
 
 LOCAL_PROPERTIES="${REPO_ROOT}/ohos/local.properties"
 if [[ ! -f "${LOCAL_PROPERTIES}" ]]; then
@@ -35,6 +35,7 @@ rsync -a \
   --exclude '.dart_tool' \
   --exclude 'build' \
   --exclude 'bag' \
+  --exclude 'release' \
   --exclude 'flutter_*.log' \
   --exclude 'ohos/node_modules' \
   --exclude 'ohos/.hvigor' \
