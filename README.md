@@ -152,6 +152,7 @@ flutter run --dart-define=USE_MOCK_AUTH=true
 
 - 推送 `v*` 标签时自动构建并上传到 GitHub Release
 - 也可手动执行 `发布安装包` 工作流，并传入发布标签
+- 若个别平台构建失败，Release 会保留已成功的平台产物，不再因为单个平台失败阻断整体发版
 
 默认构建并上传的安装包：
 
@@ -209,7 +210,7 @@ iOS 说明：
 - `flutter build appbundle --release`
 - `flutter build apk --release --split-per-abi`
 - `flutter build linux --release`
-- `tool/package_linux_all.sh build/linux/x64/release/bundle release 0.1.7+1 x64`
+- `tool/package_linux_all.sh build/linux/x64/release/bundle release 0.1.8+1 x64`
 
 未在当前环境验证的平台：
 
