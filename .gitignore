@@ -5,29 +5,42 @@
 .flutter-plugins-dependencies
 .metadata
 .packages
-devtools_options.yaml
 build/
 coverage/
 .hvigor/
+husheng-client/.dart_tool/
+husheng-client/.flatpak-builder/
+husheng-client/.flutter-plugins
+husheng-client/.flutter-plugins-dependencies
+husheng-client/.metadata
+husheng-client/.packages
+husheng-client/devtools_options.yaml
+husheng-client/build/
+husheng-client/coverage/
+husheng-client/.hvigor/
 
 # ide产生的构建文件
 .idea/
 .vscode/
 *.iml
+husheng-client/.idea/
+husheng-client/.vscode/
+husheng-client/*.iml
 
 # 平台构建文件
-android/.gradle/
-android/local.properties
-ios/Flutter/ephemeral/
-ios/Flutter/flutter_export_environment.sh
-linux/flutter/ephemeral/
-macos/Flutter/ephemeral/
-windows/flutter/ephemeral/
-ohos/.signing/
+husheng-client/android/.gradle/
+husheng-client/android/local.properties
+husheng-client/ios/Flutter/ephemeral/
+husheng-client/ios/Flutter/flutter_export_environment.sh
+husheng-client/linux/flutter/ephemeral/
+husheng-client/macos/Flutter/ephemeral/
+husheng-client/windows/flutter/ephemeral/
+husheng-client/ohos/.signing/
 
 # OS
 .DS_Store
 flutter_*.log
+husheng-client/flutter_*.log
 
 # 本地协作与调试产物
 .cache/
@@ -36,7 +49,9 @@ flutter_*.log
 bag/
 output/
 release/
+husheng-client/output/
+husheng-client/release/
 third_party/
 
 # 本地生成配置
-ohos/package-lock.json
+husheng-client/ohos/package-lock.json
