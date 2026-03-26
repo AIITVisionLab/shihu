@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/package_linux_common.sh"
 
 BUNDLE_DIR="${1:?bundle dir required}"
-OUTPUT_DIR="${2:?output dir required}"
+OUTPUT_DIR_INPUT="${2:?output dir required}"
 ARCH_PROFILE="${3:?arch profile required}"
 
 case "${ARCH_PROFILE}" in
@@ -30,6 +30,9 @@ case "${ARCH_PROFILE}" in
 esac
 
 package_linux_validate_inputs "${BUNDLE_DIR}"
+
+mkdir -p "${OUTPUT_DIR_INPUT}"
+OUTPUT_DIR="$(cd "${OUTPUT_DIR_INPUT}" && pwd)"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
@@ -68,8 +71,6 @@ cat > "${PORTABLE_STAGE_DIR}/README.txt" <<'EOF'
 - run.sh 会自动补齐 LD_LIBRARY_PATH，优先加载当前目录内的 lib。
 - 适合没有 root 权限或不想走系统包管理器的 Linux 环境。
 EOF
-
-mkdir -p "${OUTPUT_DIR}"
 
 tar -C "${BUNDLE_STAGE_PARENT}" -czf \
   "${OUTPUT_DIR}/斛生-linux-${PACKAGE_LABEL}-bundle.tar.gz" \

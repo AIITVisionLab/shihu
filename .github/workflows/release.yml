@@ -424,21 +424,26 @@ jobs:
           Get-ChildItem dist
 
       - name: 整理 Windows 便携包
+        continue-on-error: true
         shell: pwsh
         run: |
+          $portableName = "husheng-windows-${{ matrix.build_arch }}-portable"
           $stageRoot = Join-Path $env:RUNNER_TEMP "husheng-windows-${{ matrix.build_arch }}"
-          $portableDir = Join-Path $stageRoot "husheng-windows-${{ matrix.build_arch }}-portable"
+          $portableDir = Join-Path $stageRoot $portableName
 
           Remove-Item -Recurse -Force $stageRoot -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Force -Path $portableDir | Out-Null
-          Copy-Item -Recurse -Force "build/windows/${{ matrix.build_arch }}/runner/Release/*" $portableDir
-          Compress-Archive -Path $portableDir -DestinationPath "dist/斛生-windows-${{ matrix.build_arch }}-portable.zip" -Force
+          Copy-Item -Recurse -Force (Join-Path "build/windows/${{ matrix.build_arch }}/runner/Release" '*') $portableDir
+          tar.exe -a -cf "dist/斛生-windows-${{ matrix.build_arch }}-portable.zip" -C $stageRoot $portableName
 
       - name: 输出 Windows 构建结果
         shell: pwsh
         run: |
           if (-not (Test-Path -LiteralPath "dist/${{ matrix.asset_name }}")) {
             Write-Warning "当前架构的 Windows 安装器未生成，后续 Release 会跳过这个安装器产物。"
+          }
+          if (-not (Test-Path -LiteralPath "dist/斛生-windows-${{ matrix.build_arch }}-portable.zip")) {
+            Write-Warning "当前架构的 Windows 便携压缩包未生成，后续 Release 会跳过这个便携产物。"
           }
           Get-ChildItem dist
 
