@@ -11,6 +11,10 @@ on:
         required: true
         type: string
 
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.release_tag || github.ref_name }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -72,6 +76,13 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: 安装 Android 归档依赖
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y zip
+
       - name: 安装 Flutter SDK
         shell: bash
         run: |
@@ -95,6 +106,22 @@ jobs:
             --build-name "${{ needs.prepare.outputs.build_name }}" \
             --build-number "${{ needs.prepare.outputs.build_number }}"
 
+      - name: 构建 Android 通用 APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter build apk --release \
+            --build-name "${{ needs.prepare.outputs.build_name }}" \
+            --build-number "${{ needs.prepare.outputs.build_number }}"
+
+      - name: 构建 Android AAB
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter build appbundle --release \
+            --build-name "${{ needs.prepare.outputs.build_name }}" \
+            --build-number "${{ needs.prepare.outputs.build_number }}"
+
       - name: 整理 Android 安装包
         shell: bash
         run: |
@@ -107,6 +134,25 @@ jobs:
             "dist/斛生-android-armeabi-v7a.apk"
           cp build/app/outputs/flutter-apk/app-x86_64-release.apk \
             "dist/斛生-android-x86_64.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk \
+            "dist/斛生-android-universal.apk"
+          cp build/app/outputs/bundle/release/app-release.aab \
+            "dist/斛生-android-release.aab"
+
+          zip -j "dist/斛生-android-split-apks.zip" \
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
+            build/app/outputs/flutter-apk/app-x86_64-release.apk
+
+          tar -C dist -czf "${RUNNER_TEMP}/斛生-android-all-packages.tar.gz" \
+            "斛生-android-arm64-v8a.apk" \
+            "斛生-android-armeabi-v7a.apk" \
+            "斛生-android-x86_64.apk" \
+            "斛生-android-universal.apk" \
+            "斛生-android-release.aab" \
+            "斛生-android-split-apks.zip"
+          mv "${RUNNER_TEMP}/斛生-android-all-packages.tar.gz" \
+            "dist/斛生-android-all-packages.tar.gz"
 
           ls -lh dist
 
@@ -165,6 +211,8 @@ jobs:
             pkg-config \
             rpm \
             squashfs-tools \
+            xz-utils \
+            zip \
             zstd
 
       - name: 安装 Flutter SDK
@@ -201,6 +249,7 @@ jobs:
           chmod +x tool/package_linux_appimage.sh
           chmod +x tool/package_linux_flatpak.sh
           chmod +x tool/package_linux_all.sh
+          chmod +x tool/package_linux_extra_archives.sh
           chmod +x tool/package_linux_pacman.sh
           chmod +x tool/package_linux_rpm.sh
           chmod +x tool/package_linux_portable.sh
@@ -210,11 +259,87 @@ jobs:
             "dist" \
             "${{ needs.prepare.outputs.build_name }}" \
             "${{ matrix.build_arch }}"
+          tool/package_linux_extra_archives.sh \
+            "build/linux/${{ matrix.build_arch }}/release/bundle" \
+            "dist" \
+            "${{ matrix.build_arch }}"
 
       - name: 上传 Linux 安装包
         uses: actions/upload-artifact@v4
         with:
           name: release-linux-${{ matrix.build_arch }}
+          path: ${{ env.CLIENT_DIR }}/dist/*
+          if-no-files-found: error
+
+  build_web:
+    name: 构建 Web 发布包
+    runs-on: ubuntu-latest
+    needs: prepare
+    defaults:
+      run:
+        working-directory: ${{ env.CLIENT_DIR }}
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Web 归档依赖
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y xz-utils zip
+
+      - name: 安装 Flutter SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --depth 1 --branch "${FLUTTER_VERSION}" \
+            https://github.com/flutter/flutter.git "${RUNNER_TEMP}/flutter"
+          echo "${RUNNER_TEMP}/flutter/bin" >> "${GITHUB_PATH}"
+
+      - name: 拉取 Flutter 依赖
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter config --no-analytics
+          flutter pub get
+
+      - name: 构建 Web 静态资源
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter build web --release \
+            --build-name "${{ needs.prepare.outputs.build_name }}" \
+            --build-number "${{ needs.prepare.outputs.build_number }}"
+
+      - name: 整理 Web 发布包
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          stage_dir="$(mktemp -d)"
+          trap 'rm -rf "${stage_dir}"' EXIT
+
+          cp -R build/web "${stage_dir}/husheng-web"
+
+          (
+            cd "${stage_dir}"
+            zip -qr "${PWD}/../斛生-web.zip" husheng-web
+            tar -czf "${PWD}/../斛生-web.tar.gz" husheng-web
+            tar -cJf "${PWD}/../斛生-web.tar.xz" husheng-web
+          )
+
+          mv "${stage_dir}/../斛生-web.zip" dist/
+          mv "${stage_dir}/../斛生-web.tar.gz" dist/
+          mv "${stage_dir}/../斛生-web.tar.xz" dist/
+
+          ls -lh dist
+
+      - name: 上传 Web 发布包
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-web
           path: ${{ env.CLIENT_DIR }}/dist/*
           if-no-files-found: error
 
@@ -298,21 +423,31 @@ jobs:
             -Architecture "${{ matrix.build_arch }}"
           Get-ChildItem dist
 
+      - name: 整理 Windows 便携包
+        shell: pwsh
+        run: |
+          $stageRoot = Join-Path $env:RUNNER_TEMP "husheng-windows-${{ matrix.build_arch }}"
+          $portableDir = Join-Path $stageRoot "husheng-windows-${{ matrix.build_arch }}-portable"
+
+          Remove-Item -Recurse -Force $stageRoot -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $portableDir | Out-Null
+          Copy-Item -Recurse -Force "build/windows/${{ matrix.build_arch }}/runner/Release/*" $portableDir
+          Compress-Archive -Path $portableDir -DestinationPath "dist/斛生-windows-${{ matrix.build_arch }}-portable.zip" -Force
+
       - name: 输出 Windows 构建结果
         shell: pwsh
         run: |
-          if (Test-Path -LiteralPath "dist/${{ matrix.asset_name }}") {
-            Get-ChildItem dist
-          } else {
-            Write-Warning "当前架构的 Windows 安装器未生成，后续 Release 会跳过这个产物。"
+          if (-not (Test-Path -LiteralPath "dist/${{ matrix.asset_name }}")) {
+            Write-Warning "当前架构的 Windows 安装器未生成，后续 Release 会跳过这个安装器产物。"
           }
+          Get-ChildItem dist
 
       - name: 上传 Windows 安装包
         uses: actions/upload-artifact@v4
         with:
           name: release-windows-${{ matrix.build_arch }}
           path: ${{ env.CLIENT_DIR }}/dist/*
-          if-no-files-found: ignore
+          if-no-files-found: error
 
   build_macos:
     name: 构建 macOS 安装包
@@ -360,6 +495,7 @@ jobs:
             --build-number "${{ needs.prepare.outputs.build_number }}"
 
       - name: 生成 macOS dmg 安装包
+        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
@@ -368,6 +504,15 @@ jobs:
           tool/package_macos_dmg.sh \
             "build/macos/Build/Products/Release/husheng.app" \
             "dist/${{ matrix.asset_name }}"
+
+      - name: 整理 macOS 应用压缩包
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent \
+            "build/macos/Build/Products/Release/husheng.app" \
+            "dist/斛生-macos-${{ matrix.build_arch }}.app.zip"
           ls -lh dist
 
       - name: 上传 macOS 安装包
@@ -413,6 +558,7 @@ jobs:
             --build-number "${{ needs.prepare.outputs.build_number }}"
 
       - name: 生成未签名 IPA 安装包
+        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
@@ -428,6 +574,22 @@ jobs:
           tool/package_ios_ipa.sh \
             "${app_path}" \
             "dist/斛生-ios-unsigned.ipa"
+
+      - name: 整理未签名 iOS 应用压缩包
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          app_path="$(find build/ios/iphoneos -maxdepth 1 -type d -name '*.app' | head -n 1)"
+          if [[ -z "${app_path}" ]]; then
+            echo "未找到 iOS .app 产物。" >&2
+            exit 1
+          fi
+
+          ditto -c -k --sequesterRsrc --keepParent \
+            "${app_path}" \
+            "dist/斛生-ios-unsigned-app.zip"
           ls -lh dist
 
       - name: 上传 iOS 安装包
@@ -529,12 +691,13 @@ jobs:
 
   release:
     name: 上传到 GitHub Release
-    if: ${{ always() && !cancelled() && (needs.build_android.result == 'success' || needs.build_linux.result == 'success' || needs.build_windows.result == 'success' || needs.build_macos.result == 'success' || needs.build_ios.result == 'success' || needs.build_ohos.result == 'success') }}
+    if: ${{ always() && !cancelled() && (needs.build_android.result == 'success' || needs.build_linux.result == 'success' || needs.build_web.result == 'success' || needs.build_windows.result == 'success' || needs.build_macos.result == 'success' || needs.build_ios.result == 'success' || needs.build_ohos.result == 'success') }}
     runs-on: ubuntu-latest
     needs:
       - prepare
       - build_android
       - build_linux
+      - build_web
       - build_windows
       - build_macos
       - build_ios
@@ -559,19 +722,20 @@ jobs:
           cat > "${RUNNER_TEMP}/release-notes.md" <<EOF
           ${RELEASE_TAG} 安装包发布
 
-          当前 Release 仅包含安装包：
+          当前 Release 会汇总所有构建成功的平台产物：
 
-          - Android 按架构拆分 APK
-          - Linux 按架构拆分 deb、rpm、pacman、AppImage、Flatpak 与便携二进制包
-          - Windows 按架构拆分安装器
-          - macOS 按架构拆分 dmg
-          - iOS 未签名 IPA
+          - Android 按架构拆分 APK、通用 APK、AAB、拆分包压缩包与 Android 汇总包
+          - Linux 按架构拆分 deb、rpm、pacman、AppImage、Flatpak、portable 与 bundle 归档包
+          - Web 静态资源 zip、tar.gz、tar.xz
+          - Windows 按架构拆分安装器与便携压缩包
+          - macOS 按架构拆分 dmg 与 .app.zip
+          - iOS 未签名 IPA 与未签名 .app.zip
           - OpenHarmony / 鸿蒙 HAP（仅在自托管 runner 启用时提供）
 
           说明：
 
           - 若个别平台构建失败，本次 Release 只保留构建成功的平台产物，不再阻断其他平台发版。
-          - 不再上传 Web 静态资源、AAB 和校验说明文件。
+          - GitHub Release 仅上传最终分发产物，不上传原始 build 目录和本地开发配置。
           - iOS 当前提供未签名 IPA，如需直接安装到真机，请按你的分发流程重新签名。
           - macOS dmg 当前未做 notarization，如需正式分发请继续补签名与公证。
           EOF

@@ -50,45 +50,62 @@ esac
 
 mkdir -p "${OUTPUT_DIR}"
 
-"${SCRIPT_DIR}/package_linux_deb.sh" \
+run_packager() {
+  local label="$1"
+  shift
+
+  if "$@"; then
+    echo "Generated ${label} package successfully."
+  else
+    echo "Failed to generate ${label} package, continue with remaining outputs." >&2
+  fi
+}
+
+run_packager "deb" \
+  "${SCRIPT_DIR}/package_linux_deb.sh" \
   "${BUNDLE_DIR}" \
   "${OUTPUT_DIR}/斛生-linux-${PACKAGE_LABEL}.deb" \
   "${VERSION}" \
   "${DEB_ARCH}"
 
-"${SCRIPT_DIR}/package_linux_rpm.sh" \
+run_packager "rpm" \
+  "${SCRIPT_DIR}/package_linux_rpm.sh" \
   "${BUNDLE_DIR}" \
   "${OUTPUT_DIR}/斛生-linux-${PACKAGE_LABEL}.rpm" \
   "${VERSION}" \
   "${RPM_ARCH}"
 
-"${SCRIPT_DIR}/package_linux_pacman.sh" \
+run_packager "pacman" \
+  "${SCRIPT_DIR}/package_linux_pacman.sh" \
   "${BUNDLE_DIR}" \
   "${OUTPUT_DIR}/斛生-linux-${PACKAGE_LABEL}.pkg.tar.zst" \
   "${VERSION}" \
   "1" \
   "${PACMAN_ARCH}"
 
-"${SCRIPT_DIR}/package_linux_portable.sh" \
+run_packager "portable tar.gz" \
+  "${SCRIPT_DIR}/package_linux_portable.sh" \
   "${BUNDLE_DIR}" \
   "${OUTPUT_DIR}/斛生-linux-${PACKAGE_LABEL}-portable.tar.gz" \
   "husheng-linux-${PACKAGE_LABEL}-portable"
 
 if [[ -n "${APPIMAGE_ARCH}" ]]; then
-  "${SCRIPT_DIR}/package_linux_appimage.sh" \
-    "${BUNDLE_DIR}" \
-    "${OUTPUT_DIR}/斛生-linux-${PACKAGE_LABEL}.AppImage" \
-    "${APPIMAGE_ARCH}"
+  run_packager "AppImage" \
+    timeout 20m "${SCRIPT_DIR}/package_linux_appimage.sh" \
+      "${BUNDLE_DIR}" \
+      "${OUTPUT_DIR}/斛生-linux-${PACKAGE_LABEL}.AppImage" \
+      "${APPIMAGE_ARCH}"
 else
   echo "Skip AppImage for ${ARCH_PROFILE}: upstream appimagetool is unavailable for this arch." >&2
 fi
 
 if [[ -n "${FLATPAK_ARCH}" ]]; then
-  "${SCRIPT_DIR}/package_linux_flatpak.sh" \
-    "${BUNDLE_DIR}" \
-    "${OUTPUT_DIR}/斛生-linux-${PACKAGE_LABEL}.flatpak" \
-    "${VERSION}" \
-    "${FLATPAK_ARCH}"
+  run_packager "Flatpak" \
+    timeout 25m "${SCRIPT_DIR}/package_linux_flatpak.sh" \
+      "${BUNDLE_DIR}" \
+      "${OUTPUT_DIR}/斛生-linux-${PACKAGE_LABEL}.flatpak" \
+      "${VERSION}" \
+      "${FLATPAK_ARCH}"
 else
   echo "Skip Flatpak for ${ARCH_PROFILE}: this script only packages prebuilt bundles for supported Flatpak runtimes." >&2
 fi

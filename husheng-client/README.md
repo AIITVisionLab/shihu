@@ -151,20 +151,35 @@ flutter run --dart-define=USE_MOCK_AUTH=true
 默认构建并上传的安装包：
 
 - Android 按架构拆分 `APK`
+- Android 通用 `APK`
+- Android 发布 `AAB`
+- Android 拆分包汇总压缩包
 - Linux `deb`
 - Linux `rpm`
 - Linux `pacman`
 - Linux `AppImage`
 - Linux `Flatpak`
 - Linux 便携二进制包 `tar.gz`
+- Linux 便携二进制包 `tar.xz`
+- Linux 便携二进制包 `zip`
+- Linux 原始 bundle 归档包 `tar.gz`
+- Linux 原始 bundle 归档包 `tar.xz`
+- Linux 原始 bundle 归档包 `zip`
+- Linux 原始 runner 可执行文件
+- Web 静态资源 `zip`
+- Web 静态资源 `tar.gz`
+- Web 静态资源 `tar.xz`
 - Windows 安装器 `exe`
+- Windows 便携压缩包 `zip`
 - macOS 安装盘镜像 `dmg`
+- macOS 应用压缩包 `.app.zip`
 - iOS 未签名 `IPA`
+- iOS 未签名应用压缩包 `.app.zip`
 
-当前不再上传：
+当前仍不上传：
 
-- `AAB`
-- Web 静态资源
+- 原始 `build/` 目录
+- 本地开发配置
 - 校验说明附件
 
 OpenHarmony / 鸿蒙说明：
@@ -184,7 +199,7 @@ iOS 说明：
 
 - 当前 Flutter 官方工具链只能直接构建 `linux-x64`、`linux-arm64`
 - `loong64`、`riscv64` 这类冷门架构不能在当前官方 Flutter 发行版上直接交叉构建
-- 仓库已补 `tool/package_linux_all.sh`，如果你有对应架构机器上产出的原生 Linux bundle，可继续一键封装成 `deb`、`rpm`、`pacman`、`portable`
+- 仓库已补 `tool/package_linux_all.sh` 和 `tool/package_linux_extra_archives.sh`，如果你有对应架构机器上产出的原生 Linux bundle，可继续一键封装成 `deb`、`rpm`、`pacman`、`portable` 和额外归档包
 - `AppImage`、`Flatpak` 目前只在仓库脚本里支持 `x86_64`、`aarch64`
 - 仓库内 Linux runner 已固定 `PIE` 编译和链接参数，Fedora / RHEL 这类默认启用硬化策略的宿主机不需要再额外传 `CFLAGS`、`CXXFLAGS`、`LDFLAGS`
 
