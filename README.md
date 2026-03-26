@@ -210,7 +210,7 @@ iOS 说明：
 - `flutter build appbundle --release`
 - `flutter build apk --release --split-per-abi`
 - `flutter build linux --release`
-- `tool/package_linux_all.sh build/linux/x64/release/bundle release 0.1.8+1 x64`
+- `tool/package_linux_all.sh build/linux/x64/release/bundle release 0.1.0+1 x64`
 
 未在当前环境验证的平台：
 
