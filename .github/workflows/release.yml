@@ -795,6 +795,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
           RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
           RELEASE_NAME: ${{ needs.prepare.outputs.release_name }}
         run: |
@@ -808,10 +809,10 @@ jobs:
           fi
 
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
-            mapfile -t existing_assets < <(gh release view "${RELEASE_TAG}" --json assets --jq '.assets[].name' || true)
-            for asset_name in "${existing_assets[@]}"; do
-              if [[ -n "${asset_name}" ]]; then
-                gh release delete-asset "${RELEASE_TAG}" "${asset_name}" --yes || true
+            mapfile -t existing_asset_ids < <(gh release view "${RELEASE_TAG}" --json assets --jq '.assets[].id' || true)
+            for asset_id in "${existing_asset_ids[@]}"; do
+              if [[ -n "${asset_id}" ]]; then
+                gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}" || true
               fi
             done
             gh release upload "${RELEASE_TAG}" "${assets[@]}" --clobber
