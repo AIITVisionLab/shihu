@@ -771,11 +771,39 @@ jobs:
             done
             gh release upload "${RELEASE_TAG}" "${assets[@]}" --clobber
             gh release edit "${RELEASE_TAG}" \
+              --draft=false \
+              --latest \
               --title "${RELEASE_NAME}" \
               --notes-file "${RUNNER_TEMP}/release-notes.md"
           else
             gh release create "${RELEASE_TAG}" "${assets[@]}" \
+              --latest \
               --title "${RELEASE_NAME}" \
               --notes-file "${RUNNER_TEMP}/release-notes.md" \
               --target "${GITHUB_SHA}"
+          fi
+
+      - name: 校验 GitHub Release 已公开发布
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+
+          is_draft="$(gh release view "${RELEASE_TAG}" --json isDraft --jq '.isDraft')"
+          asset_count="$(gh release view "${RELEASE_TAG}" --json assets --jq '.assets | length')"
+          release_url="$(gh release view "${RELEASE_TAG}" --json url --jq '.url')"
+
+          echo "release_url=${release_url}"
+          echo "asset_count=${asset_count}"
+
+          if [[ "${is_draft}" != "false" ]]; then
+            echo "GitHub Release 仍处于草稿状态。" >&2
+            exit 1
+          fi
+
+          if (( asset_count == 0 )); then
+            echo "GitHub Release 未挂载任何二进制资产。" >&2
+            exit 1
           fi
