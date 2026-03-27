@@ -355,10 +355,10 @@ jobs:
         include:
           - runner: windows-latest
             build_arch: x64
-            asset_name: 斛生-windows-x64-setup.exe
+            asset_name: husheng-windows-x64-setup.exe
           - runner: windows-11-arm
             build_arch: arm64
-            asset_name: 斛生-windows-arm64-setup.exe
+            asset_name: husheng-windows-arm64-setup.exe
     runs-on: ${{ matrix.runner }}
     steps:
       - name: 拉取代码
@@ -387,6 +387,13 @@ jobs:
           flutter build windows --release \
             --build-name "${{ needs.prepare.outputs.build_name }}" \
             --build-number "${{ needs.prepare.outputs.build_number }}"
+
+      - name: 解析 Windows 构建目录
+        id: windows_build
+        shell: pwsh
+        run: |
+          ./tool/resolve_windows_build_dir.ps1 `
+            -PreferredArchitecture "${{ matrix.build_arch }}"
 
       - name: 安装 Inno Setup
         shell: pwsh
@@ -417,7 +424,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           ./tool/package_windows_installer.ps1 `
-            -BuildDir "build/windows/${{ matrix.build_arch }}/runner/Release" `
+            -BuildDir "${{ steps.windows_build.outputs.build_dir }}" `
             -OutputFile "dist/${{ matrix.asset_name }}" `
             -Version "${{ needs.prepare.outputs.build_name }}" `
             -Architecture "${{ matrix.build_arch }}"
@@ -430,20 +437,23 @@ jobs:
           $portableName = "husheng-windows-${{ matrix.build_arch }}-portable"
           $stageRoot = Join-Path $env:RUNNER_TEMP "husheng-windows-${{ matrix.build_arch }}"
           $portableDir = Join-Path $stageRoot $portableName
+          $buildDir = "${{ steps.windows_build.outputs.build_dir }}"
 
           Remove-Item -Recurse -Force $stageRoot -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Force -Path $portableDir | Out-Null
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item -Recurse -Force (Join-Path "build/windows/${{ matrix.build_arch }}/runner/Release" '*') $portableDir
-          Compress-Archive -Path $portableDir -DestinationPath "dist/斛生-windows-${{ matrix.build_arch }}-portable.zip" -Force
+          Copy-Item -Recurse -Force (Join-Path $buildDir '*') $portableDir
+          Compress-Archive -Path $portableDir -DestinationPath "dist/husheng-windows-${{ matrix.build_arch }}-portable.zip" -Force
 
       - name: 输出 Windows 构建结果
         shell: pwsh
         run: |
+          Write-Host "resolved_build_dir=${{ steps.windows_build.outputs.build_dir }}"
+          Write-Host "resolved_binary_arch=${{ steps.windows_build.outputs.binary_arch }}"
           if (-not (Test-Path -LiteralPath "dist/${{ matrix.asset_name }}")) {
             Write-Warning "当前架构的 Windows 安装器未生成，后续 Release 会跳过这个安装器产物。"
           }
-          if (-not (Test-Path -LiteralPath "dist/斛生-windows-${{ matrix.build_arch }}-portable.zip")) {
+          if (-not (Test-Path -LiteralPath "dist/husheng-windows-${{ matrix.build_arch }}-portable.zip")) {
             Write-Warning "当前架构的 Windows 便携压缩包未生成，后续 Release 会跳过这个便携产物。"
           }
           Get-ChildItem dist
@@ -719,6 +729,40 @@ jobs:
           pattern: release-*
           merge-multiple: true
 
+      - name: 规整 Release 资产文件名
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          for asset_path in package/*; do
+            [[ -f "${asset_path}" ]] || continue
+
+            asset_name="$(basename "${asset_path}")"
+            normalized_name="${asset_name}"
+
+            normalized_name="${normalized_name/#斛生-/husheng-}"
+            normalized_name="${normalized_name/#default.-/husheng-}"
+
+            if [[ "${normalized_name}" == "${asset_name}" && "${asset_name}" == -* ]]; then
+              normalized_name="husheng${asset_name}"
+            fi
+
+            target_path="package/${normalized_name}"
+            if [[ "${target_path}" == "${asset_path}" ]]; then
+              continue
+            fi
+
+            if [[ -e "${target_path}" ]]; then
+              echo "Release 资产重命名后发生冲突: ${normalized_name}" >&2
+              exit 1
+            fi
+
+            mv "${asset_path}" "${target_path}"
+          done
+
+          ls -1 package
+
       - name: 生成 Release 说明
         shell: bash
         env:
@@ -742,6 +786,7 @@ jobs:
 
           - 若个别平台构建失败，本次 Release 只保留构建成功的平台产物，不再阻断其他平台发版。
           - GitHub Release 仅上传最终分发产物，不上传原始 build 目录和本地开发配置。
+          - GitHub Release 资产文件名统一使用 husheng-* ASCII 前缀，避免 GitHub artifact 中转后中文前缀异常。
           - iOS 当前提供未签名 IPA，如需直接安装到真机，请按你的分发流程重新签名。
           - macOS dmg 当前未做 notarization，如需正式分发请继续补签名与公证。
           EOF

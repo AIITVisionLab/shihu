@@ -147,6 +147,7 @@ flutter run --dart-define=USE_MOCK_AUTH=true
 - 推送 `v*` 标签时自动构建并上传到 GitHub Release
 - 也可手动执行 `发布安装包` 工作流，并传入发布标签
 - 若个别平台构建失败，Release 会保留已成功的平台产物，不再因为单个平台失败阻断整体发版
+- GitHub Release 对外资产统一规整为 ASCII 文件名，统一使用 `husheng-*` 前缀，避免经过 GitHub artifact 链路后丢失中文前缀
 
 默认构建并上传的安装包：
 
