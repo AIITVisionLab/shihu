@@ -433,8 +433,9 @@ jobs:
 
           Remove-Item -Recurse -Force $stageRoot -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Force -Path $portableDir | Out-Null
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
           Copy-Item -Recurse -Force (Join-Path "build/windows/${{ matrix.build_arch }}/runner/Release" '*') $portableDir
-          tar.exe -a -cf "dist/斛生-windows-${{ matrix.build_arch }}-portable.zip" -C $stageRoot $portableName
+          Compress-Archive -Path $portableDir -DestinationPath "dist/斛生-windows-${{ matrix.build_arch }}-portable.zip" -Force
 
       - name: 输出 Windows 构建结果
         shell: pwsh
@@ -753,19 +754,27 @@ jobs:
           RELEASE_NAME: ${{ needs.prepare.outputs.release_name }}
         run: |
           set -euo pipefail
+          shopt -s nullglob
+
+          assets=(package/*)
+          if (( ${#assets[@]} == 0 )); then
+            echo "未下载到任何可发布产物。" >&2
+            exit 1
+          fi
 
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
-            gh release view "${RELEASE_TAG}" --json assets --jq '.assets[].name' | while read -r asset_name; do
+            mapfile -t existing_assets < <(gh release view "${RELEASE_TAG}" --json assets --jq '.assets[].name' || true)
+            for asset_name in "${existing_assets[@]}"; do
               if [[ -n "${asset_name}" ]]; then
-                gh release delete-asset "${RELEASE_TAG}" "${asset_name}" --yes
+                gh release delete-asset "${RELEASE_TAG}" "${asset_name}" --yes || true
               fi
             done
-            gh release upload "${RELEASE_TAG}" package/* --clobber
+            gh release upload "${RELEASE_TAG}" "${assets[@]}" --clobber
             gh release edit "${RELEASE_TAG}" \
               --title "${RELEASE_NAME}" \
               --notes-file "${RUNNER_TEMP}/release-notes.md"
           else
-            gh release create "${RELEASE_TAG}" package/* \
+            gh release create "${RELEASE_TAG}" "${assets[@]}" \
               --title "${RELEASE_NAME}" \
               --notes-file "${RUNNER_TEMP}/release-notes.md" \
               --target "${GITHUB_SHA}"
