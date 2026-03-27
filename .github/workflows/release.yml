@@ -795,7 +795,6 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
           RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
           RELEASE_NAME: ${{ needs.prepare.outputs.release_name }}
         run: |
@@ -809,25 +808,14 @@ jobs:
           fi
 
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
-            mapfile -t existing_asset_ids < <(gh release view "${RELEASE_TAG}" --json assets --jq '.assets[].id' || true)
-            for asset_id in "${existing_asset_ids[@]}"; do
-              if [[ -n "${asset_id}" ]]; then
-                gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}" || true
-              fi
-            done
-            gh release upload "${RELEASE_TAG}" "${assets[@]}" --clobber
-            gh release edit "${RELEASE_TAG}" \
-              --draft=false \
-              --latest \
-              --title "${RELEASE_NAME}" \
-              --notes-file "${RUNNER_TEMP}/release-notes.md"
-          else
-            gh release create "${RELEASE_TAG}" "${assets[@]}" \
-              --latest \
-              --title "${RELEASE_NAME}" \
-              --notes-file "${RUNNER_TEMP}/release-notes.md" \
-              --target "${GITHUB_SHA}"
+            gh release delete "${RELEASE_TAG}" --yes
           fi
+
+          gh release create "${RELEASE_TAG}" "${assets[@]}" \
+            --latest \
+            --title "${RELEASE_NAME}" \
+            --notes-file "${RUNNER_TEMP}/release-notes.md" \
+            --target "${GITHUB_SHA}"
 
       - name: 校验 GitHub Release 已公开发布
         shell: bash
