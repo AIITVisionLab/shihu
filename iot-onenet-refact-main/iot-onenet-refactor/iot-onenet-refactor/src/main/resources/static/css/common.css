@@ -1,0 +1,156 @@
+/* ============================================================
+   common.css — 公共 Design Tokens + 组件类
+   默认值以“放青松”柔和绿系为基准，各页面可在自身 :root 中覆盖
+   ============================================================ */
+
+/* 1. Design Tokens (语义化 CSS 变量) */
+:root {
+    /* 基础颜色 */
+    --color-primary: #518463;
+    --color-primary-hover: #a7d3b2;
+    --color-success: #a7d3b2;
+    --color-warning: #d2c8ac;
+    --color-danger: #cebbd8;
+    --color-info: #cbf2e0;
+
+    /* 中性色与背景 */
+    --color-bg-main: #0d1712;
+    --color-panel-bg: rgba(81,132,99,0.16);
+    --color-border: rgba(167,211,178,0.18);
+    --color-text-main: #f3f6f0;
+    --color-text-muted: #c5d4ca;
+
+    /* 效果与尺寸 */
+    --shadow-panel: 0 20px 60px rgba(8,14,10,.36);
+    --radius-lg: 22px;
+    --radius-md: 14px;
+    --radius-sm: 8px;
+}
+
+/* 2A. 全局重置 (Reset) */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Roboto", "Noto Sans SC", sans-serif;
+    color: var(--color-text-main);
+    min-height: 100vh;
+}
+
+/* 2B. 面板容器 (.glass-panel) */
+.glass-panel {
+    background: var(--color-panel-bg);
+    border: 1px solid var(--color-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-panel);
+}
+
+/* 2C. 按钮体系 (.btn) */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 12px 18px;
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    text-decoration: none;
+}
+
+.btn:hover { transform: translateY(-2px); }
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+    color: #0d1712;
+    box-shadow: 0 12px 36px rgba(81,132,99,.28);
+}
+
+.btn-primary:hover { box-shadow: 0 16px 42px rgba(81,132,99,.38); }
+
+.btn-secondary {
+    background: rgba(255,255,255,.05);
+    color: var(--color-text-main);
+    border: 1px solid var(--color-border);
+}
+
+.btn-outline {
+    background: rgba(81,132,99,.14);
+    color: var(--color-primary);
+    border: 1px solid rgba(167,211,178,.28);
+}
+
+/* 2D. 状态标签 (.tag) */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border: 1px solid transparent;
+}
+
+.tag-success, .tag.safe {
+    color: var(--color-success);
+    background: rgba(167,211,178,.16);
+    border-color: rgba(167,211,178,.28);
+}
+
+.tag-warning, .tag.warn {
+    color: var(--color-warning);
+    background: rgba(210,200,172,.18);
+    border-color: rgba(210,200,172,.28);
+}
+
+.tag-danger, .tag.danger {
+    color: var(--color-danger);
+    background: rgba(206,187,216,.18);
+    border-color: rgba(206,187,216,.28);
+}
+
+.tag-info, .tag.info {
+    color: var(--color-primary);
+    background: rgba(203,242,224,.14);
+    border-color: rgba(203,242,224,.24);
+}
+
+.tag-off, .tag.off {
+    color: var(--color-text-muted);
+    background: rgba(255,255,255,.08);
+    border-color: var(--color-border);
+}
+
+/* 2E. 表单元素 (.form-group, .input-control) */
+.form-group { margin-bottom: 20px; }
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--color-text-muted);
+    font-size: 15px;
+}
+
+.input-control {
+    width: 100%;
+    height: 54px;
+    padding: 0 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    outline: none;
+    background: rgba(0,0,0,.2);
+    color: #fff;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: .2s ease;
+}
+
+.input-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(81,132,99,.18);
+}

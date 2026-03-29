@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日志中心 - 设备状态检测与远程运维控制台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/console.css">
+    <link rel="stylesheet" href="css/console-pages.css">
+    <link rel="stylesheet" href="css/theme-console-soft.css">
+    <meta http-equiv="Cache-Control" content="no-store">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+<body class="theme-console-soft">
+
+<div class="bg-grid"></div>
+
+<div class="layout">
+    <header class="topbar glass-panel">
+        <div class="brand">
+            <div class="brand-icon"><i class="fa-solid fa-server"></i></div>
+            <div>
+                <h1>设备状态检测与远程运维控制台</h1>
+                <p>查看 OneNET 上报、下行命令、回执和 AI 识别日志。</p>
+            </div>
+        </div>
+        <div class="top-actions">
+            <div class="pill"><i class="fa-solid fa-user"></i> <strong id="current-user">--</strong></div>
+            <button class="btn btn-secondary" id="refresh-btn"><i class="fa-solid fa-rotate"></i> 刷新</button>
+            <button class="btn btn-primary" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> 退出</button>
+        </div>
+    </header>
+
+    <div class="main-body">
+        <aside class="sidebar glass-panel">
+            <nav class="page-nav vertical-nav">
+                <a class="nav-item" href="index.html"><i class="fa-solid fa-house"></i> 实时概览</a>
+                <a class="nav-item" href="video.html"><i class="fa-solid fa-video"></i> 实时视频流</a>
+                <a class="nav-item" href="daily.html"><i class="fa-solid fa-chart-area"></i> 今日波动</a>
+                <a class="nav-item" href="history.html"><i class="fa-solid fa-layer-group"></i> 历史统计</a>
+                <a class="nav-item active" href="logs.html"><i class="fa-solid fa-clipboard-list"></i> 日志中心</a>
+                <a class="nav-item" href="ai.html"><i class="fa-solid fa-brain"></i> AI识别</a>
+            </nav>
+        </aside>
+
+        <div class="content-area">
+            <main class="view-section">
+                <div class="panel glass-panel" style="min-height: 600px;">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-clipboard-list"></i><h3>平台事件日志</h3></div>
+                        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                            <div class="date-picker-wrapper">
+                                <i class="fa-regular fa-calendar"></i>
+                                <input type="date" id="log-date-start">
+                                <span style="color:var(--text-sub);">至</span>
+                                <input type="date" id="log-date-end">
+                                <button class="btn btn-primary" style="padding:8px 16px;" id="btn-log-date-search">
+                                    <i class="fa-solid fa-magnifying-glass"></i> 筛选
+                                </button>
+                                <button class="btn btn-secondary" style="padding:8px 16px;" id="btn-log-date-reset">重置</button>
+                            </div>
+                            <div class="log-filter-group" id="log-filters">
+                                <button class="log-filter-btn active" data-type="all">全部</button>
+                                <button class="log-filter-btn" data-type="ONENET_UPLINK">设备上报</button>
+                                <button class="log-filter-btn" data-type="ONENET_COMMAND">下行指令</button>
+                                <button class="log-filter-btn" data-type="ONENET_SET_REPLY">命令回执</button>
+                                <button class="log-filter-btn" data-type="AI_DETECTION">AI识别</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px;">
+                        <div class="pill"><i class="fa-solid fa-database"></i> 总量 <strong id="log-count">--</strong></div>
+                        <div class="pill"><i class="fa-solid fa-file-lines"></i> 文件 <span id="log-file">--</span></div>
+                        <div class="pill"><i class="fa-solid fa-filter"></i> 当前筛选 <span id="log-filter-text">全部</span></div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="log-table">
+                            <thead>
+                            <tr>
+                                <th style="width: 180px;">时间</th>
+                                <th style="width: 140px;">类型</th>
+                                <th style="width: 180px;">设备/来源</th>
+                                <th>事件摘要</th>
+                                <th style="width: 140px;">事件ID</th>
+                            </tr>
+                            </thead>
+                            <tbody id="log-tbody">
+                            <tr><td colspan="5" class="empty-log">正在加载日志...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+<script src="js/console-common.js"></script>
+<script>
+    const LOGS_API = '/api/logs';
+    const LOG_SUMMARY_API = '/api/logs/summary';
+    const LOGS_LIMIT = 200;
+
+    let allLogEntries = [];
+    let currentLogFilter = 'all';
+    let logDateStart = '';
+    let logDateEnd = '';
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function formatLogTime(timestampMs) {
+        if (!timestampMs) return '--';
+        return new Intl.DateTimeFormat('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }).format(new Date(timestampMs));
+    }
+
+    function getDateOnly(timestampMs) {
+        return new Date(timestampMs).toISOString().split('T')[0];
+    }
+
+    function getTypeLabel(type) {
+        return {
+            ONENET_UPLINK: '设备上报',
+            ONENET_COMMAND: '下行指令',
+            ONENET_SET_REPLY: '命令回执',
+            AI_DETECTION: 'AI识别'
+        }[type] || (type || '未知');
+    }
+
+    function getTypeClass(type) {
+        return {
+            ONENET_UPLINK: 'info',
+            ONENET_COMMAND: 'warn',
+            ONENET_SET_REPLY: 'danger',
+            AI_DETECTION: 'warn'
+        }[type] || 'info';
+    }
+
+    function getSourceLabel(entry) {
+        return entry.deviceId || entry.details?.stream || entry.details?.source || '--';
+    }
+
+    function getSummaryText(entry) {
+        if (entry.summary) return entry.summary;
+        if (entry.details && typeof entry.details === 'object') {
+            return JSON.stringify(entry.details);
+        }
+        return '--';
+    }
+
+    function shortenEventId(value) {
+        if (!value) return '--';
+        return value.length <= 12 ? value : `${value.slice(0, 8)}...`;
+    }
+
+    function updateFilterText() {
+        document.getElementById('log-filter-text').textContent = getTypeLabel(
+            currentLogFilter === 'all' ? 'all' : currentLogFilter
+        ).replace('all', '全部');
+        if (currentLogFilter === 'all') {
+            document.getElementById('log-filter-text').textContent = '全部';
+        }
+    }
+
+    function initDateInputs() {
+        const latestTimestamp = allLogEntries.length ? allLogEntries[0].timestampMs : Date.now();
+        const earliestTimestamp = allLogEntries.length ? allLogEntries[allLogEntries.length - 1].timestampMs : latestTimestamp;
+        const latest = new Date(`${getDateOnly(latestTimestamp)}T00:00:00`);
+        const earliest = new Date(`${getDateOnly(earliestTimestamp)}T00:00:00`);
+        const suggestedStart = new Date(latest);
+        suggestedStart.setDate(suggestedStart.getDate() - 3);
+
+        const latestStr = latest.toISOString().split('T')[0];
+        const startStr = (suggestedStart < earliest ? earliest : suggestedStart).toISOString().split('T')[0];
+
+        document.getElementById('log-date-start').value = startStr;
+        document.getElementById('log-date-end').value = latestStr;
+        document.getElementById('log-date-start').setAttribute('max', latestStr);
+        document.getElementById('log-date-end').setAttribute('max', latestStr);
+
+        logDateStart = startStr;
+        logDateEnd = latestStr;
+    }
+
+    function renderLogs() {
+        const tbody = document.getElementById('log-tbody');
+        const filteredLogs = allLogEntries.filter(log => {
+            const logDate = getDateOnly(log.timestampMs);
+            if (logDateStart && logDate < logDateStart) return false;
+            if (logDateEnd && logDate > logDateEnd) return false;
+            return true;
+        });
+
+        if (!filteredLogs.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-log">当前筛选条件下没有日志记录</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = filteredLogs.map(log => `
+            <tr>
+                <td>${escapeHtml(formatLogTime(log.timestampMs))}</td>
+                <td><span class="log-level-badge ${escapeHtml(getTypeClass(log.type))}">${escapeHtml(getTypeLabel(log.type))}</span></td>
+                <td>${escapeHtml(getSourceLabel(log))}</td>
+                <td>${escapeHtml(getSummaryText(log))}</td>
+                <td><span class="log-status-badge normal">${escapeHtml(shortenEventId(log.eventId))}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    function renderErrorState(message) {
+        document.getElementById('log-tbody').innerHTML =
+            `<tr><td colspan="5" class="empty-log">${escapeHtml(message)}</td></tr>`;
+    }
+
+    async function loadSummary() {
+        const response = await fetch(LOG_SUMMARY_API, { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = extractApiPayload(await response.json());
+        if (!isApiSuccess(payload)) {
+            throw new Error(payload.msg || 'load summary failed');
+        }
+
+        setText('log-count', payload.data?.count, '--');
+        setText('log-file', payload.data?.file, '--');
+    }
+
+    async function loadLogs() {
+        const params = new URLSearchParams({ limit: String(LOGS_LIMIT) });
+        if (currentLogFilter !== 'all') {
+            params.set('type', currentLogFilter);
+        }
+
+        const response = await fetch(`${LOGS_API}?${params.toString()}`, { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = extractApiPayload(await response.json());
+        if (!isApiSuccess(payload)) {
+            throw new Error(payload.msg || 'load logs failed');
+        }
+
+        allLogEntries = Array.isArray(payload.data) ? payload.data : [];
+        if (!logDateStart || !logDateEnd) {
+            initDateInputs();
+        }
+        updateFilterText();
+        renderLogs();
+    }
+
+    async function refreshAll() {
+        try {
+            await Promise.all([loadSummary(), loadLogs()]);
+        } catch (error) {
+            renderErrorState('日志接口暂不可用，请检查后端服务或稍后重试');
+        }
+    }
+
+    document.querySelectorAll('.log-filter-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            document.querySelectorAll('.log-filter-btn').forEach(item => item.classList.remove('active'));
+            button.classList.add('active');
+            currentLogFilter = button.dataset.type;
+            refreshAll();
+        });
+    });
+
+    document.getElementById('btn-log-date-search').addEventListener('click', () => {
+        logDateStart = document.getElementById('log-date-start').value;
+        logDateEnd = document.getElementById('log-date-end').value;
+        renderLogs();
+    });
+
+    document.getElementById('btn-log-date-reset').addEventListener('click', () => {
+        document.querySelectorAll('.log-filter-btn').forEach(item => item.classList.remove('active'));
+        document.querySelector('.log-filter-btn[data-type="all"]').classList.add('active');
+        currentLogFilter = 'all';
+        logDateStart = '';
+        logDateEnd = '';
+        refreshAll();
+    });
+
+    document.getElementById('refresh-btn').addEventListener('click', refreshAll);
+
+    checkLogin().then(ok => {
+        if (!ok) return;
+        refreshAll();
+    });
+</script>
+</body>
+</html>

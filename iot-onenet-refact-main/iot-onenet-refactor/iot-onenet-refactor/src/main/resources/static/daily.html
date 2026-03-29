@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今日波动 - 机柜状态检测与远程运维平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/console.css">
+    <link rel="stylesheet" href="css/console-pages.css">
+    <link rel="stylesheet" href="css/theme-console-soft.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+</head>
+<body class="theme-console-soft">
+
+<div class="bg-grid"></div>
+
+<div class="layout">
+    <header class="topbar glass-panel">
+        <div class="brand">
+            <div class="brand-icon"><i class="fa-solid fa-server"></i></div>
+            <div>
+                <h1>机柜状态检测与远程运维控制台</h1>
+                <p>实时展示设备状态、环境数据与异常等级。</p>
+            </div>
+        </div>
+        <div class="top-actions">
+            <div class="pill"><i class="fa-solid fa-user"></i> <strong id="current-user">--</strong></div>
+            <button class="btn btn-secondary" id="refresh-btn"><i class="fa-solid fa-rotate"></i> 刷新</button>
+            <button class="btn btn-primary" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> 退出</button>
+        </div>
+    </header>
+
+    <div class="main-body">
+        <aside class="sidebar glass-panel">
+            <nav class="page-nav vertical-nav">
+    <a class="nav-item" href="index.html"><i class="fa-solid fa-house"></i> 实时概览</a>
+    <a class="nav-item" href="video.html"><i class="fa-solid fa-video"></i> 实时视频流</a>
+    <a class="nav-item active" href="daily.html"><i class="fa-solid fa-chart-area"></i> 今日波动</a>
+    <a class="nav-item" href="history.html"><i class="fa-solid fa-layer-group"></i> 历史统计</a>
+    <a class="nav-item" href="logs.html"><i class="fa-solid fa-clipboard-list"></i> 告警日志</a>
+    <a class="nav-item" href="ai.html"><i class="fa-solid fa-brain"></i> AI识别</a>
+</nav>
+        </aside>
+
+        <div class="content-area">
+            <main class="view-section" style="display:flex;">
+                <section class="metrics">
+                    <article class="metric-card glass-panel">
+                        <div class="metric-top">
+                            <div><div class="metric-title">温度</div><div><span class="metric-value" id="temperature-value">--</span><span class="metric-unit" id="temperature-unit">°C</span></div></div>
+                            <div class="metric-icon"><i class="fa-solid fa-temperature-three-quarters"></i></div>
+                        </div>
+                        <div class="metric-footer">机柜内部温度读数</div>
+                    </article>
+                    <article class="metric-card glass-panel">
+                        <div class="metric-top">
+                            <div><div class="metric-title">湿度</div><div><span class="metric-value" id="humidity-value">--</span><span class="metric-unit" id="humidity-unit">%</span></div></div>
+                            <div class="metric-icon"><i class="fa-solid fa-droplet"></i></div>
+                        </div>
+                        <div class="metric-footer">环境湿度实时采样</div>
+                    </article>
+                    <article class="metric-card glass-panel">
+                        <div class="metric-top">
+                            <div><div class="metric-title">光照</div><div><span class="metric-value" id="light-value">--</span><span class="metric-unit" id="light-unit">Lux</span></div></div>
+                            <div class="metric-icon"><i class="fa-solid fa-sun"></i></div>
+                        </div>
+                        <div class="metric-footer">模拟量换算后的光照值</div>
+                    </article>
+                    <article class="metric-card glass-panel">
+                        <div class="metric-top">
+                            <div><div class="metric-title">烟雾浓度</div><div><span class="metric-value" id="mq2-value">--</span><span class="metric-unit" id="mq2-unit">ppm</span></div></div>
+                            <div class="metric-icon"><i class="fa-solid fa-smog"></i></div>
+                        </div>
+                        <div class="metric-footer">MQ-2 传感器实时浓度</div>
+                    </article>
+                </section>
+
+                <div class="chart-card glass-panel">
+                    <div class="metric-tabs">
+                        <div class="metric-tab active" data-metric="temp"><i class="fa-solid fa-temperature-half"></i> 温度趋势</div>
+                        <div class="metric-tab" data-metric="hum"><i class="fa-solid fa-droplet"></i> 湿度趋势</div>
+                        <div class="metric-tab" data-metric="smoke"><i class="fa-solid fa-smog"></i> 烟雾浓度</div>
+                    </div>
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-chart-line"></i><h3>今日实时波动 (可拖动缩放)</h3></div>
+                        <div class="time-toggles">
+                            <button class="time-toggle" data-hours="6">6H</button>
+                            <button class="time-toggle active" data-hours="12">12H</button>
+                            <button class="time-toggle" data-hours="24">全天</button>
+                        </div>
+                    </div>
+                    <div id="dailyChart" class="chart-container"></div>
+                    <div class="daily-stats-row">
+                        <div class="stat-item"><span class="stat-label">最高值</span><div class="stat-value-wrap"><span class="stat-value" id="stat-max">--</span><span class="stat-unit"></span></div></div>
+                        <div class="stat-item"><span class="stat-label">最低值</span><div class="stat-value-wrap"><span class="stat-value" id="stat-min">--</span><span class="stat-unit"></span></div></div>
+                        <div class="stat-item"><span class="stat-label">最大波动差值</span><div class="stat-value-wrap"><span class="stat-value" id="stat-fluc" style="color: var(--primary);">--</span><span class="stat-unit"></span></div></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+<script src="js/console-common.js"></script>
+<script>
+    const API_URL = '/api/status';
+    let thresholds = getConsoleThresholds();
+    let currentMetric = 'temp';
+    const dailyChart = echarts.init(document.getElementById('dailyChart'));
+    const darkAxisBase = { axisLine: { lineStyle: { color: 'rgba(81,132,99,0.22)' } }, axisLabel: { color: '#56675c' }, splitLine: { lineStyle: { color: 'rgba(81,132,99,0.08)' } } };
+    const darkTooltipBase = { backgroundColor: 'rgba(255, 255, 255, 0.96)', borderColor: 'rgba(81,132,99,0.28)', textStyle: { color: '#24342c' } };
+
+    async function refreshDailyOverview() {
+        try {
+            const resp = await fetch(API_URL, { cache: 'no-store' });
+            if (!resp.ok) throw new Error();
+            const data = await resp.json();
+            setText('temperature-value', data.temperature?.value);
+            setText('temperature-unit', data.temperature?.unit || '°C');
+            setText('humidity-value', data.humidity?.value);
+            setText('humidity-unit', data.humidity?.unit || '%');
+            setText('light-value', data.light?.value);
+            setText('light-unit', data.light?.unit || 'Lux');
+            setText('mq2-value', data.mq2?.value);
+            setText('mq2-unit', data.mq2?.unit || 'ppm');
+        } catch (e) {
+            setText('temperature-value', '--');
+            setText('temperature-unit', '°C');
+            setText('humidity-value', '--');
+            setText('humidity-unit', '%');
+            setText('light-value', '--');
+            setText('light-unit', 'Lux');
+            setText('mq2-value', '--');
+            setText('mq2-unit', 'ppm');
+        }
+    }
+
+    function getTodayMockDataWithTime(metricType) {
+        let data = [], now = new Date(); now.setHours(0, 0, 0, 0);
+        let baseValue = metricType === 'temp' ? 25 : (metricType === 'hum' ? 50 : 50);
+        for (let i = 0; i < 96; i++) {
+            let time = new Date(now.getTime() + i * 15 * 60000);
+            let noise = (Math.random() - 0.5) * (metricType === 'smoke' ? 20 : 5);
+            let wave = Math.sin(i / 15) * (metricType === 'temp' ? 8 : 15);
+            data.push([time.getTime(), Math.max(0, parseFloat((baseValue + wave + noise).toFixed(1)))]);
+        }
+        return data;
+    }
+
+    function updateDailyStats(dataArray, unit) {
+        const values = dataArray.map(item => item[1]);
+        const maxVal = Math.max(...values), minVal = Math.min(...values);
+        setText('stat-max', maxVal); setText('stat-min', minVal); setText('stat-fluc', (maxVal - minVal).toFixed(1));
+        document.querySelectorAll('.stat-unit').forEach(el => el.textContent = unit);
+    }
+
+    function renderDailyChart() {
+        const tConf = thresholds[currentMetric];
+        const todayData = getTodayMockDataWithTime(currentMetric);
+        updateDailyStats(todayData, tConf.unit);
+        dailyChart.setOption({
+            tooltip: { trigger: 'axis', ...darkTooltipBase },
+            grid: { left: '5%', right: '5%', top: '10%', bottom: '15%' },
+            xAxis: { type: 'time', ...darkAxisBase, axisLabel: { formatter: '{HH}:{mm}', color: '#56675c' } },
+            yAxis: { type: 'value', name: tConf.unit, ...darkAxisBase, nameTextStyle: { color: '#56675c' } },
+            dataZoom: [ { type: 'inside', xAxisIndex: 0 }, { type: 'slider', xAxisIndex: 0, bottom: 0, height: 16, borderColor: 'rgba(81,132,99,0.12)', textStyle: { color: '#56675c' } } ],
+            series: [{
+                name: '今日', type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 3, color: '#2bd576' }, data: todayData,
+                markArea: { itemStyle: { color: 'rgba(43, 213, 118, 0.1)' }, data: [[ { yAxis: tConf.min }, { yAxis: tConf.max } ]] },
+                markLine: { data: [ { yAxis: tConf.max, lineStyle: { color: '#ff6b6b', type: 'dashed' }, label: { formatter: '高 ' + tConf.max, color: '#ff6b6b'} }, { yAxis: tConf.min, lineStyle: { color: '#ff6b6b', type: 'dashed' }, label: { formatter: '低 ' + tConf.min, color: '#ff6b6b'} } ] }
+            }]
+        });
+    }
+
+    document.querySelectorAll('.metric-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            const targetMetric = e.target.closest('.metric-tab').dataset.metric;
+            document.querySelectorAll('.metric-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.metric-tab[data-metric="' + targetMetric + '"]').forEach(t => t.classList.add('active'));
+            currentMetric = targetMetric;
+            renderDailyChart();
+        });
+    });
+
+    document.querySelectorAll('.time-toggle').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.time-toggle').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            dailyChart.dispatchAction({ type: 'dataZoom', start: 0, end: (parseInt(e.target.dataset.hours) / 24) * 100 });
+        });
+    });
+
+    document.getElementById('refresh-btn').addEventListener('click', () => {
+        refreshDailyOverview();
+        renderDailyChart();
+    });
+    window.addEventListener('resize', () => dailyChart.resize());
+    window.addEventListener('storage', (event) => {
+        if (event.key === CONSOLE_THRESHOLD_STORAGE_KEY) {
+            thresholds = getConsoleThresholds();
+            renderDailyChart();
+        }
+    });
+
+    checkLogin().then(ok => {
+        if (!ok) return;
+        refreshDailyOverview();
+        renderDailyChart();
+        dailyChart.dispatchAction({ type: 'dataZoom', start: 0, end: 50 });
+        setInterval(refreshDailyOverview, 3000);
+    });
+</script>
+</body>
+</html>

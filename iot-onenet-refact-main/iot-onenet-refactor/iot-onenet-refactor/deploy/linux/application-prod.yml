@@ -1,0 +1,81 @@
+spring:
+  application:
+    name: iot-onenet
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
+
+server:
+  address: 0.0.0.0
+  port: ${SERVER_PORT:8085}
+  forward-headers-strategy: framework
+
+onenet:
+  product-id: ${ONENET_PRODUCT_ID:}
+  authorization: "${ONENET_AUTHORIZATION:}"
+  property-set-url: "${ONENET_PROPERTY_SET_URL:https://iot-api.heclouds.com/thingmodel/set-device-property}"
+  property-get-url: "${ONENET_PROPERTY_GET_URL:https://iot-api.heclouds.com/thingmodel/query-device-property}"
+  timeout-ms: ${ONENET_TIMEOUT_MS:10000}
+
+  pulsar:
+    broker-url: "${ONENET_PULSAR_BROKER_URL:pulsar+ssl://iot-north-mq.heclouds.com:6651/}"
+    access-id: ${ONENET_PULSAR_ACCESS_ID:}
+    secret-key: ${ONENET_PULSAR_SECRET_KEY:}
+    subscription-name: ${ONENET_PULSAR_SUBSCRIPTION_NAME:}
+    auto-open-dashboard: ${ONENET_PULSAR_AUTO_OPEN_DASHBOARD:false}
+
+app:
+  login:
+    username: ${APP_LOGIN_USERNAME:root}
+    password: ${APP_LOGIN_PASSWORD:12345}
+  user-store:
+    mode: ${APP_USER_STORE_MODE:memory}
+    jdbc-url: "${APP_USER_STORE_JDBC_URL:}"
+    username: ${APP_USER_STORE_USERNAME:}
+    password: "${APP_USER_STORE_PASSWORD:}"
+  ai:
+    max-history: ${APP_AI_MAX_HISTORY:100}
+  logs:
+    file: ${APP_LOGS_FILE:/var/log/iot-onenet/platform-events.jsonl}
+    max-in-memory: ${APP_LOGS_MAX_IN_MEMORY:500}
+  video:
+    default-stream-id: ${APP_VIDEO_DEFAULT_STREAM_ID:k230}
+    default-device-id: ${APP_VIDEO_DEFAULT_DEVICE_ID:k230}
+    display-name: "${APP_VIDEO_DISPLAY_NAME:K230 live stream}"
+    gateway-page-url: "${APP_VIDEO_GATEWAY_PAGE_URL:http://101.35.79.76:1984/}"
+    player-url: "${APP_VIDEO_PLAYER_URL:http://101.35.79.76:1984/stream.html?src=k230&mode=webrtc,mse}"
+    preferred-mode: ${APP_VIDEO_PREFERRED_MODE:webrtc}
+    fallback-mode: ${APP_VIDEO_FALLBACK_MODE:mse}
+    public-host: ${APP_VIDEO_PUBLIC_HOST:101.35.79.76}
+    webrtc-port: ${APP_VIDEO_WEBRTC_PORT:8555}
+    available: ${APP_VIDEO_AVAILABLE:false}
+
+logging:
+  level:
+    com.aurora.iotonenet: INFO
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+pulsar:
+  service:
+    url: "${ONENET_PULSAR_BROKER_URL:pulsar+ssl://iot-north-mq.heclouds.com:6651/}"
+
+  client:
+    connectionTimeoutMs: ${PULSAR_CONNECTION_TIMEOUT_MS:30000}
+    operationTimeoutMs: ${PULSAR_OPERATION_TIMEOUT_MS:60000}
+    requestTimeoutMs: ${PULSAR_REQUEST_TIMEOUT_MS:120000}
+    initialBackoffIntervalNanos: ${PULSAR_INITIAL_BACKOFF_INTERVAL_NANOS:1000000000}
+    maxBackoffIntervalNanos: ${PULSAR_MAX_BACKOFF_INTERVAL_NANOS:30000000000}
+    enableBusyWait: ${PULSAR_ENABLE_BUSY_WAIT:false}
+    keepAliveIntervalSeconds: ${PULSAR_KEEP_ALIVE_INTERVAL_SECONDS:30}
+    connectionMaxIdleSeconds: ${PULSAR_CONNECTION_MAX_IDLE_SECONDS:180}
+    tlsAllowInsecureConnection: ${PULSAR_TLS_ALLOW_INSECURE_CONNECTION:true}
+    tlsHostnameVerificationEnable: ${PULSAR_TLS_HOSTNAME_VERIFICATION_ENABLE:false}
+
+  consumer:
+    receiverQueueSize: ${PULSAR_CONSUMER_RECEIVER_QUEUE_SIZE:2000}
+    ackTimeoutMillis: ${PULSAR_CONSUMER_ACK_TIMEOUT_MILLIS:60000}
+    autoAckOldestChunkedMessageOnQueueFull: ${PULSAR_CONSUMER_AUTO_ACK_OLDEST_CHUNKED_MESSAGE_ON_QUEUE_FULL:true}

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI识别 - 机柜状态检测与远程运维控制台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/console.css">
+    <link rel="stylesheet" href="css/console-pages.css">
+    <link rel="stylesheet" href="css/theme-console-soft.css">
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+</head>
+<body class="theme-console-soft">
+
+<div class="bg-grid"></div>
+
+<div class="layout">
+    <header class="topbar glass-panel">
+        <div class="brand">
+            <div class="brand-icon"><i class="fa-solid fa-server"></i></div>
+            <div>
+                <h1>机柜状态检测与远程运维控制台</h1>
+                <p>实时展示设备状态、环境数据与异常等级。</p>
+            </div>
+        </div>
+        <div class="top-actions">
+            <div class="pill"><i class="fa-solid fa-user"></i> <strong id="current-user">--</strong></div>
+            <button class="btn btn-secondary" id="refresh-btn"><i class="fa-solid fa-rotate"></i> 刷新</button>
+            <button class="btn btn-primary" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> 退出</button>
+        </div>
+    </header>
+
+    <div class="main-body">
+        <aside class="sidebar glass-panel">
+            <nav class="page-nav vertical-nav">
+    <a class="nav-item" href="index.html"><i class="fa-solid fa-house"></i> 实时概览</a>
+    <a class="nav-item" href="video.html"><i class="fa-solid fa-video"></i> 实时视频流</a>
+    <a class="nav-item" href="daily.html"><i class="fa-solid fa-chart-area"></i> 今日波动</a>
+    <a class="nav-item" href="history.html"><i class="fa-solid fa-layer-group"></i> 历史统计</a>
+    <a class="nav-item" href="logs.html"><i class="fa-solid fa-clipboard-list"></i> 告警日志</a>
+    <a class="nav-item active" href="ai.html"><i class="fa-solid fa-brain"></i> AI识别</a>
+</nav>
+        </aside>
+
+        <div class="content-area">
+            <main class="view-section">
+                <section class="hero">
+                    <article class="hero-panel glass-panel">
+                        <div class="panel-header" style="margin-bottom: 18px;">
+                            <div class="panel-title"><i class="fa-solid fa-bug"></i><h3>病虫害识别总览</h3></div>
+                            <span class="pill"><i class="fa-solid fa-wand-magic-sparkles"></i> 边缘推理联动</span>
+                        </div>
+                        <h2 id="latest-summary">等待病虫害识别结果</h2>
+                        <p id="latest-desc">页面会自动轮询最新 AI 识别结果，并同步展示目标数量、风险等级、设备来源和处置建议。</p>
+                        <div class="hero-stats">
+                            <div class="mini-stat"><div class="label">设备 ID</div><div class="value" id="latest-device">--</div></div>
+                            <div class="mini-stat"><div class="label">流标识</div><div class="value" id="latest-stream">--</div></div>
+                            <div class="mini-stat"><div class="label">识别目标数</div><div class="value" id="latest-count">--</div></div>
+                            <div class="mini-stat"><div class="label">识别时间</div><div class="value" id="latest-time">--</div></div>
+                        </div>
+                    </article>
+
+                    <article class="status-banner glass-panel">
+                        <div class="label">当前识别状态</div>
+                        <div id="latest-risk-chip" class="status-chip unknown"><i class="fa-solid fa-circle-question"></i><span>等待数据</span></div>
+                        <div class="status-detail" id="ai-status-text">页面将从 <code>/api/edge/ai-detections</code> 相关接口自动拉取最新结果。</div>
+                        <div class="ai-kpi-grid" style="margin-top: 20px;">
+                            <div class="ai-kpi"><span>图像尺寸</span><strong id="latest-size">--</strong></div>
+                            <div class="ai-kpi"><span>帧编号</span><strong id="latest-frame">--</strong></div>
+                            <div class="ai-kpi"><span>历史记录</span><strong id="history-total">--</strong></div>
+                            <div class="ai-kpi"><span>高风险帧</span><strong id="history-danger">--</strong></div>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="ai-page-grid">
+                    <article class="panel glass-panel">
+                        <div class="panel-header">
+                            <div class="panel-title"><i class="fa-solid fa-magnifying-glass-chart"></i><h3>当前帧识别明细</h3></div>
+                            <span class="pill" id="detail-pill"><i class="fa-solid fa-camera"></i> 当前帧</span>
+                        </div>
+                        <div id="latest-detail" class="ai-empty-state">
+                            <div>
+                                <i class="fa-solid fa-seedling"></i>
+                                <h4>暂未接收到识别目标</h4>
+                                <p>当边缘设备上传病虫害识别结果后，这里会展示当前帧目标、风险等级、置信度和坐标信息。</p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="panel glass-panel">
+                        <div class="panel-header">
+                            <div class="panel-title"><i class="fa-solid fa-shield-heart"></i><h3>联动建议</h3></div>
+                            <span class="pill"><i class="fa-solid fa-list-check"></i> 自动整理</span>
+                        </div>
+                        <div id="ai-advice-list" class="ai-advice-list"></div>
+                    </article>
+                </section>
+
+                <section class="panel glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-clock-rotate-left"></i><h3>识别历史</h3></div>
+                        <span class="pill" id="history-count-pill"><i class="fa-solid fa-database"></i> 最近 0 条</span>
+                    </div>
+                    <div id="history-list" class="ai-history-list">
+                        <div class="ai-empty-state compact">
+                            <div>
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                <h4>暂无历史识别记录</h4>
+                                <p>历史结果会在边缘端持续上传后逐步累积，方便你回看风险变化和处理过程。</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+</div>
+
+<script src="js/console-common.js"></script>
+<script>
+    const AI_LATEST_API = '/api/edge/ai-detections/latest';
+    const AI_HISTORY_API = '/api/edge/ai-detections/history?limit=20';
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function getPayloadData(payload) {
+        if (Array.isArray(payload)) return payload;
+        if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) return payload.data;
+        return payload ?? null;
+    }
+
+    function asArray(value) {
+        return Array.isArray(value) ? value : [];
+    }
+
+    function riskTone(level) {
+        const text = String(level || '').trim().toLowerCase();
+        if (!text) return 'unknown';
+        if (text.includes('极高') || text.includes('严重') || text.includes('danger') || text.includes('critical') || text === 'high') return 'danger';
+        if (text.includes('中') || text.includes('预警') || text.includes('warn') || text.includes('medium')) return 'warn';
+        if (text.includes('低') || text.includes('安全') || text.includes('safe') || text.includes('low') || text.includes('normal')) return 'safe';
+        if (text.includes('高')) return 'danger';
+        return 'unknown';
+    }
+
+    function tagTone(level) {
+        const tone = riskTone(level);
+        return tone === 'unknown' ? 'off' : tone;
+    }
+
+    function iconByTone(tone) {
+        return {
+            danger: 'fa-solid fa-triangle-exclamation',
+            warn: 'fa-solid fa-eye',
+            safe: 'fa-solid fa-leaf',
+            unknown: 'fa-solid fa-circle-question'
+        }[tone] || 'fa-solid fa-circle-question';
+    }
+
+    function statusIconByTone(tone) {
+        return {
+            danger: 'fa-solid fa-biohazard',
+            warn: 'fa-solid fa-triangle-exclamation',
+            safe: 'fa-solid fa-circle-check',
+            unknown: 'fa-solid fa-circle-question'
+        }[tone] || 'fa-solid fa-circle-question';
+    }
+
+    function formatConfidence(value) {
+        const num = Number(value);
+        if (!Number.isFinite(num)) return '--';
+        return num <= 1 ? Math.round(num * 100) + '%' : Math.round(num) + '%';
+    }
+
+    function formatTime(value) {
+        if (value == null || value === '') return '--';
+        const date = new Date(Number(value) || value);
+        if (Number.isNaN(date.getTime())) return String(value);
+        return new Intl.DateTimeFormat('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }).format(date);
+    }
+
+    function formatImageSize(item) {
+        const width = item?.imageWidth;
+        const height = item?.imageHeight;
+        return width && height ? width + ' × ' + height : '--';
+    }
+
+    function renderEmptyState(targetId, title, text, compact) {
+        const el = document.getElementById(targetId);
+        el.className = 'ai-empty-state' + (compact ? ' compact' : '');
+        el.innerHTML = `
+            <div>
+                <i class="fa-solid fa-seedling"></i>
+                <h4>${escapeHtml(title)}</h4>
+                <p>${escapeHtml(text)}</p>
+            </div>
+        `;
+    }
+
+    function setAiStatus(tone, title, detail) {
+        const chip = document.getElementById('latest-risk-chip');
+        chip.className = 'status-chip ' + tone;
+        chip.innerHTML = `<i class="${statusIconByTone(tone)}"></i><span>${escapeHtml(title)}</span>`;
+        document.getElementById('ai-status-text').textContent = detail;
+    }
+
+    function renderAdvice(latestItem) {
+        const container = document.getElementById('ai-advice-list');
+        const items = asArray(latestItem?.items);
+        let cards = [];
+
+        if (items.length > 0) {
+            const dedup = new Map();
+            items.forEach(item => {
+                const name = item.displayName || item.category || '病虫害目标';
+                const advice = item.advice || '建议结合原始画面和现场情况进行人工复核。';
+                const key = name + '|' + advice;
+                if (!dedup.has(key)) {
+                    const tone = riskTone(item.riskLevel);
+                    dedup.set(key, {
+                        icon: iconByTone(tone),
+                        title: name + ' · ' + (item.riskLevel || '待判级'),
+                        text: advice
+                    });
+                }
+            });
+            cards = Array.from(dedup.values()).slice(0, 4);
+        } else {
+            cards = [
+                {
+                    icon: 'fa-solid fa-eye',
+                    title: '保持巡检',
+                    text: '当前帧未发现明显病虫害目标，建议继续保持定时抓拍与人工巡检。'
+                },
+                {
+                    icon: 'fa-solid fa-sliders',
+                    title: '联动环境策略',
+                    text: '可结合温湿度和烟雾变化综合判断，必要时同步调整环境控制阈值。'
+                },
+                {
+                    icon: 'fa-solid fa-clock-rotate-left',
+                    title: '关注历史趋势',
+                    text: '若近期识别次数增多，建议对重点区域进行复核并结合历史记录定位异常来源。'
+                }
+            ];
+        }
+
+        container.innerHTML = cards.map(card => `
+            <article class="ai-advice-item">
+                <div class="ai-advice-icon"><i class="${card.icon}"></i></div>
+                <div>
+                    <h4>${escapeHtml(card.title)}</h4>
+                    <p>${escapeHtml(card.text)}</p>
+                </div>
+            </article>
+        `).join('');
+    }
+
+    function renderLatest(item) {
+        const detections = asArray(item?.items);
+
+        if (!item) {
+            setAiStatus('unknown', '等待识别结果', '当前还没有收到病虫害识别数据，页面会继续自动轮询。');
+            setText('latest-device', '--');
+            setText('latest-stream', '--');
+            setText('latest-count', '--');
+            setText('latest-time', '--');
+            setText('latest-size', '--');
+            setText('latest-frame', '--');
+            document.getElementById('latest-summary').textContent = '等待病虫害识别结果';
+            document.getElementById('latest-desc').textContent = '边缘设备上传识别结果后，这里会展示最新一帧的摘要、目标和处置建议。';
+            document.getElementById('detail-pill').innerHTML = '<i class="fa-solid fa-camera"></i> 当前帧';
+            renderEmptyState('latest-detail', '暂未接收到识别目标', '系统尚未收到最新的病虫害识别结果，请稍后刷新或检查边缘侧上传链路。', false);
+            renderAdvice(null);
+            return;
+        }
+
+        const tone = detections.length === 0 || item.empty ? 'safe' : riskTone(item.overallRiskLevel || detections[0]?.riskLevel);
+        const targetCount = item.detectionCount != null ? item.detectionCount : detections.length;
+        const summary = item.summary || (detections.length === 0 ? '当前帧未检出病虫害目标' : '当前帧已接收到病虫害识别结果');
+        const detail = detections.length === 0 || item.empty
+            ? '当前帧未检测到病虫害目标，系统将继续轮询并更新最新结果。'
+            : '本次识别来自设备 ' + (item.deviceId || '--') + ' / 流 ' + (item.stream || '--') + '，建议优先复核高风险目标。';
+
+        setAiStatus(tone, detections.length === 0 || item.empty ? '当前帧安全' : '最高风险：' + (item.overallRiskLevel || '待判定'), detail);
+        document.getElementById('latest-summary').textContent = summary;
+        document.getElementById('latest-desc').textContent = detections.length === 0 || item.empty
+            ? '最近一次推理没有发现病虫害目标，你可以继续观察后续画面和历史趋势。'
+            : '当前帧共识别到 ' + targetCount + ' 个目标，页面已将风险、建议和坐标信息整理到下方卡片中。';
+        setText('latest-device', item.deviceId || '--');
+        setText('latest-stream', item.stream || '--');
+        setText('latest-count', targetCount);
+        setText('latest-time', formatTime(item.timestampMs));
+        setText('latest-size', formatImageSize(item));
+        setText('latest-frame', item.frameId != null ? item.frameId : '--');
+        document.getElementById('detail-pill').innerHTML = '<i class="fa-solid fa-camera"></i> 帧号 ' + escapeHtml(item.frameId != null ? item.frameId : '--');
+
+        if (detections.length === 0 || item.empty) {
+            renderEmptyState('latest-detail', '当前帧未发现病虫害', '本次推理结果为空，说明当前画面没有识别到病虫害目标。', false);
+            renderAdvice(item);
+            return;
+        }
+
+        const detailEl = document.getElementById('latest-detail');
+        detailEl.className = 'ai-detection-grid';
+        detailEl.innerHTML = detections.map(detection => {
+            const name = detection.displayName || detection.category || '未命名目标';
+            const bbox = Array.isArray(detection.bbox) ? detection.bbox : [];
+            const bboxText = bbox.length ? bbox.join(', ') : '--';
+            return `
+                <article class="ai-detection-card">
+                    <div class="ai-detection-head">
+                        <div>
+                            <h4>${escapeHtml(name)}</h4>
+                            <p>${escapeHtml(detection.category || '未分类目标')}</p>
+                        </div>
+                        <span class="tag ${tagTone(detection.riskLevel)}">${escapeHtml(detection.riskLevel || '待判级')}</span>
+                    </div>
+                    <div class="ai-detail-meta">
+                        <div class="ai-meta-pill">
+                            <span>置信度</span>
+                            <strong>${escapeHtml(formatConfidence(detection.confidence))}</strong>
+                        </div>
+                        <div class="ai-meta-pill">
+                            <span>坐标框</span>
+                            <strong>${escapeHtml(bboxText)}</strong>
+                        </div>
+                    </div>
+                    <p>${escapeHtml(detection.advice || '建议结合原始画面和现场情况进行人工复核。')}</p>
+                    <code class="ai-code">${escapeHtml(JSON.stringify(bbox))}</code>
+                </article>
+            `;
+        }).join('');
+
+        renderAdvice(item);
+    }
+
+    function renderHistory(items) {
+        const history = asArray(items);
+        const historyEl = document.getElementById('history-list');
+        const dangerCount = history.filter(item => riskTone(item?.overallRiskLevel) === 'danger').length;
+
+        setText('history-total', history.length);
+        setText('history-danger', dangerCount);
+        document.getElementById('history-count-pill').innerHTML = '<i class="fa-solid fa-database"></i> 最近 ' + history.length + ' 条';
+
+        if (history.length === 0) {
+            renderEmptyState('history-list', '暂无历史识别记录', '识别历史会在边缘设备持续上传后逐步累积，方便后续回溯与分析。', true);
+            return;
+        }
+
+        historyEl.className = 'ai-history-list';
+        historyEl.innerHTML = history.map(item => {
+            const detections = asArray(item?.items);
+            const tone = riskTone(item?.overallRiskLevel);
+            const tag = tone === 'unknown' ? 'off' : tone;
+            const names = detections.length
+                ? detections.slice(0, 3).map(detection => detection.displayName || detection.category || '未命名目标').join('、') + (detections.length > 3 ? ' 等' : '')
+                : '当前帧未检出病虫害目标';
+
+            return `
+                <article class="ai-history-card">
+                    <div class="ai-history-head">
+                        <div>
+                            <h4>${escapeHtml(item.summary || 'AI 病虫害识别记录')}</h4>
+                            <p>${escapeHtml(item.deviceId || '--')} / ${escapeHtml(item.stream || '--')}</p>
+                        </div>
+                        <span class="tag ${tag}">${escapeHtml(item.overallRiskLevel || '未知')}</span>
+                    </div>
+                    <div class="ai-history-meta">
+                        <span class="pill"><i class="fa-regular fa-clock"></i> ${escapeHtml(formatTime(item.timestampMs))}</span>
+                        <span class="pill"><i class="fa-solid fa-camera"></i> 帧号 ${escapeHtml(item.frameId != null ? item.frameId : '--')}</span>
+                        <span class="pill"><i class="fa-solid fa-layer-group"></i> 目标 ${escapeHtml(item.detectionCount != null ? item.detectionCount : detections.length)}</span>
+                    </div>
+                    <p>${escapeHtml(names)}</p>
+                    <div class="ai-history-tags">
+                        ${detections.length
+                            ? detections.slice(0, 4).map(detection => `<span class="tag ${tagTone(detection.riskLevel)}">${escapeHtml(detection.displayName || detection.category || '目标')}</span>`).join('')
+                            : '<span class="tag safe">当前安全</span>'}
+                    </div>
+                </article>
+            `;
+        }).join('');
+    }
+
+    async function loadAiData() {
+        try {
+            const [latestResp, historyResp] = await Promise.all([
+                fetch(AI_LATEST_API, { cache: 'no-store' }),
+                fetch(AI_HISTORY_API, { cache: 'no-store' })
+            ]);
+
+            if (!latestResp.ok || !historyResp.ok) {
+                throw new Error('request failed');
+            }
+
+            const latestPayload = await latestResp.json();
+            const historyPayload = await historyResp.json();
+            const latestData = getPayloadData(latestPayload);
+            const historyData = getPayloadData(historyPayload);
+
+            renderLatest(Array.isArray(latestData) ? (latestData[0] || null) : latestData);
+            renderHistory(Array.isArray(historyData) ? historyData : (historyData ? [historyData] : []));
+        } catch (error) {
+            renderLatest(null);
+            renderHistory([]);
+            setAiStatus('warn', '识别接口暂不可用', '暂时无法获取 AI 识别数据，请检查边缘网关、接口服务或稍后重试。');
+            document.getElementById('latest-summary').textContent = 'AI 识别数据暂不可用';
+            document.getElementById('latest-desc').textContent = '页面结构和轮询逻辑已就绪，接口恢复后会自动刷新最新识别结果。';
+        }
+    }
+
+    document.getElementById('refresh-btn').addEventListener('click', loadAiData);
+
+    checkLogin().then(ok => {
+        if (!ok) return;
+        loadAiData();
+        setInterval(loadAiData, 5000);
+    });
+</script>
+</body>
+</html>

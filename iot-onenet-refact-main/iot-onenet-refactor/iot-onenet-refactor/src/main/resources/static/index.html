@@ -2,14 +2,408 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=/console/index.html">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting</title>
-    <script>
-        window.location.replace('/console/index.html');
-    </script>
+    <title>实时概览 - 机柜状态检测与远程运维平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/console.css">
+    <link rel="stylesheet" href="css/console-pages.css">
+    <link rel="stylesheet" href="css/theme-console-soft.css">
+    <style>
+        /* =========================================================
+           顶部导航栏 (.topbar) UI 专项优化覆盖
+           ========================================================= */
+
+        /* 1. 副标题对比度提升：提高透明度，确保在深绿背景下文字清晰 */
+        body.theme-console-soft .topbar .brand p {
+            color: rgba(255, 255, 255, 0.96) !important;
+            font-size: 0.9rem;
+            font-weight: 400;
+            margin-top: 4px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+        }
+
+        /* 2. 右侧操作区整体间距与对齐优化（增加呼吸感） */
+        .topbar .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px !important;
+        }
+
+        .shortcut-card .btn.is-static {
+            pointer-events: none;
+            cursor: default;
+            min-width: 132px;
+        }
+
+        /* 3. 统一信息展示块（Pill）的样式，降低视觉突兀感 */
+        .topbar .pill {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            box-shadow: none !important;
+        }
+
+        /* 4. 优化“动态阈值”和“刷新”按钮：浅色背景 + 深色文字，保证极佳对比度 */
+        .topbar .top-actions .btn:not(#logout-btn):not(#refresh-btn) {
+            background-color: #f8f9fa !important;
+            color: #2c3e50 !important;
+            border: 1px solid #e9ecef !important;
+            font-weight: 600 !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+            text-shadow: none !important;
+        }
+
+        .topbar .top-actions .btn:not(#logout-btn):not(#refresh-btn):hover {
+            background-color: #ffffff !important;
+            transform: translateY(-1px);
+            transition: all 0.2s;
+        }
+
+        /* 5. 弱化“退出”按钮：去掉抢眼的渐变，改为幽灵按钮（透明底+白边框） */
+        body.theme-console-soft .topbar #refresh-btn,
+        body.theme-console-soft .topbar #logout-btn {
+            background: transparent !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            box-shadow: none !important;
+            font-weight: 500 !important;
+        }
+
+        body.theme-console-soft .topbar #refresh-btn:hover,
+        body.theme-console-soft .topbar #logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: #ffffff !important;
+            border-color: rgba(255, 255, 255, 0.8) !important;
+            transform: translateY(-1px);
+            transition: all 0.2s;
+        }
+    </style>
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 </head>
-<body>
-正在跳转到新控制台：<a href="/console/index.html">/console/index.html</a>
+<body class="theme-console-soft">
+
+<div class="bg-grid"></div>
+
+<div class="layout">
+    <header class="topbar glass-panel">
+        <div class="brand">
+            <div class="brand-icon"><i class="fa-solid fa-server"></i></div>
+            <div>
+                <h1>机柜状态检测与远程运维控制台</h1>
+                <p>实时展示设备状态、环境数据与异常等级。</p>
+            </div>
+        </div>
+        <div class="top-actions">
+            <div class="pill"><i class="fa-solid fa-user"></i> <strong id="current-user">--</strong></div>
+            <div class="pill"><i class="fa-solid fa-link"></i> <span id="connection-text">检测中</span></div>
+            <button class="btn btn-outline" id="btn-settings"><i class="fa-solid fa-sliders"></i> 动态阈值</button>
+            <button class="btn btn-secondary" id="refresh-btn"><i class="fa-solid fa-rotate"></i> 刷新</button>
+            <button class="btn btn-primary" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> 退出</button>
+        </div>
+    </header>
+
+    <div class="main-body">
+
+        <aside class="sidebar glass-panel">
+            <nav class="page-nav vertical-nav">
+    <a class="nav-item active" href="index.html"><i class="fa-solid fa-house"></i> 实时概览</a>
+    <a class="nav-item" href="video.html"><i class="fa-solid fa-video"></i> 实时视频流</a>
+    <a class="nav-item" href="daily.html"><i class="fa-solid fa-chart-area"></i> 今日波动</a>
+    <a class="nav-item" href="history.html"><i class="fa-solid fa-layer-group"></i> 历史统计</a>
+    <a class="nav-item" href="logs.html"><i class="fa-solid fa-clipboard-list"></i> 告警日志</a>
+    <a class="nav-item" href="ai.html"><i class="fa-solid fa-brain"></i> AI识别</a>
+</nav>
+        </aside>
+
+        <div class="content-area">
+            <main class="view-section" style="display:flex;">
+                <section class="hero">
+                    <div class="hero-panel glass-panel">
+                        <div>
+                            <h2>欢迎进入设备监控主控台</h2>
+                            <p>首页现在只保留实时概览，视频流、今日波动、历史统计和告警日志都已拆到独立页面，后续查找和维护会更直接。</p>
+                            <div class="hero-stats">
+                                <div class="mini-stat"><div class="label">设备名称</div><div class="value" id="device-name">--</div></div>
+                                <div class="mini-stat"><div class="label">设备 ID</div><div class="value" id="device-id">--</div></div>
+                                <div class="mini-stat"><div class="label">最近更新</div><div class="value" id="last-updated-time">等待数据</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="status-banner glass-panel">
+                        <div class="label">系统综合状态</div>
+                        <div id="system-status-chip" class="status-chip unknown"><i class="fa-solid fa-circle-question"></i><span>等待数据</span></div>
+                        <div class="status-detail" id="system-status-text">设备尚未上报数据，页面正在尝试建立连接。</div>
+                    </div>
+                </section>
+
+                <section class="metrics">
+                    <article class="metric-card glass-panel">
+                        <div class="metric-top">
+                            <div><div class="metric-title">温度</div><div><span class="metric-value" id="temperature-value">--</span><span class="metric-unit" id="temperature-unit">°C</span></div></div>
+                            <div class="metric-icon"><i class="fa-solid fa-temperature-three-quarters"></i></div>
+                        </div>
+                        <div class="metric-footer">机柜内部温度读数</div>
+                    </article>
+                    <article class="metric-card glass-panel">
+                        <div class="metric-top">
+                            <div><div class="metric-title">湿度</div><div><span class="metric-value" id="humidity-value">--</span><span class="metric-unit" id="humidity-unit">%</span></div></div>
+                            <div class="metric-icon"><i class="fa-solid fa-droplet"></i></div>
+                        </div>
+                        <div class="metric-footer">环境湿度实时采样</div>
+                    </article>
+                    <article class="metric-card glass-panel">
+                        <div class="metric-top">
+                            <div><div class="metric-title">光照</div><div><span class="metric-value" id="light-value">--</span><span class="metric-unit" id="light-unit">Lux</span></div></div>
+                            <div class="metric-icon"><i class="fa-solid fa-sun"></i></div>
+                        </div>
+                        <div class="metric-footer">模拟量换算后的光照值</div>
+                    </article>
+                    <article class="metric-card glass-panel">
+                        <div class="metric-top">
+                            <div><div class="metric-title">烟雾浓度</div><div><span class="metric-value" id="mq2-value">--</span><span class="metric-unit" id="mq2-unit">ppm</span></div></div>
+                            <div class="metric-icon"><i class="fa-solid fa-smog"></i></div>
+                        </div>
+                        <div class="metric-footer">MQ-2 传感器实时浓度</div>
+                    </article>
+                </section>
+
+                <section class="main-grid">
+                    <article class="panel glass-panel">
+                        <div class="panel-header">
+                            <div class="panel-title"><i class="fa-solid fa-wave-square"></i><h3>设备运行状态</h3></div>
+                            <span class="pill"><i class="fa-solid fa-satellite-dish"></i> 自动刷新：3 秒</span>
+                        </div>
+                        <div class="grid-list">
+                            <div class="info-row">
+                                <div class="info-label"><i class="fa-solid fa-fan" style="color: #9eb1ca;"></i> 排风/散热风机</div>
+                                <div class="info-value"><span id="fan-status" class="tag safe">运转中</span></div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label"><i class="fa-solid fa-spray-can-sparkles" style="color: #9eb1ca;"></i> 雾化加湿模块</div>
+                                <div class="info-value"><span id="mist-status" class="tag off">待机</span></div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label"><i class="fa-solid fa-microchip" style="color: #9eb1ca;"></i> 当前控制模式</div>
+                                <div class="info-value">自动托管</div>
+                            </div>
+                            <div class="info-row"><div class="info-label"><i class="fa-solid fa-lightbulb"></i> LED 指示灯</div><div class="info-value"><span id="led-indicator" class="tag off">--</span></div></div>
+                            <div class="info-row"><div class="info-label"><i class="fa-solid fa-bell"></i> 蜂鸣器</div><div class="info-value"><span id="buzzer-status" class="tag off">--</span></div></div>
+                            <div class="info-row"><div class="info-label"><i class="fa-solid fa-shield-heart"></i> 错误码</div><div class="info-value"><span id="error-code-text">--</span></div></div>
+                        </div>
+                    </article>
+                    <article class="panel glass-panel">
+                        <div class="panel-header">
+                            <div class="panel-title"><i class="fa-solid fa-layer-group"></i><h3>功能概览</h3></div>
+                            <span class="pill"><i class="fa-solid fa-table-cells-large"></i> 首页摘要展示</span>
+                        </div>
+                        <p class="summary-text" style="margin-bottom: 20px;">这里改为展示当前控制台包含的核心模块与用途说明，仅作总览展示，不再作为页面跳转入口。</p>
+                        <div class="shortcut-list">
+                            <div class="shortcut-card">
+                                <div>
+                                    <div class="shortcut-title">实时视频流</div>
+                                    <p>用于查看实时画面、链路状态与播放器接入情况，适合排查视频流在线状态。</p>
+                                </div>
+                                <span class="btn btn-secondary is-static">视频模块</span>
+                            </div>
+                            <div class="shortcut-card">
+                                <div>
+                                    <div class="shortcut-title">今日波动</div>
+                                    <p>聚合当天传感器曲线、波动区间和统计值，适合快速查看实时变化趋势。</p>
+                                </div>
+                                <span class="btn btn-secondary is-static">趋势模块</span>
+                            </div>
+                            <div class="shortcut-card">
+                                <div>
+                                    <div class="shortcut-title">历史统计</div>
+                                    <p>展示多日趋势对比、达标率分析和综合占比，适合做阶段性复盘。</p>
+                                </div>
+                                <span class="btn btn-secondary is-static">分析模块</span>
+                            </div>
+                            <div class="shortcut-card">
+                                <div>
+                                    <div class="shortcut-title">告警日志</div>
+                                    <p>用于查看异常记录、处理状态和时间筛选结果，便于追溯问题来源。</p>
+                                </div>
+                                <span class="btn btn-secondary is-static">日志模块</span>
+                            </div>
+                            <div class="shortcut-card">
+                                <div>
+                                    <div class="shortcut-title">病虫害识别</div>
+                                    <p>展示 AI 推理结果、风险等级和识别历史，可辅助判断是否存在异常目标。</p>
+                                </div>
+                                <span class="btn btn-secondary is-static">AI模块</span>
+                            </div>
+                        </div>
+                    </article>
+                </section>
+            </main>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="settings-modal">
+    <div class="modal">
+        <h3><i class="fa-solid fa-sliders" style="color:var(--primary);"></i> 全局环境阈值配置</h3>
+        <p style="color:var(--text-sub); font-size:0.95rem; margin-bottom:24px; line-height: 1.6;">修改后将自动更新图表上的安全达标区间（绿色背景区域）与报警线，配置会保存到浏览器本地。</p>
+        <div class="form-group"><label>最高温度告警线 (°C)</label><input type="number" id="input-temp-max" value="35"></div>
+        <div class="form-group"><label>最低温度告警线 (°C)</label><input type="number" id="input-temp-min" value="15"></div>
+        <div class="form-group"><label>最高湿度告警线 (%)</label><input type="number" id="input-hum-max" value="70"></div>
+        <div class="form-group"><label>最低湿度告警线 (%)</label><input type="number" id="input-hum-min" value="40"></div>
+        <div class="form-group"><label>烟雾浓度告警上限 (ppm)</label><input type="number" id="input-smoke-max" value="200"></div>
+        <div class="form-group"><label>烟雾浓度告警下限 (ppm)</label><input type="number" id="input-smoke-min" value="0"></div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="btn-cancel">取消配置</button>
+            <button class="btn btn-primary" id="btn-save"><i class="fa-solid fa-check"></i> 保存并重绘</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/console-common.js"></script>
+<script>
+    const API_URL = '/api/status';
+    let thresholds = getConsoleThresholds();
+
+    function syncThresholdInputs() {
+        thresholds = getConsoleThresholds();
+        document.getElementById('input-temp-max').value = thresholds.temp.max;
+        document.getElementById('input-temp-min').value = thresholds.temp.min;
+        document.getElementById('input-hum-max').value = thresholds.hum.max;
+        document.getElementById('input-hum-min').value = thresholds.hum.min;
+        document.getElementById('input-smoke-max').value = thresholds.smoke.max;
+        document.getElementById('input-smoke-min').value = thresholds.smoke.min;
+    }
+
+    function readThresholdInputs() {
+        return {
+            temp: {
+                min: Number(document.getElementById('input-temp-min').value),
+                max: Number(document.getElementById('input-temp-max').value),
+                unit: '°C'
+            },
+            hum: {
+                min: Number(document.getElementById('input-hum-min').value),
+                max: Number(document.getElementById('input-hum-max').value),
+                unit: '%'
+            },
+            smoke: {
+                min: Number(document.getElementById('input-smoke-min').value),
+                max: Number(document.getElementById('input-smoke-max').value),
+                unit: 'ppm'
+            }
+        };
+    }
+
+    function validateThresholds(next) {
+        if (next.temp.min >= next.temp.max) return '温度下限必须小于上限';
+        if (next.hum.min >= next.hum.max) return '湿度下限必须小于上限';
+        if (next.smoke.min >= next.smoke.max) return '烟雾下限必须小于上限';
+        return '';
+    }
+
+    function setStatusBanner(statusType, text, detail) {
+        const chip = document.getElementById('system-status-chip');
+        const detailEl = document.getElementById('system-status-text');
+        const map = {
+            safe: { icon: 'fa-solid fa-circle-check', cls: 'safe' },
+            warn: { icon: 'fa-solid fa-triangle-exclamation', cls: 'warn' },
+            danger: { icon: 'fa-solid fa-radiation', cls: 'danger' },
+            unknown: { icon: 'fa-solid fa-circle-question', cls: 'unknown' }
+        };
+        const cfg = map[statusType] || map.unknown;
+        chip.className = 'status-chip ' + cfg.cls;
+        chip.innerHTML = '<i class="' + cfg.icon + '"></i><span>' + text + '</span>';
+        detailEl.textContent = detail;
+    }
+
+    async function refreshStatus() {
+        try {
+            const resp = await fetch(API_URL, { cache: 'no-store' });
+            if (!resp.ok) throw new Error();
+            const data = await resp.json();
+            document.getElementById('connection-text').textContent = '已连接';
+            document.getElementById('connection-text').style.color = 'var(--success)';
+            setText('device-name', data.deviceName); setText('device-id', data.deviceId);
+            setText('temperature-value', data.temperature?.value); setText('temperature-unit', data.temperature?.unit || '°C');
+            setText('humidity-value', data.humidity?.value); setText('humidity-unit', data.humidity?.unit || '%');
+            setText('light-value', data.light?.value); setText('light-unit', data.light?.unit || 'Lux');
+            setText('mq2-value', data.mq2?.value); setText('mq2-unit', data.mq2?.unit || 'ppm');
+            setText('last-updated-time', formatRelativeTime(new Date(data.updatedAt || new Date())));
+            const err = data.error?.value;
+            const humidityValue = Number(data.humidity?.value);
+            setText('error-code-text', err, '--');
+            if (err === 0) {
+                setStatusBanner('safe', '安全运行', '错误码 0，系统正常。');
+                setTag('fan-status', '运转中', 'safe');
+                setTag('led-indicator', '绿色', 'safe');
+                setTag('buzzer-status', 'OFF', 'off');
+            } else if (err === 1) {
+                setStatusBanner('warn', '警告状态', '错误码 1，检测到异常趋势。');
+                setTag('fan-status', '增强运转', 'warn');
+                setTag('led-indicator', '黄色', 'warn');
+                setTag('buzzer-status', 'ON', 'warn');
+            } else if (err === 2) {
+                setStatusBanner('danger', '严重告警', '错误码 2，高风险状态。');
+                setTag('fan-status', '高速运转', 'warn');
+                setTag('led-indicator', '红色', 'danger');
+                setTag('buzzer-status', 'ON', 'danger');
+            } else {
+                setStatusBanner('unknown', '未知状态', '等待数据。');
+                setTag('fan-status', '--', 'off');
+                setTag('led-indicator', '--', 'off');
+                setTag('buzzer-status', '--', 'off');
+            }
+            if (Number.isFinite(humidityValue) && humidityValue < 40) {
+                setTag('mist-status', '运行中', 'info');
+            } else {
+                setTag('mist-status', '待机', 'off');
+            }
+        } catch (e) {
+            document.getElementById('connection-text').textContent = '等待后端';
+            document.getElementById('connection-text').style.color = 'var(--warning)';
+            setStatusBanner('unknown', '本地演示模式', '当前无后端连接，展现默认 UI 与前端图表交互体验。');
+            setTag('fan-status', '--', 'off');
+            setTag('mist-status', '--', 'off');
+        }
+    }
+
+    document.getElementById('refresh-btn').addEventListener('click', refreshStatus);
+
+    const modal = document.getElementById('settings-modal');
+    document.getElementById('btn-settings').addEventListener('click', () => {
+        syncThresholdInputs();
+        modal.classList.add('show');
+    });
+    document.getElementById('btn-cancel').addEventListener('click', () => {
+        syncThresholdInputs();
+        modal.classList.remove('show');
+    });
+    document.getElementById('btn-save').addEventListener('click', () => {
+        const nextThresholds = readThresholdInputs();
+        const errorText = validateThresholds(nextThresholds);
+        if (errorText) {
+            window.alert(errorText);
+            return;
+        }
+        thresholds = nextThresholds;
+        saveConsoleThresholds(nextThresholds);
+        modal.classList.remove('show');
+    });
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.classList.remove('show');
+        }
+    });
+
+    syncThresholdInputs();
+    checkLogin().then(ok => { if (ok) { refreshStatus(); } });
+    setInterval(refreshStatus, 3000);
+</script>
 </body>
 </html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时视频流 - 机柜状态检测与远程运维平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/console.css">
+    <link rel="stylesheet" href="css/console-pages.css">
+    <link rel="stylesheet" href="css/theme-console-soft.css">
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+</head>
+<body class="theme-console-soft">
+
+<div class="bg-grid"></div>
+
+<div class="layout">
+    <header class="topbar glass-panel">
+        <div class="brand">
+            <div class="brand-icon"><i class="fa-solid fa-server"></i></div>
+            <div>
+                <h1>机柜状态检测与远程运维控制台</h1>
+                <p>实时展示设备状态、环境数据与异常等级。</p>
+            </div>
+        </div>
+        <div class="top-actions">
+            <div class="pill"><i class="fa-solid fa-user"></i> <strong id="current-user">--</strong></div>
+            <button class="btn btn-secondary" id="refresh-btn"><i class="fa-solid fa-rotate"></i> 刷新</button>
+            <button class="btn btn-primary" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> 退出</button>
+        </div>
+    </header>
+
+    <div class="main-body">
+        <aside class="sidebar glass-panel">
+            <nav class="page-nav vertical-nav">
+    <a class="nav-item" href="index.html"><i class="fa-solid fa-house"></i> 实时概览</a>
+    <a class="nav-item active" href="video.html"><i class="fa-solid fa-video"></i> 实时视频流</a>
+    <a class="nav-item" href="daily.html"><i class="fa-solid fa-chart-area"></i> 今日波动</a>
+    <a class="nav-item" href="history.html"><i class="fa-solid fa-layer-group"></i> 历史统计</a>
+    <a class="nav-item" href="logs.html"><i class="fa-solid fa-clipboard-list"></i> 告警日志</a>
+    <a class="nav-item" href="ai.html"><i class="fa-solid fa-brain"></i> AI识别</a>
+</nav>
+        </aside>
+
+        <div class="content-area">
+            <main class="view-section">
+                <section class="hero">
+                    <div class="hero-panel glass-panel">
+                        <div>
+                            <h2>实时视频流</h2>
+                            <p>播放器、流地址和链路信息已经从首页拆出到独立页面，后续排查视频接入问题时不用再翻整份首页。</p>
+                            <div class="hero-stats">
+                                <div class="mini-stat"><div class="label">流标识</div><div class="value" id="vs-summary-stream">--</div></div>
+                                <div class="mini-stat"><div class="label">设备 ID</div><div class="value" id="vs-summary-device">--</div></div>
+                                <div class="mini-stat"><div class="label">最近刷新</div><div class="value" id="vs-summary-refresh">等待数据</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="status-banner glass-panel">
+                        <div class="label">视频链路状态</div>
+                        <div id="video-status-chip" class="status-chip unknown"><i class="fa-solid fa-circle-question"></i><span>等待数据</span></div>
+                        <div class="status-detail" id="video-status-text">页面正在尝试连接 <code>/api/video/streams</code>。</div>
+                    </div>
+                </section>
+
+                <section class="video-page-grid">
+                    <article class="panel glass-panel video-player-card">
+                        <div class="panel-header">
+                            <div class="panel-title"><i class="fa-solid fa-video"></i><h3>视频画面</h3></div>
+                            <div class="video-panel-actions">
+                                <span class="pill" id="vs-avail-pill"><i class="fa-solid fa-spinner fa-spin"></i> 检测中</span>
+                            </div>
+                        </div>
+
+                        <div class="video-stage" id="vs-banner">
+                            <div class="video-stage-head">
+                                <div class="video-status-icon" id="vs-banner-icon"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                                <div class="video-stage-meta">
+                                    <h4 id="vs-display-name">正在获取视频流...</h4>
+                                    <p id="vs-banner-desc">连接中，页面会优先尝试加载播放器地址，并保留外链排查入口。</p>
+                                </div>
+                            </div>
+
+                            <div class="video-frame-shell">
+                                <iframe id="vs-player-frame" class="video-frame" title="实时视频流播放器" allow="autoplay; fullscreen; camera; microphone"></iframe>
+                                <div class="video-frame-placeholder" id="vs-frame-placeholder">
+                                    <div>
+                                        <div class="video-frame-empty-icon" id="vs-placeholder-icon"><i class="fa-solid fa-video"></i></div>
+                                        <h5 id="vs-placeholder-title">正在加载播放器</h5>
+                                        <p id="vs-placeholder-text">如果浏览器无法直接嵌入播放，你也可以使用右侧链接在新窗口打开播放器地址或网关页面。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="panel glass-panel video-meta-card">
+                        <div class="panel-header">
+                            <div class="panel-title"><i class="fa-solid fa-circle-info"></i><h3>流信息</h3></div>
+                            <span class="pill"><i class="fa-solid fa-wave-square"></i> 独立页面</span>
+                        </div>
+
+                        <div class="video-info-grid">
+                            <div class="info-row"><div class="info-label"><i class="fa-solid fa-fingerprint" style="color:#9eb1ca;"></i> 流标识</div><div class="info-value" id="vs-stream-id">--</div></div>
+                            <div class="info-row"><div class="info-label"><i class="fa-solid fa-microchip" style="color:#9eb1ca;"></i> 设备 ID</div><div class="info-value" id="vs-device-id">--</div></div>
+                            <div class="info-row"><div class="info-label"><i class="fa-solid fa-play" style="color:#9eb1ca;"></i> 首选模式</div><div class="info-value" id="vs-mode">--</div></div>
+                            <div class="info-row"><div class="info-label"><i class="fa-solid fa-rotate-left" style="color:#9eb1ca;"></i> 回退模式</div><div class="info-value" id="vs-fallback">--</div></div>
+                            <div class="info-row"><div class="info-label"><i class="fa-solid fa-globe" style="color:#9eb1ca;"></i> 公网地址</div><div class="info-value" id="vs-host" style="word-break:break-all;">--</div></div>
+                            <div class="info-row"><div class="info-label"><i class="fa-solid fa-tower-broadcast" style="color:#9eb1ca;"></i> WebRTC 端口</div><div class="info-value" id="vs-port">--</div></div>
+                            <div class="info-row"><div class="info-label"><i class="fa-solid fa-brain" style="color:#9eb1ca;"></i> AI 结果转发</div><div class="info-value"><span id="vs-ai" class="tag off">--</span></div></div>
+                            <div class="info-row"><div class="info-label"><i class="fa-solid fa-clock" style="color:#9eb1ca;"></i> 最近刷新</div><div class="info-value" id="vs-last-refresh">--</div></div>
+                        </div>
+
+                        <div class="video-actions">
+                            <a id="vs-player-url" class="btn btn-secondary" href="#" target="_blank" rel="noreferrer">打开播放器地址</a>
+                            <a id="vs-gateway-url" class="btn btn-secondary" href="#" target="_blank" rel="noreferrer">打开网关页面</a>
+                        </div>
+
+                        <div class="video-link-stack" style="margin-top: 18px;">
+                            <div class="video-link-card">
+                                <span class="video-link-label">播放器地址</span>
+                                <a id="vs-player-url-text" class="video-link-value is-empty" href="#" target="_blank" rel="noreferrer">--</a>
+                            </div>
+                            <div class="video-link-card">
+                                <span class="video-link-label">网关页面</span>
+                                <a id="vs-gateway-url-text" class="video-link-value is-empty" href="#" target="_blank" rel="noreferrer">--</a>
+                            </div>
+                        </div>
+                    </article>
+                </section>
+            </main>
+        </div>
+    </div>
+</div>
+
+<script src="js/console-common.js"></script>
+<script>
+    const VIDEO_API_URL = '/api/video/streams';
+    let currentVideoFrameSrc = '';
+
+    function setVideoTextLink(id, url) {
+        const el = document.getElementById(id);
+        if (!url) {
+            el.textContent = '--';
+            el.href = '#';
+            el.classList.add('is-empty');
+            return;
+        }
+        el.textContent = url;
+        el.href = url;
+        el.classList.remove('is-empty');
+    }
+
+    function setVideoActionLink(id, url) {
+        const el = document.getElementById(id);
+        if (!url) {
+            el.href = '#';
+            el.classList.add('is-empty');
+            return;
+        }
+        el.href = url;
+        el.classList.remove('is-empty');
+    }
+
+    function setVideoPlaceholder(iconClass, title, text) {
+        document.getElementById('vs-placeholder-icon').innerHTML = '<i class="' + iconClass + '"></i>';
+        document.getElementById('vs-placeholder-title').textContent = title;
+        document.getElementById('vs-placeholder-text').textContent = text;
+    }
+
+    function toggleVideoPlaceholder(show) {
+        document.getElementById('vs-frame-placeholder').classList.toggle('hidden', !show);
+    }
+
+    function setVideoStageState(state) {
+        const banner = document.getElementById('vs-banner');
+        banner.classList.remove('is-online', 'is-offline', 'is-warning');
+        if (state) banner.classList.add(state);
+    }
+
+    function setVideoFrameSrc(src) {
+        const frame = document.getElementById('vs-player-frame');
+        if (!src) {
+            if (currentVideoFrameSrc) {
+                frame.removeAttribute('src');
+                currentVideoFrameSrc = '';
+            }
+            return false;
+        }
+        if (currentVideoFrameSrc === src) return false;
+        currentVideoFrameSrc = src;
+        frame.src = src;
+        return true;
+    }
+
+    function getVideoStreamsFromResponse(payload) {
+        if (Array.isArray(payload)) return { code: 0, msg: '', data: payload };
+        if (payload && Array.isArray(payload.data)) return { code: payload.code, msg: payload.msg, data: payload.data };
+        return { code: payload?.code, msg: payload?.msg, data: [] };
+    }
+
+    function setVideoStatusBanner(statusType, text, detail) {
+        const chip = document.getElementById('video-status-chip');
+        const detailEl = document.getElementById('video-status-text');
+        const map = {
+            safe: { icon: 'fa-solid fa-circle-check', cls: 'safe' },
+            warn: { icon: 'fa-solid fa-triangle-exclamation', cls: 'warn' },
+            danger: { icon: 'fa-solid fa-circle-xmark', cls: 'danger' },
+            unknown: { icon: 'fa-solid fa-circle-question', cls: 'unknown' }
+        };
+        const cfg = map[statusType] || map.unknown;
+        chip.className = 'status-chip ' + cfg.cls;
+        chip.innerHTML = '<i class="' + cfg.icon + '"></i><span>' + text + '</span>';
+        detailEl.textContent = detail;
+    }
+
+    function updateSummary(stream) {
+        setText('vs-summary-stream', stream?.streamId);
+        setText('vs-summary-device', stream?.deviceId);
+        setText('vs-summary-refresh', formatDateTime());
+    }
+
+    async function loadVideoStream() {
+        const pill = document.getElementById('vs-avail-pill');
+        const icon = document.getElementById('vs-banner-icon');
+        const name = document.getElementById('vs-display-name');
+        const desc = document.getElementById('vs-banner-desc');
+
+        try {
+            pill.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 检测中';
+            pill.style.color = '';
+
+            const response = await fetch(VIDEO_API_URL, { cache: 'no-store' });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+
+            const payload = getVideoStreamsFromResponse(await response.json());
+            const okCode = payload.code == null || payload.code === 0 || payload.code === 200;
+            const stream = payload.data[0];
+
+            if (!okCode || !stream) {
+                updateSummary(null);
+                setVideoStageState('is-offline');
+                setVideoStatusBanner('danger', '无可用流', payload.msg || '未检测到已配置的视频流。');
+                pill.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> 无可用流';
+                pill.style.color = 'var(--danger)';
+                icon.innerHTML = '<i class="fa-solid fa-video-slash"></i>';
+                name.textContent = '暂无可用视频流';
+                desc.textContent = payload.msg || '当前没有从接口返回可播放的视频流地址。';
+                setVideoFrameSrc('');
+                setVideoPlaceholder('fa-solid fa-video-slash', '暂无可预览画面', '后端暂未返回播放器地址或网关页面。');
+                toggleVideoPlaceholder(true);
+                setText('vs-last-refresh', formatDateTime());
+                setTag('vs-ai', '--', 'off');
+                setVideoActionLink('vs-player-url', '');
+                setVideoActionLink('vs-gateway-url', '');
+                setVideoTextLink('vs-player-url-text', '');
+                setVideoTextLink('vs-gateway-url-text', '');
+                return;
+            }
+
+            const playerUrl = stream.playerUrl || '';
+            const gatewayUrl = stream.gatewayPageUrl || '';
+            const primaryUrl = playerUrl || gatewayUrl;
+
+            updateSummary(stream);
+            setText('vs-stream-id', stream.streamId);
+            setText('vs-device-id', stream.deviceId);
+            setText('vs-mode', stream.preferredMode);
+            setText('vs-fallback', stream.fallbackMode);
+            setText('vs-host', stream.publicHost ? stream.publicHost + (stream.webrtcPort ? ':' + stream.webrtcPort : '') : '--');
+            setText('vs-port', stream.webrtcPort);
+            setText('vs-last-refresh', formatDateTime());
+
+            setVideoActionLink('vs-player-url', playerUrl);
+            setVideoActionLink('vs-gateway-url', gatewayUrl);
+            setVideoTextLink('vs-player-url-text', playerUrl);
+            setVideoTextLink('vs-gateway-url-text', gatewayUrl);
+            setTag('vs-ai', stream.aiResultForwarded ? '已转发' : '未转发', stream.aiResultForwarded ? 'safe' : 'off');
+
+            if (stream.available && primaryUrl) {
+                setVideoStageState('is-online');
+                setVideoStatusBanner('safe', '视频流在线', '播放器地址已就绪，可直接预览视频。');
+                pill.innerHTML = '<i class="fa-solid fa-circle-check"></i> 在线';
+                pill.style.color = 'var(--success)';
+                icon.innerHTML = '<i class="fa-solid fa-circle-play"></i>';
+                name.textContent = stream.displayName || '实时视频流';
+                desc.textContent = '视频流在线，优先 ' + (stream.preferredMode || '--') + '，回退 ' + (stream.fallbackMode || '--') + '。';
+                const frameChanged = setVideoFrameSrc(primaryUrl);
+                if (frameChanged) {
+                    setVideoPlaceholder('fa-solid fa-spinner fa-spin', '播放器载入中', '稍候片刻，或使用右侧按钮在新窗口打开播放页。');
+                    toggleVideoPlaceholder(true);
+                } else {
+                    toggleVideoPlaceholder(false);
+                }
+                return;
+            }
+
+            setVideoStageState(primaryUrl ? 'is-offline' : 'is-warning');
+            setVideoStatusBanner(primaryUrl ? 'danger' : 'warn', primaryUrl ? '视频流离线' : '未配置地址', primaryUrl ? '已获取到地址，但当前 available=false。' : '后端暂未下发播放地址。');
+            pill.innerHTML = '<i class="fa-solid ' + (primaryUrl ? 'fa-circle-xmark' : 'fa-triangle-exclamation') + '"></i> ' + (primaryUrl ? '离线' : '未配置地址');
+            pill.style.color = primaryUrl ? 'var(--danger)' : 'var(--warning)';
+            icon.innerHTML = '<i class="fa-solid ' + (primaryUrl ? 'fa-video-slash' : 'fa-triangle-exclamation') + '"></i>';
+            name.textContent = stream.displayName || '视频流';
+            desc.textContent = primaryUrl ? '播放器入口已保留，但当前流状态为离线。' : '后端还没有返回可用的播放器地址。';
+            setVideoFrameSrc('');
+            setVideoPlaceholder(primaryUrl ? 'fa-solid fa-video-slash' : 'fa-solid fa-triangle-exclamation', primaryUrl ? '视频流暂不可用' : '尚未配置播放地址', primaryUrl ? '可以先通过地址排查网关和播放器。' : '请先在后端补齐播放器地址。');
+            toggleVideoPlaceholder(true);
+        } catch (error) {
+            updateSummary(null);
+            setVideoStageState('is-warning');
+            setVideoStatusBanner('warn', '连接失败', '当前未能从 /api/video/streams 拉取数据。');
+            pill.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> 连接失败';
+            pill.style.color = 'var(--warning)';
+            icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            name.textContent = '视频流服务连接失败';
+            desc.textContent = '接口请求失败，后端接通后即可恢复。';
+            setVideoFrameSrc('');
+            setVideoPlaceholder('fa-solid fa-triangle-exclamation', '视频流加载失败', '如果当前项目还没接入视频流接口，这里会保持在等待状态。');
+            toggleVideoPlaceholder(true);
+            setText('vs-last-refresh', formatDateTime());
+            setTag('vs-ai', '--', 'off');
+            setVideoActionLink('vs-player-url', '');
+            setVideoActionLink('vs-gateway-url', '');
+            setVideoTextLink('vs-player-url-text', '');
+            setVideoTextLink('vs-gateway-url-text', '');
+        }
+    }
+
+    document.getElementById('refresh-btn').addEventListener('click', loadVideoStream);
+    document.getElementById('vs-player-frame').addEventListener('load', () => {
+        if (currentVideoFrameSrc) toggleVideoPlaceholder(false);
+    });
+
+    checkLogin().then(ok => {
+        if (ok) {
+            loadVideoStream();
+            setInterval(loadVideoStream, 15000);
+        }
+    });
+</script>
+</body>
+</html>

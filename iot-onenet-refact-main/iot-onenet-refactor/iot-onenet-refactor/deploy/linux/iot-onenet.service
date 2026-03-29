@@ -1,0 +1,26 @@
+[Unit]
+Description=IoT OneNET Spring Boot Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__APP_USER__
+Group=__APP_GROUP__
+WorkingDirectory=__APP_HOME__
+Environment=APP_HOME=__APP_HOME__
+Environment=CONF_HOME=__CONF_HOME__
+Environment=JAR_PATH=__APP_HOME__/app.jar
+Environment=CONFIG_FILE=__CONF_HOME__/application-prod.yml
+Environment=SPRING_PROFILE=prod
+EnvironmentFile=-__CONF_HOME__/iot-onenet.env
+ExecStart=__APP_HOME__/bin/start.sh
+SuccessExitStatus=143
+Restart=always
+RestartSec=5
+LimitNOFILE=65535
+StandardOutput=journal
+StandardError=inherit
+
+[Install]
+WantedBy=multi-user.target

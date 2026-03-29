@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>历史统计 - 机柜状态检测与远程运维平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/console.css">
+    <link rel="stylesheet" href="css/console-pages.css">
+    <link rel="stylesheet" href="css/theme-console-soft.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+</head>
+<body class="theme-console-soft">
+
+<div class="bg-grid"></div>
+
+<div class="layout">
+    <header class="topbar glass-panel">
+        <div class="brand">
+            <div class="brand-icon"><i class="fa-solid fa-server"></i></div>
+            <div>
+                <h1>机柜状态检测与远程运维控制台</h1>
+                <p>实时展示设备状态、环境数据与异常等级。</p>
+            </div>
+        </div>
+        <div class="top-actions">
+            <div class="pill"><i class="fa-solid fa-user"></i> <strong id="current-user">--</strong></div>
+            <button class="btn btn-secondary" id="refresh-btn"><i class="fa-solid fa-rotate"></i> 刷新</button>
+            <button class="btn btn-primary" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> 退出</button>
+        </div>
+    </header>
+
+    <div class="main-body">
+        <aside class="sidebar glass-panel">
+            <nav class="page-nav vertical-nav">
+    <a class="nav-item" href="index.html"><i class="fa-solid fa-house"></i> 实时概览</a>
+    <a class="nav-item" href="video.html"><i class="fa-solid fa-video"></i> 实时视频流</a>
+    <a class="nav-item" href="daily.html"><i class="fa-solid fa-chart-area"></i> 今日波动</a>
+    <a class="nav-item active" href="history.html"><i class="fa-solid fa-layer-group"></i> 历史统计</a>
+    <a class="nav-item" href="logs.html"><i class="fa-solid fa-clipboard-list"></i> 告警日志</a>
+    <a class="nav-item" href="ai.html"><i class="fa-solid fa-brain"></i> AI识别</a>
+</nav>
+        </aside>
+
+        <div class="content-area">
+            <main class="view-section" style="display:flex;">
+                <div class="chart-card glass-panel">
+                    <div class="metric-tabs">
+                        <div class="metric-tab active" data-metric="temp"><i class="fa-solid fa-temperature-half"></i> 温度趋势</div>
+                        <div class="metric-tab" data-metric="hum"><i class="fa-solid fa-droplet"></i> 湿度趋势</div>
+                        <div class="metric-tab" data-metric="smoke"><i class="fa-solid fa-smog"></i> 烟雾浓度</div>
+                    </div>
+                    <div class="panel-header" style="margin-bottom: 30px; flex-wrap: wrap;">
+                        <div class="panel-title"><i class="fa-solid fa-layer-group"></i><h3>多日重叠曲线与 TIR 达标率</h3></div>
+                        <div class="date-picker-wrapper">
+                            <i class="fa-regular fa-calendar"></i>
+                            <input type="date" id="start-date"> <span style="color:var(--text-sub);">至</span> <input type="date" id="end-date">
+                            <button class="btn btn-primary" style="padding: 8px 16px;" id="btn-update-dates">更新数据</button>
+                            <span class="error-text" id="date-error">不能超过 14 天</span>
+                        </div>
+                    </div>
+                    <div class="history-grid-layout">
+                        <div id="historyChart" class="chart-container"></div>
+                        <div>
+                            <h4 style="text-align:center; margin-bottom: 0;">选中日期综合达标率</h4>
+                            <div id="pieChart" class="pie-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+<script src="js/console-common.js"></script>
+<script>
+    let thresholds = getConsoleThresholds();
+    let currentMetric = 'temp';
+    const historyChart = echarts.init(document.getElementById('historyChart'));
+    const pieChart = echarts.init(document.getElementById('pieChart'));
+    const darkAxisBase = { axisLine: { lineStyle: { color: 'rgba(81,132,99,0.22)' } }, axisLabel: { color: '#56675c' }, splitLine: { lineStyle: { color: 'rgba(81,132,99,0.08)' } } };
+    const darkTooltipBase = { backgroundColor: 'rgba(255, 255, 255, 0.96)', borderColor: 'rgba(81,132,99,0.28)', textStyle: { color: '#24342c' } };
+
+    const timeCategories = [];
+    for (let h = 0; h < 24; h++) { for (let m = 0; m < 60; m += 15) timeCategories.push(String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0')); }
+
+    const dateEndInput = document.getElementById('end-date');
+    const dateStartInput = document.getElementById('start-date');
+    const todayObj = new Date(); const todayStr = todayObj.toISOString().split('T')[0];
+    dateEndInput.setAttribute('max', todayStr); dateStartInput.setAttribute('max', todayStr);
+    const threeDaysAgo = new Date(); threeDaysAgo.setDate(todayObj.getDate() - 2);
+    dateEndInput.value = todayStr; dateStartInput.value = threeDaysAgo.toISOString().split('T')[0];
+
+    function getDatesInRange(startStr, endStr) {
+        let dates = [], curr = new Date(startStr), end = new Date(endStr);
+        let todayMax = new Date(); todayMax.setHours(23,59,59,999);
+        if (end > todayMax) end = todayMax;
+        while (curr <= end) { dates.push(new Date(curr).toISOString().split('T')[0]); curr.setDate(curr.getDate() + 1); }
+        return dates.reverse();
+    }
+
+    function getMockDataArray(metricType, dateStr) {
+        const dayOfMonth = parseInt(dateStr.split('-')[2], 10);
+        if (dayOfMonth % 5 === 0) return [];
+        let data = [], baseValue = metricType === 'temp' ? 25 : (metricType === 'hum' ? 50 : 50);
+        let seed = dateStr ? dateStr.charCodeAt(dateStr.length-1) : 1;
+        for (let i = 0; i < 96; i++) {
+            let noise = (Math.random() - 0.5) * (metricType === 'smoke' ? 20 : 5);
+            let wave = Math.sin((i + seed * 5) / 15) * (metricType === 'temp' ? 8 : 15);
+            data.push(Math.max(0, parseFloat((baseValue + wave + noise).toFixed(1))));
+        }
+        return data;
+    }
+
+    function renderHistoryCharts() {
+        const tConf = thresholds[currentMetric];
+        let dateList = getDatesInRange(dateStartInput.value, dateEndInput.value);
+        let historySeries = [], allValuesForPie = [];
+        dateList.forEach(dateStr => {
+            let dayData = getMockDataArray(currentMetric, dateStr);
+            let hasData = dayData && dayData.length > 0;
+            if (hasData) allValuesForPie = allValuesForPie.concat(dayData);
+            let seriesName = hasData ? dateStr : dateStr + ' (无数据)';
+            historySeries.push({
+                name: seriesName, type: 'line', smooth: true, symbol: 'none', data: dayData,
+                lineStyle: hasData ? { width: 2 } : { opacity: 0 },
+                itemStyle: hasData ? undefined : { color: 'rgba(255, 255, 255, 0.2)' }
+            });
+        });
+        historyChart.setOption({
+            tooltip: { trigger: 'axis', ...darkTooltipBase },
+            legend: {
+                bottom: 0, icon: 'circle', type: 'scroll',
+                textStyle: { rich: { nodata: { color: '#9aa99f' }, normal: { color: '#31443a' } } },
+                formatter: function(name) { return name.includes('无数据') ? '{nodata|' + name + '}' : '{normal|' + name + '}'; },
+                pageTextStyle: { color: '#56675c' }, pageIconColor: '#518463'
+            },
+            grid: { left: '8%', right: '5%', top: '10%', bottom: '15%' },
+            xAxis: { type: 'category', boundaryGap: false, data: timeCategories, ...darkAxisBase, axisLabel: { interval: 11, color: '#56675c' } },
+            yAxis: { type: 'value', name: tConf.unit, ...darkAxisBase, nameTextStyle: { color: '#56675c' } },
+            series: historySeries
+        }, true);
+
+        let safeCnt = 0, highCnt = 0, lowCnt = 0;
+        allValuesForPie.forEach(v => { if(v > tConf.max) highCnt++; else if(v < tConf.min) lowCnt++; else safeCnt++; });
+        pieChart.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}: {d}%', ...darkTooltipBase },
+            legend: {
+                orient: 'vertical',
+                right: '5%',
+                top: 'center',
+                itemWidth: 12,
+                itemHeight: 12,
+                itemGap: 16,
+                textStyle: { color: '#56675c', fontSize: 13 }
+            },
+            series: [{
+                type: 'pie',
+                radius: ['38%', '58%'],
+                center: ['32%', '50%'],
+                avoidLabelOverlap: false,
+                label: { show: false },
+                itemStyle: {
+                    borderColor: '#ffffff',
+                    borderWidth: 3,
+                    borderRadius: 6
+                },
+                data: [
+                    { value: safeCnt, name: '达标 (安全区间)', itemStyle: { color: '#24c878' } },
+                    { value: highCnt, name: '过高 (超上限)', itemStyle: { color: '#f0ad4e' } },
+                    { value: lowCnt, name: '过低 (低下限)', itemStyle: { color: '#ff6b6b' } }
+                ]
+            }]
+        });
+    }
+
+    document.querySelectorAll('.metric-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            const targetMetric = e.target.closest('.metric-tab').dataset.metric;
+            document.querySelectorAll('.metric-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.metric-tab[data-metric="' + targetMetric + '"]').forEach(t => t.classList.add('active'));
+            currentMetric = targetMetric;
+            renderHistoryCharts();
+        });
+    });
+
+    document.getElementById('btn-update-dates').addEventListener('click', () => {
+        const errorEl = document.getElementById('date-error');
+        const start = new Date(dateStartInput.value), end = new Date(dateEndInput.value);
+        if (start > end) { errorEl.textContent = "起止日期错误！"; errorEl.style.display = 'inline'; return; }
+        const diffDays = Math.floor((end - start) / (1000 * 60 * 60 * 24));
+        if (diffDays > 13) { errorEl.textContent = "范围最多包含 14 天！"; errorEl.style.display = 'inline'; return; }
+        errorEl.style.display = 'none'; renderHistoryCharts();
+    });
+
+    document.getElementById('refresh-btn').addEventListener('click', renderHistoryCharts);
+    window.addEventListener('resize', () => { historyChart.resize(); pieChart.resize(); });
+    window.addEventListener('storage', (event) => {
+        if (event.key === CONSOLE_THRESHOLD_STORAGE_KEY) {
+            thresholds = getConsoleThresholds();
+            renderHistoryCharts();
+        }
+    });
+
+    checkLogin();
+    renderHistoryCharts();
+</script>
+</body>
+</html>

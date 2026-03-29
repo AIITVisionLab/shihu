@@ -6,10 +6,10 @@
     <title>石斛幼苗智能培育管理平台</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
     <style>
-        /* ================== 1. 变量统一定义 ================== */
+        /* ================== 1. 变量映射到 common.css tokens ================== */
         :root {
-            /* 原 preview.html 的变量 */
             --bg: #07111f;
             --bg2: #0b1830;
             --panel: rgba(255,255,255,.08);
@@ -36,32 +36,25 @@
             --btn-hover-bg: rgba(255, 255, 255, 0.1);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        
+        * { user-select: none; }
+
         body, html {
             font-family: 'Roboto', "Microsoft YaHei", "PingFang SC", sans-serif;
             background-color: var(--bg);
-            color: var(--text);
             height: 100vh;
             width: 100vw;
-            overflow: hidden; /* 交由 scroll-wrapper 处理滚动 */
+            overflow: hidden;
         }
-        
+
         a { color: inherit; text-decoration: none; }
         img { max-width: 100%; }
 
         /* ================== 2. 全局固定背景与组件 ================== */
-        .bg-grid {
-            position: fixed; inset: 0; pointer-events: none; opacity: .18; z-index: 0;
-            background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
-            background-size: 30px 30px;
-            mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0.1));
-            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0.1));
+        .dot-grid-bg {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
         }
-        .ambient-glow {
-            position: fixed; inset: 0; pointer-events: none; z-index: 0;
-            background: radial-gradient(circle at 20% 40%, rgba(87,216,255,.15) 0%, transparent 45%),
-                        radial-gradient(circle at 80% 60%, rgba(109,124,255,.12) 0%, transparent 45%);
+        .dot-grid-canvas {
+            position: absolute; inset: 0; width: 100%; height: 100%; display: block;
         }
 
         /* 纯净的右上角登录区 */
@@ -94,7 +87,7 @@
         .anim-bottom, .anim-middle, .anim-title, .anim-subtitle { opacity: 0; will-change: transform, opacity, clip-path; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes revealLeftToRight { 0% { clip-path: inset(0 100% 0 0); opacity: 0; } 1% { clip-path: inset(0 100% 0 0); opacity: 1; } 100% { clip-path: inset(0 0 0 0); opacity: 1; } }
-        
+
         .play-anim .anim-bottom { animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s forwards; }
         .play-anim .anim-middle { animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s forwards; }
         .play-anim .anim-title  { animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.9s forwards; }
@@ -118,11 +111,11 @@
         .header-main { text-align: center; margin-bottom: 2vh; }
         .header-main h1 { font-size: 3rem; font-weight: 400; letter-spacing: 2px; margin-bottom: 12px; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }
         .header-main p { color: var(--muted); font-size: 1.15rem; max-width: 650px; margin: 0 auto; letter-spacing: 1px;}
-        
+
         .interactive-showcase-zone { width: 100%; display: flex; justify-content: center; align-items: center; position: relative; perspective: 1800px; cursor: grab; margin-bottom: 4vh; }
         .interactive-showcase-zone:active { cursor: grabbing; }
         .window-cluster { position: relative; width: 900px; height: 460px; transform-style: preserve-3d; transition: transform 0.15s ease-out; display: flex; justify-content: center; align-items: center; }
-        
+
         .maa-window { position: absolute; width: 720px; height: 440px; background-color: var(--app-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s ease, box-shadow 0.6s ease; }
         .pos-left { transform: translateX(-340px) translateZ(-80px) scale(0.85); opacity: 0.5; z-index: 1; pointer-events: none; }
         .pos-center { transform: translateX(0) translateZ(30px) scale(1); opacity: 1; z-index: 10; box-shadow: 0 40px 100px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(87,216,255,0.15); pointer-events: auto; }
@@ -156,6 +149,7 @@
         .status-banner { background: rgba(43, 213, 118, 0.1); border: 1px solid rgba(43, 213, 118, 0.2); border-radius: 8px; padding: 16px; display: flex; align-items: center; gap: 14px; }
         .status-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--good); color: #000; display: grid; place-items: center; font-size: 20px; }
         .camera-view { flex-grow: 1; background: var(--app-log); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; color: var(--muted); position: relative;}
+        #vs-enter-btn:hover { background: linear-gradient(135deg, rgba(87,216,255,0.28), rgba(109,124,255,0.28)) !important; border-color: rgba(87,216,255,0.5) !important; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(87,216,255,0.15); }
 
         /* 1:1 还原【图二】的首屏按钮区样式 */
         .action-sections { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px; z-index: 10; margin-bottom: 2vh;}
@@ -193,7 +187,7 @@
         /* ================== 6. 原版 Preview.html 样式完整保留 (包含强大的图表和排版) ================== */
         .hero-centered { text-align: center; margin-bottom: 64px; }
         .hero-panels { display:grid; grid-template-columns: 1fr 1fr; gap:28px; align-items:stretch; }
-        
+
         .hero-left, .hero-right, .section-card, .metric-card, .feature-card, .paper-card, .system-card {
             background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--shadow);
         }
@@ -201,7 +195,7 @@
         .hero-left{ padding:34px; position:relative; overflow:hidden; display: flex; flex-direction: column; justify-content: center; }
         .hero-left::after{ content:""; position:absolute; right:-40px; bottom:-60px; width:240px; height:240px; border-radius:50%; background:radial-gradient(circle, rgba(87,216,255,.22), transparent 70%); }
         .tag{ display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:rgba(87,216,255,.12); border:1px solid rgba(87,216,255,.22); color:#c8f4ff; font-size:13px; margin-bottom:20px;}
-        
+
         .hero-points{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:14px; }
         .point{ padding:16px 18px; border-radius:18px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); transition: transform 0.3s;}
         .point:hover { transform: translateY(-3px); background: rgba(255,255,255,.08); border-color: rgba(87,216,255,0.2);}
@@ -297,9 +291,9 @@
         .logo-text { color: #c026d3; font-size: 1.15rem; font-weight: 700; letter-spacing: 0.5px; }
         .footer-brand p { margin: 0; color: #6b7280; font-size: 0.9rem; }
         .footer-info { color: #9ca3af; font-size: 0.85rem; word-spacing: 0.5px; }
-        
+
         .footer-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.05); }
-        
+
         .footer-bottom { display: flex; justify-content: space-between; align-items: center; }
         .copyright { color: #6b7280; font-size: 0.85rem; }
         .footer-links { display: flex; gap: 12px; }
@@ -327,541 +321,1018 @@
             .dl-btn-main { width: 100%; justify-content: center; }
             .footer-top, .footer-bottom { flex-direction: column; align-items: flex-start; gap: 16px; }
         }
+
+        /* ================== 7. 控制台同色系覆盖 ================== */
+        :root {
+            --bg: #edf4eb;
+            --bg2: #f7faf5;
+            --panel: rgba(255,255,255,.88);
+            --panel-strong: rgba(255,255,255,.96);
+            --line: rgba(144,171,150,.28);
+            --text: #14231a;
+            --muted: #52655a;
+            --brand: #518463;
+            --brand2: #a7d3b2;
+            --good: #518463;
+            --warn: #c59a46;
+            --danger: #c8645e;
+            --shadow: 0 20px 48px rgba(45,65,52,.16);
+            --app-bg: rgba(250,252,249,.92);
+            --app-header: rgba(81,132,99,.94);
+            --app-panel: rgba(81,132,99,.08);
+            --app-log: rgba(35,52,44,.06);
+            --btn-bg: rgba(255,255,255,.78);
+            --btn-border: rgba(144,171,150,.22);
+            --btn-hover-bg: rgba(167,211,178,.18);
+        }
+
+        html, body {
+            background:
+                radial-gradient(circle at 12% 16%, rgba(81,132,99,.14), transparent 24%),
+                radial-gradient(circle at 82% 18%, rgba(203,242,224,.22), transparent 26%),
+                radial-gradient(circle at 74% 74%, rgba(206,187,216,.14), transparent 22%),
+                radial-gradient(circle at 22% 78%, rgba(210,200,172,.16), transparent 20%),
+                linear-gradient(180deg, #fbfcf8 0%, #f4f8f2 52%, #eef4ee 100%) !important;
+            color: var(--text);
+        }
+
+        .control-btn,
+        .dl-btn-sub,
+        .nav-pill,
+        .footer-links a {
+            background: rgba(255,255,255,.84) !important;
+            border-color: rgba(144,171,150,.22) !important;
+            color: var(--text) !important;
+            box-shadow: 0 10px 24px rgba(45,65,52,.08);
+        }
+
+        .control-btn:hover,
+        .dl-btn-sub:hover,
+        .nav-pill:hover,
+        .footer-links a:hover {
+            background: rgba(167,211,178,.18) !important;
+            border-color: rgba(81,132,99,.28) !important;
+            color: var(--brand) !important;
+        }
+
+        .maa-window,
+        .hero-left,
+        .hero-right,
+        .section-card,
+        .metric-card,
+        .feature-card,
+        .paper-card,
+        .system-card,
+        .point,
+        .env-card,
+        .task-item,
+        .flow-item,
+        .camera-view,
+        .benefit-card {
+            background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(247,250,246,.94)) !important;
+            border-color: rgba(144,171,150,.26) !important;
+            box-shadow: 0 20px 48px rgba(45,65,52,.12), inset 0 1px 0 rgba(255,255,255,.85) !important;
+        }
+
+        .win-titlebar {
+            background: linear-gradient(135deg, rgba(81,132,99,.96), rgba(67,110,81,.98)) !important;
+            color: #f7f5ef !important;
+            border-color: rgba(255,255,255,.08) !important;
+        }
+
+        .win-titlebar .win-btns span {
+            background: rgba(255,255,255,.46) !important;
+        }
+
+        .maa-navbar {
+            background: rgba(81,132,99,.06) !important;
+            border-color: rgba(144,171,150,.16) !important;
+        }
+
+        .maa-tab.active {
+            color: var(--brand) !important;
+            border-bottom-color: var(--brand) !important;
+        }
+
+        .header-main h1,
+        .system-card h3,
+        .section-head h3,
+        .metric-value,
+        .point strong,
+        .flow-item,
+        .logo-text {
+            color: var(--text) !important;
+            text-shadow: none !important;
+        }
+
+        .header-main p,
+        .point span,
+        .metric-desc,
+        .system-card p,
+        .list-item,
+        .paper-card p,
+        .bar-label,
+        .footer-brand p,
+        .footer-info,
+        .copyright,
+        .version,
+        .setting-row,
+        .col-log,
+        .env-label,
+        .win-titlebar .title,
+        .flow-item span,
+        .flow-item small {
+            color: var(--muted) !important;
+        }
+
+        .env-icon,
+        .feature-icon,
+        .status-icon,
+        .flow-dot {
+            background: linear-gradient(135deg, var(--brand), var(--brand2)) !important;
+            color: #ffffff !important;
+            box-shadow: 0 12px 28px rgba(81,132,99,.18) !important;
+        }
+
+        .status-icon {
+            color: #ffffff !important;
+        }
+
+        .hero-left::after {
+            background: radial-gradient(circle, rgba(81,132,99,.18), transparent 70%) !important;
+        }
+
+        .tag {
+            background: rgba(167,211,178,.18) !important;
+            border-color: rgba(81,132,99,.2) !important;
+            color: #365044 !important;
+        }
+
+        .point:hover,
+        .feature-card:hover,
+        .paper-card:hover,
+        .benefit-card:hover {
+            border-color: rgba(81,132,99,.24) !important;
+        }
+
+        .dl-btn-main {
+            background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(245,249,244,.94)) !important;
+            border-color: rgba(81,132,99,.3) !important;
+            color: var(--text) !important;
+            box-shadow: 0 16px 32px rgba(45,65,52,.14) !important;
+        }
+
+        .dl-btn-main:hover {
+            border-color: rgba(81,132,99,.42) !important;
+        }
+
+        .dl-btn-main i {
+            color: var(--brand) !important;
+        }
+
+        .nav-pill.highlight {
+            background: rgba(81,132,99,.12) !important;
+            border-color: rgba(81,132,99,.28) !important;
+            color: var(--brand) !important;
+        }
+
+        .nav-pill.highlight i {
+            color: var(--brand) !important;
+        }
+
+        .bar-fill.after {
+            background: linear-gradient(90deg, #7ca58a, #a7d3b2) !important;
+        }
+
+        .b-icon-1,
+        .b-icon-2,
+        .b-icon-3 {
+            color: var(--brand) !important;
+            background: rgba(81,132,99,.12) !important;
+        }
+
+        #vs-enter-btn {
+            background: linear-gradient(135deg, rgba(81,132,99,.16), rgba(167,211,178,.16)) !important;
+            border-color: rgba(81,132,99,.24) !important;
+            color: var(--brand) !important;
+        }
+
+        #vs-enter-btn:hover {
+            background: linear-gradient(135deg, rgba(81,132,99,.24), rgba(167,211,178,.24)) !important;
+            border-color: rgba(81,132,99,.38) !important;
+            box-shadow: 0 8px 24px rgba(81,132,99,.16) !important;
+        }
+
+        .global-footer {
+            background: linear-gradient(180deg, #edf4eb, #e5eee4) !important;
+        }
+
+        .footer-divider {
+            background: rgba(144,171,150,.28) !important;
+        }
     </style>
-    <link rel="stylesheet" href="/theme-tech-white.css">
 </head>
-<body class="theme-tech-white page-preview">
+<body>
 
-    <div class="bg-grid"></div>
-    <div class="ambient-glow"></div>
+<div class="dot-grid-bg" aria-hidden="true">
+    <canvas id="dot-grid-canvas" class="dot-grid-canvas"></canvas>
+</div>
 
-    <div class="top-controls">
-        <a href="register.html" class="control-btn"><i class="fa-solid fa-user-plus" style="margin-right: 6px;"></i> 注册账号</a>
-        <a href="login.html" class="control-btn"><i class="fa-solid fa-right-to-bracket" style="margin-right: 6px;"></i> 管理员登录</a>
-    </div>
+<div class="top-controls">
+    <a href="register.html" class="control-btn"><i class="fa-solid fa-user-plus" style="margin-right: 6px;"></i> 注册账号</a>
+    <a href="login.html" class="control-btn"><i class="fa-solid fa-right-to-bracket" style="margin-right: 6px;"></i> 管理员登录</a>
+</div>
 
-    <div class="scroll-wrapper" id="main-scroller">
+<div class="scroll-wrapper" id="main-scroller">
 
-        <section class="scroll-section play-anim" id="hero-section">
-            <main class="full-screen-content">
-                <header class="header-main">
-                    <h1 class="anim-title">石斛幼苗智能培育管理平台</h1>
-                    <p class="anim-subtitle">融合边缘计算与精准环控，自动感知、智能控制，全日常一键管控</p>
-                </header>
+    <section class="scroll-section play-anim" id="hero-section">
+        <main class="full-screen-content">
+            <header class="header-main">
+                <h1 class="anim-title">石斛幼苗智能培育管理平台</h1>
+                <p class="anim-subtitle">融合边缘计算与精准环控，自动感知、智能控制，全日常一键管控</p>
+            </header>
 
-                <div class="interactive-showcase-zone anim-middle" id="stage">
-                    <div class="window-cluster" id="win-group">
-                        <div class="maa-window pos-left" id="win-1">
-                            <div class="win-titlebar"><span>Node_01_Sensor - 环境感知</span><div class="win-btns"><span></span><span></span><span></span></div></div>
-                            <div class="maa-navbar"><div class="maa-tab active">一键感知</div><div class="maa-tab">自动调控</div><div class="maa-tab">诊断视图</div></div>
-                            <div class="content-wrap">
-                                <div class="env-grid">
-                                    <div class="env-card"><div class="env-info"><span class="env-label">温度</span><div><span class="env-val">24.5</span> <span style="font-size:12px;color:#888">°C</span></div></div><div class="env-icon"><i class="fa-solid fa-temperature-half"></i></div></div>
-                                    <div class="env-card"><div class="env-info"><span class="env-label">湿度</span><div><span class="env-val">82.0</span> <span style="font-size:12px;color:#888">%</span></div></div><div class="env-icon"><i class="fa-solid fa-droplet"></i></div></div>
-                                    <div class="env-card"><div class="env-info"><span class="env-label">光照</span><div><span class="env-val">1250</span> <span style="font-size:12px;color:#888">Lux</span></div></div><div class="env-icon"><i class="fa-solid fa-sun"></i></div></div>
-                                    <div class="env-card"><div class="env-info"><span class="env-label">烟雾浓度</span><div><span class="env-val">15</span> <span style="font-size:12px;color:#888">ppm</span></div></div><div class="env-icon" style="color:var(--good); background:rgba(43,213,118,0.1);"><i class="fa-solid fa-smog"></i></div></div>
-                                </div>
+            <div class="interactive-showcase-zone anim-middle" id="stage">
+                <div class="window-cluster" id="win-group">
+                    <div class="maa-window pos-left" id="win-1">
+                        <div class="win-titlebar"><span>Node_01_Sensor - 环境感知</span><div class="win-btns"><span></span><span></span><span></span></div></div>
+                        <div class="maa-navbar"><div class="maa-tab active">一键感知</div><div class="maa-tab">自动调控</div><div class="maa-tab">诊断视图</div></div>
+                        <div class="content-wrap">
+                            <div class="env-grid">
+                                <div class="env-card"><div class="env-info"><span class="env-label">温度</span><div><span class="env-val">24.5</span> <span style="font-size:12px;color:#888">°C</span></div></div><div class="env-icon"><i class="fa-solid fa-temperature-half"></i></div></div>
+                                <div class="env-card"><div class="env-info"><span class="env-label">湿度</span><div><span class="env-val">82.0</span> <span style="font-size:12px;color:#888">%</span></div></div><div class="env-icon"><i class="fa-solid fa-droplet"></i></div></div>
+                                <div class="env-card"><div class="env-info"><span class="env-label">光照</span><div><span class="env-val">1250</span> <span style="font-size:12px;color:#888">Lux</span></div></div><div class="env-icon"><i class="fa-solid fa-sun"></i></div></div>
+                                <div class="env-card"><div class="env-info"><span class="env-label">烟雾浓度</span><div><span class="env-val">15</span> <span style="font-size:12px;color:#888">ppm</span></div></div><div class="env-icon" style="color:var(--good); background:rgba(43,213,118,0.1);"><i class="fa-solid fa-smog"></i></div></div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="maa-window pos-center" id="win-2">
-                            <div class="win-titlebar"><span>Edge_Gateway_RK3568 (192.168.1.100)</span><div class="win-btns"><span></span><span></span><span></span></div></div>
-                            <div class="maa-navbar"><div class="maa-tab">一键感知</div><div class="maa-tab active">自动调控</div><div class="maa-tab">诊断视图</div></div>
-                            <div class="content-wrap">
-                                <div class="col-tasks">
-                                    <div class="task-item"><div><i class="fa-solid fa-robot" style="color:var(--brand);margin-right:8px"></i>自动环控模式</div><div class="switch"></div></div>
-                                    <div class="task-item"><div><i class="fa-solid fa-fan" style="color:#666;margin-right:8px"></i>排湿风机</div><div class="switch off"></div></div>
-                                    <div class="task-item"><div><i class="fa-solid fa-shower" style="color:var(--brand);margin-right:8px"></i>雾化加湿</div><div class="switch"></div></div>
-                                    <div class="task-item"><div><i class="fa-solid fa-lightbulb" style="color:var(--warn);margin-right:8px"></i>LED补光</div><div class="switch"></div></div>
-                                </div>
-                                <div class="col-settings">
-                                    <div class="setting-row"><span>温控上限</span><div class="setting-input">28.0 °C</div></div>
-                                    <div class="setting-row"><span>湿控下限</span><div class="setting-input">75.0 %</div></div>
-                                    <div class="setting-row" style="margin-top:15px;"><span>上报频率</span><div class="setting-input" style="text-align:left">3 秒 ▽</div></div>
-                                </div>
-                                <div class="col-log">
-                                    <div><span style="color:var(--brand2)">[10:45:01]</span> System Boot OK.</div>
-                                    <div><span style="color:var(--brand2)">[10:45:15]</span> <span style="color:var(--warn)">Rule: Humidity(74%) < Limit</span></div>
-                                    <div><span style="color:var(--brand2)">[10:45:15]</span> Action: Pump Relay -> ON</div>
-                                    <div><span style="color:var(--brand2)">[10:46:20]</span> Humidity reached 82%.</div>
-                                    <div><span style="color:var(--brand2)">[10:46:20]</span> Action: Pump Relay -> OFF</div>
-                                    <div><span style="color:var(--brand2)">[10:46:25]</span> Check: ErrorCode=0 <span style="color:var(--good)">(Safe)</span></div>
-                                </div>
+                    <div class="maa-window pos-center" id="win-2">
+                        <div class="win-titlebar"><span>Edge_Gateway_RK3568 (192.168.1.100)</span><div class="win-btns"><span></span><span></span><span></span></div></div>
+                        <div class="maa-navbar"><div class="maa-tab">一键感知</div><div class="maa-tab active">自动调控</div><div class="maa-tab">诊断视图</div></div>
+                        <div class="content-wrap">
+                            <div class="col-tasks">
+                                <div class="task-item"><div><i class="fa-solid fa-robot" style="color:var(--brand);margin-right:8px"></i>自动环控模式</div><div class="switch"></div></div>
+                                <div class="task-item"><div><i class="fa-solid fa-fan" style="color:#666;margin-right:8px"></i>排湿风机</div><div class="switch off"></div></div>
+                                <div class="task-item"><div><i class="fa-solid fa-shower" style="color:var(--brand);margin-right:8px"></i>雾化加湿</div><div class="switch"></div></div>
+                                <div class="task-item"><div><i class="fa-solid fa-lightbulb" style="color:var(--warn);margin-right:8px"></i>LED补光</div><div class="switch"></div></div>
+                            </div>
+                            <div class="col-settings">
+                                <div class="setting-row"><span>温控上限</span><div class="setting-input">28.0 °C</div></div>
+                                <div class="setting-row"><span>湿控下限</span><div class="setting-input">75.0 %</div></div>
+                                <div class="setting-row" style="margin-top:15px;"><span>上报频率</span><div class="setting-input" style="text-align:left">3 秒 ▽</div></div>
+                            </div>
+                            <div class="col-log">
+                                <div><span style="color:var(--brand2)">[10:45:01]</span> System Boot OK.</div>
+                                <div><span style="color:var(--brand2)">[10:45:15]</span> <span style="color:var(--warn)">Rule: Humidity(74%) < Limit</span></div>
+                                <div><span style="color:var(--brand2)">[10:45:15]</span> Action: Pump Relay -> ON</div>
+                                <div><span style="color:var(--brand2)">[10:46:20]</span> Humidity reached 82%.</div>
+                                <div><span style="color:var(--brand2)">[10:46:20]</span> Action: Pump Relay -> OFF</div>
+                                <div><span style="color:var(--brand2)">[10:46:25]</span> Check: ErrorCode=0 <span style="color:var(--good)">(Safe)</span></div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="maa-window pos-right" id="win-3">
-                            <div class="win-titlebar"><span>Cloud_Analysis - 风险预警</span><div class="win-btns"><span></span><span></span><span></span></div></div>
-                            <div class="maa-navbar"><div class="maa-tab">一键感知</div><div class="maa-tab">自动调控</div><div class="maa-tab active">诊断视图</div></div>
-                            <div class="content-wrap right-content">
-                                <div class="status-banner">
-                                    <div class="status-icon"><i class="fa-solid fa-check"></i></div>
-                                    <div>
-                                        <h3 style="font-size:15px; color:var(--good); margin-bottom:4px;">系统安全运行中</h3>
-                                        <p style="font-size:12px; color:var(--muted);">未发现软腐病特征，处于最佳练苗状态。</p>
-                                    </div>
+                    <div class="maa-window pos-right" id="win-3">
+                        <div class="win-titlebar"><span>K230_VideoStream - 实时视频流</span><div class="win-btns"><span></span><span></span><span></span></div></div>
+                        <div class="maa-navbar"><div class="maa-tab">一键感知</div><div class="maa-tab">自动调控</div><div class="maa-tab active">视频监控</div></div>
+                        <div class="content-wrap right-content" style="padding:14px; gap:10px;">
+                            <div class="status-banner" id="vs-status-banner" style="padding:12px;">
+                                <div class="status-icon" id="vs-status-icon"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                                <div>
+                                    <h3 id="vs-status-title" style="font-size:14px; color:var(--muted); margin-bottom:3px;">正在获取视频流信息…</h3>
+                                    <p id="vs-status-desc" style="font-size:11px; color:var(--muted);">连接中</p>
                                 </div>
-                                <div class="camera-view"><i class="fa-solid fa-video-slash" style="font-size: 24px; margin-right: 8px;"></i> 实时图像流挂起</div>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%;">
+                                <div style="background:var(--app-panel); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:10px 12px;">
+                                    <div style="font-size:10px; color:var(--muted); margin-bottom:4px;">播放模式</div>
+                                    <div id="vs-mode" style="font-size:15px; font-weight:700; color:white;">--</div>
+                                </div>
+                                <div style="background:var(--app-panel); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:10px 12px;">
+                                    <div style="font-size:10px; color:var(--muted); margin-bottom:4px;">公网地址</div>
+                                    <div id="vs-host" style="font-size:13px; font-weight:700; color:white; word-break:break-all;">--</div>
+                                </div>
+                                <div style="background:var(--app-panel); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:10px 12px;">
+                                    <div style="font-size:10px; color:var(--muted); margin-bottom:4px;">WebRTC 端口</div>
+                                    <div id="vs-port" style="font-size:15px; font-weight:700; color:white;">--</div>
+                                </div>
+                                <div style="background:var(--app-panel); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:10px 12px;">
+                                    <div style="font-size:10px; color:var(--muted); margin-bottom:4px;">AI 转发</div>
+                                    <div id="vs-ai" style="font-size:15px; font-weight:700; color:var(--muted);">--</div>
+                                </div>
+                            </div>
+                            <a id="vs-enter-btn" href="#" target="_blank" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px 0; border-radius:10px; background:linear-gradient(135deg, rgba(87,216,255,0.15), rgba(109,124,255,0.15)); border:1px solid rgba(87,216,255,0.25); color:var(--brand); font-size:13px; font-weight:600; text-decoration:none; transition:all 0.3s; cursor:pointer;">
+                                <i class="fa-solid fa-video"></i> 进入视频页
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <section class="action-sections anim-bottom">
+            <div class="download-row">
+                <a href="index.html" class="dl-btn-main">
+                    <i class="fa-brands fa-windows"></i>
+                    <div class="text-area">
+                        <span class="title">Windows x64 下载</span>
+                        <span class="version">v2.0.0 正式版</span>
+                    </div>
+                </a>
+                <a href="#" class="dl-btn-sub"><i class="fa-brands fa-android"></i> 安卓端</a>
+                <a href="#" class="dl-btn-sub"><i class="fa-brands fa-apple"></i> 苹果端</a>
+                <a href="#" class="dl-btn-sub"><i class="fa-brands fa-linux"></i> Linux端</a>
+            </div>
+
+            <div class="links-row">
+                <a href="https://github.com" target="_blank" class="nav-pill highlight"><i class="fa-brands fa-github"></i> GitHub 开源仓库</a>
+                <a class="nav-pill" onclick="scrollToId('overview')"><i class="fa-solid fa-layer-group"></i> 系统架构</a>
+                <a class="nav-pill" onclick="scrollToId('platform')"><i class="fa-solid fa-desktop"></i> 平台能力</a>
+                <a class="nav-pill" onclick="scrollToId('literature')"><i class="fa-solid fa-book-open"></i> 文献背景</a>
+                <a class="nav-pill" onclick="scrollToId('survival')"><i class="fa-solid fa-chart-line"></i> 数据对比</a>
+            </div>
+        </section>
+    </section>
+
+
+    <section class="scroll-section" id="overview">
+        <div class="container">
+            <div class="hero-centered reveal-item delay-1">
+                <div class="tag" style="margin-bottom: 20px;"><i class="fa-solid fa-leaf" style="margin-right: 5px;"></i>面向石斛组培苗 / 练苗 / 初期培育场景的智能化平台</div>
+                <h2 style="margin:0 0 24px; font-size:clamp(38px, 5vw, 56px); line-height:1.15; letter-spacing:.4px;">以数据驱动石斛育苗，<br>让环境调控更精准，让成活率更稳定。</h2>
+                <p style="margin:0 auto 36px; font-size:17px; line-height:1.85; color:#d6e2f2; max-width:860px;">
+                    本平台聚焦石斛幼苗培养设备的数字化管理，围绕温度、湿度、光照、基质状态、病害风险与执行器联动，
+                    构建“现场设备层—边缘控制层—边缘网关层—云端应用层”的一体化管理体系，支持多终端访问与可视化运维。
+                </p>
+            </div>
+
+            <div class="hero-panels">
+                <div class="hero-left reveal-item delay-2">
+                    <h3 style="margin: 0 0 20px; font-size: 20px; color: white;">系统核心特性</h3>
+                    <div class="hero-points">
+                        <div class="point">
+                            <strong>多平台可用</strong>
+                            <span>支持 PC、大屏、平板与移动端浏览，适合作为实验室展示页、项目主页与系统入口页。</span>
+                        </div>
+                        <div class="point">
+                            <strong>智能控制闭环</strong>
+                            <span>从传感器采集、边缘控制、网关上云，到后端规则判断与前端展示，形成完整控制闭环。</span>
+                        </div>
+                        <div class="point">
+                            <strong>科研与工程结合</strong>
+                            <span>将石斛栽培文献、标准化规程与设备管理能力融合展示，兼顾学术说明与工程落地。</span>
+                        </div>
+                        <div class="point">
+                            <strong>可追溯、可扩展</strong>
+                            <span>支持历史数据、告警记录、病虫害识别结果与设备状态留痕，方便后续扩展分析与答辩展示。</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-right reveal-item delay-3">
+                    <div class="kpi-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">系统目标</div>
+                            <div class="metric-value">≥ 85%</div>
+                            <div class="metric-desc">项目说明书给出的组培苗成活率目标值</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">文献最佳参考</div>
+                            <div class="metric-value">95.9%</div>
+                            <div class="metric-desc">松磷:木屑=1:1 基质下 540 天成活率</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">文献低值参考</div>
+                            <div class="metric-value">73.5%</div>
+                            <div class="metric-desc">低适配基质条件下 540 天成活率</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">核心感知项</div>
+                            <div class="metric-value">4+</div>
+                            <div class="metric-desc">温度 / 湿度 / 光照 / 基质状态等环境因子</div>
+                        </div>
+                    </div>
+
+                    <div class="system-card">
+                        <h3>系统架构概览</h3>
+                        <p>平台围绕石斛幼苗培育场景，打通设备、边缘控制、网关与云端应用，兼顾实时监测、设备控制和可视化管理。</p>
+                        <div class="system-flow">
+                            <div class="flow-item">
+                                <div class="flow-left"><span class="flow-dot"></span><span style="color:white">现场设备层</span></div>
+                                <span style="color:var(--muted)">传感器 / 执行器 / PLC / F103 节点</span>
+                            </div>
+                            <div class="flow-item">
+                                <div class="flow-left"><span class="flow-dot"></span><span style="color:white">边缘控制层</span></div>
+                                <span style="color:var(--muted)">STM32F429 主控制器</span>
+                            </div>
+                            <div class="flow-item">
+                                <div class="flow-left"><span class="flow-dot"></span><span style="color:white">边缘网关层</span></div>
+                                <span style="color:var(--muted)">RK3568 数据汇聚与协议转换</span>
+                            </div>
+                            <div class="flow-item">
+                                <div class="flow-left"><span class="flow-dot"></span><span style="color:white">云端应用层</span></div>
+                                <span style="color:var(--muted)">Spring Boot / Vue / MySQL / OneNET</span>
                             </div>
                         </div>
                     </div>
                 </div>
-            </main>
+            </div>
+        </div>
+    </section>
 
-            <section class="action-sections anim-bottom">
-                <div class="download-row">
-                    <a href="login.html" class="dl-btn-main">
-                        <i class="fa-solid fa-right-to-bracket"></i>
-                        <div class="text-area">
-                            <span class="title">立即登录系统</span>
-                            <span class="version">进入控制台管理设备</span>
-                        </div>
-                    </a>
-                </div>
-                
-                <div class="links-row">
-                    <a class="nav-pill" onclick="scrollToId('overview')"><i class="fa-solid fa-layer-group"></i> 系统架构</a>
-                    <a class="nav-pill" onclick="scrollToId('platform')"><i class="fa-solid fa-desktop"></i> 平台能力</a>
-                    <a class="nav-pill" onclick="scrollToId('literature')"><i class="fa-solid fa-book-open"></i> 文献背景</a>
-                    <a class="nav-pill" onclick="scrollToId('survival')"><i class="fa-solid fa-chart-line"></i> 数据对比</a>
-                </div>
-            </section>
-        </section>
-
-
-        <section class="scroll-section" id="overview">
-            <div class="container">
-                <div class="hero-centered reveal-item delay-1">
-                    <div class="tag" style="margin-bottom: 20px;"><i class="fa-solid fa-leaf" style="margin-right: 5px;"></i>面向石斛组培苗 / 练苗 / 初期培育场景的智能化平台</div>
-                    <h2 style="margin:0 0 24px; font-size:clamp(38px, 5vw, 56px); line-height:1.15; letter-spacing:.4px;">以数据驱动石斛育苗，<br>让环境调控更精准，让成活率更稳定。</h2>
-                    <p style="margin:0 auto 36px; font-size:17px; line-height:1.85; color:#d6e2f2; max-width:860px;">
-                        本平台聚焦石斛幼苗培养设备的数字化管理，围绕温度、湿度、光照、基质状态、病害风险与执行器联动，
-                        构建“现场设备层—边缘控制层—边缘网关层—云端应用层”的一体化管理体系，支持多终端访问与可视化运维。
+    <section class="scroll-section" id="platform">
+        <div class="container">
+            <div class="section-head reveal-item delay-1">
+                <div>
+                    <h3 style="color: white; font-size: 32px; margin-bottom: 12px;">第一部分｜平台与设备能力介绍</h3>
+                    <p>
+                        该系统用于石斛幼苗培养设备的集中监测与智能管理，前端侧重数据可视化、告警展示与过程回溯，
+                        后端侧重数据接入、规则判断与设备控制，硬件侧重环境感知、边缘执行与上云通信。
                     </p>
                 </div>
+            </div>
 
-                <div class="hero-panels">
-                    <div class="hero-left reveal-item delay-2">
-                        <h3 style="margin: 0 0 20px; font-size: 20px; color: white;">系统核心特性</h3>
-                        <div class="hero-points">
-                            <div class="point">
-                                <strong>多平台可用</strong>
-                                <span>支持 PC、大屏、平板与移动端浏览，适合作为实验室展示页、项目主页与系统入口页。</span>
-                            </div>
-                            <div class="point">
-                                <strong>智能控制闭环</strong>
-                                <span>从传感器采集、边缘控制、网关上云，到后端规则判断与前端展示，形成完整控制闭环。</span>
-                            </div>
-                            <div class="point">
-                                <strong>科研与工程结合</strong>
-                                <span>将石斛栽培文献、标准化规程与设备管理能力融合展示，兼顾学术说明与工程落地。</span>
-                            </div>
-                            <div class="point">
-                                <strong>可追溯、可扩展</strong>
-                                <span>支持历史数据、告警记录、病虫害识别结果与设备状态留痕，方便后续扩展分析与答辩展示。</span>
-                            </div>
-                        </div>
+            <div class="feature-grid">
+                <div class="feature-card reveal-item delay-2">
+                    <div class="feature-icon"><i class="fa-solid fa-desktop"></i></div>
+                    <h4>管理界面能力</h4>
+                    <p>提供实时环境监控、历史曲线、病虫害告警提示、设备状态监控等功能，支持数据可视化直观呈现与培育过程回溯分析。</p>
+                </div>
+                <div class="feature-card reveal-item delay-3">
+                    <div class="feature-icon"><i class="fa-solid fa-brain"></i></div>
+                    <h4>平台业务能力</h4>
+                    <p>后端具备设备管理、环境数据接收与解析、环境规则引擎、病虫害识别结果管理能力，并可根据规则触发控制指令或告警。</p>
+                </div>
+                <div class="feature-card reveal-item delay-4">
+                    <div class="feature-icon"><i class="fa-solid fa-microchip"></i></div>
+                    <h4>硬件控制能力</h4>
+                    <p>现场侧采集温度、湿度、光照、基质状态等参数，通过风机、雾化模块等执行器进行环境调控，形成从感知到控制的闭环。</p>
+                </div>
+            </div>
+
+            <div class="dual" style="margin-top:18px;">
+                <div class="section-card reveal-item delay-2">
+                    <h4>后台管理界面展示重点</h4>
+                    <div class="list">
+                        <div class="list-item">实时显示温度、湿度、光照、基质状态等关键指标</div>
+                        <div class="list-item">展示设备在线状态、异常状态、联动执行状态</div>
+                        <div class="list-item">提供病害风险识别结果与告警记录追踪</div>
+                        <div class="list-item">支持历史数据曲线、过程追溯与趋势判断</div>
                     </div>
-
-                    <div class="hero-right reveal-item delay-3">
-                        <div class="kpi-grid">
-                            <div class="metric-card">
-                                <div class="metric-label">系统目标</div>
-                                <div class="metric-value">≥ 85%</div>
-                                <div class="metric-desc">项目说明书给出的组培苗成活率目标值</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">文献最佳参考</div>
-                                <div class="metric-value">95.9%</div>
-                                <div class="metric-desc">松磷:木屑=1:1 基质下 540 天成活率</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">文献低值参考</div>
-                                <div class="metric-value">73.5%</div>
-                                <div class="metric-desc">低适配基质条件下 540 天成活率</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">核心感知项</div>
-                                <div class="metric-value">4+</div>
-                                <div class="metric-desc">温度 / 湿度 / 光照 / 基质状态等环境因子</div>
-                            </div>
-                        </div>
-
-                        <div class="system-card">
-                            <h3>系统架构概览</h3>
-                            <p>平台围绕石斛幼苗培育场景，打通设备、边缘控制、网关与云端应用，兼顾实时监测、设备控制和可视化管理。</p>
-                            <div class="system-flow">
-                                <div class="flow-item">
-                                    <div class="flow-left"><span class="flow-dot"></span><span style="color:white">现场设备层</span></div>
-                                    <span style="color:var(--muted)">传感器 / 执行器 / PLC / F103 节点</span>
-                                </div>
-                                <div class="flow-item">
-                                    <div class="flow-left"><span class="flow-dot"></span><span style="color:white">边缘控制层</span></div>
-                                    <span style="color:var(--muted)">STM32F429 主控制器</span>
-                                </div>
-                                <div class="flow-item">
-                                    <div class="flow-left"><span class="flow-dot"></span><span style="color:white">边缘网关层</span></div>
-                                    <span style="color:var(--muted)">RK3568 数据汇聚与协议转换</span>
-                                </div>
-                                <div class="flow-item">
-                                    <div class="flow-left"><span class="flow-dot"></span><span style="color:white">云端应用层</span></div>
-                                    <span style="color:var(--muted)">Spring Boot / Vue / MySQL / OneNET</span>
-                                </div>
-                            </div>
-                        </div>
+                </div>
+                <div class="section-card reveal-item delay-3">
+                    <h4>硬件设备组成展示重点</h4>
+                    <div class="list">
+                        <div class="list-item">STM32F103C8T6 节点负责部分传感器采集</div>
+                        <div class="list-item">PLC S7-200 Smart 负责执行器控制</div>
+                        <div class="list-item">STM32F429 作为主控制器进行边缘数据处理与通信</div>
+                        <div class="list-item">RK3568 负责数据汇聚、协议转换与云平台连接</div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="scroll-section" id="platform">
+    <section class="scroll-section" id="literature">
+        <div class="container">
+            <div class="section-head reveal-item delay-1">
+                <div>
+                    <h3 style="color: white; font-size: 32px; margin-bottom: 12px;">第二部分｜石斛幼苗易病死的研究背景</h3>
+                    <p>
+                        石斛幼苗尤其是组培苗在移栽与练苗阶段，对温度、湿度、光照、基质通气性和病害防控非常敏感。
+                        如果环境控制粗放、通风排水不良或病害防控滞后，成活率会明显下降，因此需要更标准化、可视化的设备体系。
+                    </p>
+                </div>
+            </div>
+
+            <div class="dual">
+                <div class="section-card reveal-item delay-2">
+                    <h4>为什么石斛幼苗容易出问题</h4>
+                    <div class="list">
+                        <div class="list-item">铁皮石斛喜欢阴凉、湿润环境，相对湿度需 80% 以上，生长期适宜温度常见为 18–28℃。环境偏离后，幼苗容易受胁迫。</div>
+                        <div class="list-item">组培苗从封闭培养环境转入自然环境后，需要完成从异养到自养的适应，基质与炼苗处理对成活率影响极大。</div>
+                        <div class="list-item">高温高湿、浇水过多、通气不良容易诱发软腐病、黑斑病、炭疽病和疫病，对当年移栽苗危害尤重。</div>
+                    </div>
+                </div>
+                <div class="section-card reveal-item delay-3">
+                    <h4>为什么需要智能培育管理平台</h4>
+                    <div class="list">
+                        <div class="list-item">传统人工经验管理存在环境调控不精准、病虫害发现滞后、培育过程不可追溯的问题。</div>
+                        <div class="list-item">系统通过环境感知、规则判断和执行器联动，把温湿光和通风、喷淋、病害风险控制在更合适的范围内。</div>
+                        <div class="list-item">不仅能提升成活率稳定性，其数字孪生特性也更适合科研答辩展示与项目汇报。</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="paper-grid">
+                <div class="paper-card reveal-item delay-2">
+                    <h5>文献 1｜铁皮石斛组培苗移栽基质筛选试验</h5>
+                    <div class="paper-meta">浙江林业科技，2015</div>
+                    <p>该研究显示，基质差异会显著影响组培苗成活率。松磷:木屑=1:1 处理在移栽 540 天后成活率达到 95.9%，而较差基质条件下仅 73.5%。</p>
+                    <div class="paper-links"><a href="#"><i class="fa-solid fa-file-pdf"></i> 在线查看 PDF</a></div>
+                </div>
+                <div class="paper-card reveal-item delay-3">
+                    <h5>文献 2｜铁皮石斛组织培养与栽培技术研究进展</h5>
+                    <div class="paper-meta">广东农业科学，2010</div>
+                    <p>综述指出，组织培养、炼苗、移栽管理受培养基、基质、光照、温湿度等多因素共同影响，为系统的环境控制逻辑提供了理论背景。</p>
+                    <div class="paper-links"><a href="#"><i class="fa-solid fa-file-pdf"></i> 在线查看 PDF</a></div>
+                </div>
+                <div class="paper-card reveal-item delay-4">
+                    <h5>文献 3｜广西铁皮石斛规范化生产标准操作规程</h5>
+                    <div class="paper-meta">广东农业科学，2011</div>
+                    <p>该规程明确了散射光、遮阳、喷淋、防虫网、通风降湿和病虫害防治等要求，对设备控制参数与管理制度具有直接参考价值。</p>
+                    <div class="paper-links"><a href="#"><i class="fa-solid fa-file-pdf"></i> 在线查看 PDF</a></div>
+                </div>
+            </div>
+
+            <div class="evidence-note reveal-item delay-4">
+                注：本页“文献背景”用于展示石斛幼苗在移栽和练苗阶段对环境与病害控制的敏感性；页面链接建议指向项目部署后的本地文献库，便于评委直接审阅。
+            </div>
+        </div>
+    </section>
+
+    <section class="scroll-section" id="survival" style="justify-content: space-between; padding-bottom: 0;">
+        <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; width: 100%;">
             <div class="container">
                 <div class="section-head reveal-item delay-1">
                     <div>
-                        <h3 style="color: white; font-size: 32px; margin-bottom: 12px;">第一部分｜平台与设备能力介绍</h3>
-                        <p>
-                            该系统用于石斛幼苗培养设备的集中监测与智能管理，前端侧重数据可视化、告警展示与过程回溯，
-                            后端侧重数据接入、规则判断与设备控制，硬件侧重环境感知、边缘执行与上云通信。
-                        </p>
+                        <h3 style="color: white; font-size: 32px; margin-bottom: 12px;">第三部分｜智能化环境调控预期收益评估</h3>
+                        <p>通过边缘计算与自动联动介入，我们将弥补传统人工管理的短板，确保环境因子长时间稳定在“优化基质文献”所指引的安全区间内，从而保障甚至超越项目预定的存活指标。</p>
                     </div>
                 </div>
 
-                <div class="feature-grid">
-                    <div class="feature-card reveal-item delay-2">
-                        <div class="feature-icon"><i class="fa-solid fa-desktop"></i></div>
-                        <h4>管理界面能力</h4>
-                        <p>提供实时环境监控、历史曲线、病虫害告警提示、设备状态监控等功能，支持数据可视化直观呈现与培育过程回溯分析。</p>
-                    </div>
-                    <div class="feature-card reveal-item delay-3">
-                        <div class="feature-icon"><i class="fa-solid fa-brain"></i></div>
-                        <h4>平台业务能力</h4>
-                        <p>后端具备设备管理、环境数据接收与解析、环境规则引擎、病虫害识别结果管理能力，并可根据规则触发控制指令或告警。</p>
-                    </div>
-                    <div class="feature-card reveal-item delay-4">
-                        <div class="feature-icon"><i class="fa-solid fa-microchip"></i></div>
-                        <h4>硬件控制能力</h4>
-                        <p>现场侧采集温度、湿度、光照、基质状态等参数，通过风机、雾化模块等执行器进行环境调控，形成从感知到控制的闭环。</p>
-                    </div>
-                </div>
-
-                <div class="dual" style="margin-top:18px;">
-                    <div class="section-card reveal-item delay-2">
-                        <h4>后台管理界面展示重点</h4>
-                        <div class="list">
-                            <div class="list-item">实时显示温度、湿度、光照、基质状态等关键指标</div>
-                            <div class="list-item">展示设备在线状态、异常状态、联动执行状态</div>
-                            <div class="list-item">提供病害风险识别结果与告警记录追踪</div>
-                            <div class="list-item">支持历史数据曲线、过程追溯与趋势判断</div>
+                <div class="survival-layout">
+                    <div class="chart-card reveal-item delay-2">
+                        <div class="chart-title">
+                            <h4>成活率目标对齐展示</h4>
+                            <span>依据文献验证处理结果与实际项目指标界定</span>
                         </div>
-                    </div>
-                    <div class="section-card reveal-item delay-3">
-                        <h4>硬件设备组成展示重点</h4>
-                        <div class="list">
-                            <div class="list-item">STM32F103C8T6 节点负责部分传感器采集</div>
-                            <div class="list-item">PLC S7-200 Smart 负责执行器控制</div>
-                            <div class="list-item">STM32F429 作为主控制器进行边缘数据处理与通信</div>
-                            <div class="list-item">RK3568 负责数据汇聚、协议转换与云平台连接</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <section class="scroll-section" id="literature">
-            <div class="container">
-                <div class="section-head reveal-item delay-1">
-                    <div>
-                        <h3 style="color: white; font-size: 32px; margin-bottom: 12px;">第二部分｜石斛幼苗易病死的研究背景</h3>
-                        <p>
-                            石斛幼苗尤其是组培苗在移栽与练苗阶段，对温度、湿度、光照、基质通气性和病害防控非常敏感。
-                            如果环境控制粗放、通风排水不良或病害防控滞后，成活率会明显下降，因此需要更标准化、可视化的设备体系。
-                        </p>
-                    </div>
-                </div>
-
-                <div class="dual">
-                    <div class="section-card reveal-item delay-2">
-                        <h4>为什么石斛幼苗容易出问题</h4>
-                        <div class="list">
-                            <div class="list-item">铁皮石斛喜欢阴凉、湿润环境，相对湿度需 80% 以上，生长期适宜温度常见为 18–28℃。环境偏离后，幼苗容易受胁迫。</div>
-                            <div class="list-item">组培苗从封闭培养环境转入自然环境后，需要完成从异养到自养的适应，基质与炼苗处理对成活率影响极大。</div>
-                            <div class="list-item">高温高湿、浇水过多、通气不良容易诱发软腐病、黑斑病、炭疽病和疫病，对当年移栽苗危害尤重。</div>
-                        </div>
-                    </div>
-                    <div class="section-card reveal-item delay-3">
-                        <h4>为什么需要智能培育管理平台</h4>
-                        <div class="list">
-                            <div class="list-item">传统人工经验管理存在环境调控不精准、病虫害发现滞后、培育过程不可追溯的问题。</div>
-                            <div class="list-item">系统通过环境感知、规则判断和执行器联动，把温湿光和通风、喷淋、病害风险控制在更合适的范围内。</div>
-                            <div class="list-item">不仅能提升成活率稳定性，其数字孪生特性也更适合科研答辩展示与项目汇报。</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="paper-grid">
-                    <div class="paper-card reveal-item delay-2">
-                        <h5>文献 1｜铁皮石斛组培苗移栽基质筛选试验</h5>
-                        <div class="paper-meta">浙江林业科技，2015</div>
-                        <p>该研究显示，基质差异会显著影响组培苗成活率。松磷:木屑=1:1 处理在移栽 540 天后成活率达到 95.9%，而较差基质条件下仅 73.5%。</p>
-                        <div class="paper-links"><a href="/docs/050418.pdf" target="_blank"><i class="fa-solid fa-file-pdf"></i> 在线查看 PDF</a></div>
-                    </div>
-                    <div class="paper-card reveal-item delay-3">
-                        <h5>文献 2｜铁皮石斛组织培养与栽培技术研究进展</h5>
-                        <div class="paper-meta">广东农业科学，2010</div>
-                        <p>综述指出，组织培养、炼苗、移栽管理受培养基、基质、光照、温湿度等多因素共同影响，为系统的环境控制逻辑提供了理论背景。</p>
-                        <div class="paper-links"><a href="/docs/j.issn.1004-874X.2010.04.028.pdf" target="_blank"><i class="fa-solid fa-file-pdf"></i> 在线查看 PDF</a></div>
-                    </div>
-                    <div class="paper-card reveal-item delay-4">
-                        <h5>文献 3｜广西铁皮石斛规范化生产标准操作规程</h5>
-                        <div class="paper-meta">广东农业科学，2011</div>
-                        <p>该规程明确了散射光、遮阳、喷淋、防虫网、通风降湿和病虫害防治等要求，对设备控制参数与管理制度具有直接参考价值。</p>
-                        <div class="paper-links"><a href="/docs/j.issn.1004-874X.2011.11.017.pdf" target="_blank"><i class="fa-solid fa-file-pdf"></i> 在线查看 PDF</a></div>
-                    </div>
-                </div>
-                
-                <div class="evidence-note reveal-item delay-4">
-                    注：本页“文献背景”用于展示石斛幼苗在移栽和练苗阶段对环境与病害控制的敏感性；页面链接建议指向项目部署后的本地文献库，便于评委直接审阅。
-                </div>
-            </div>
-        </section>
-
-        <section class="scroll-section" id="survival" style="justify-content: space-between; padding-bottom: 0;">
-            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; width: 100%;">
-                <div class="container">
-                    <div class="section-head reveal-item delay-1">
-                        <div>
-                            <h3 style="color: white; font-size: 32px; margin-bottom: 12px;">第三部分｜智能化环境调控预期收益评估</h3>
-                            <p>通过边缘计算与自动联动介入，我们将弥补传统人工管理的短板，确保环境因子长时间稳定在“优化基质文献”所指引的安全区间内，从而保障甚至超越项目预定的存活指标。</p>
-                        </div>
-                    </div>
-
-                    <div class="survival-layout">
-                        <div class="chart-card reveal-item delay-2">
-                            <div class="chart-title">
-                                <h4>成活率目标对齐展示</h4>
-                                <span>依据文献验证处理结果与实际项目指标界定</span>
+                        <div class="bars">
+                            <div class="bar-row">
+                                <div class="bar-label">传统/低适配条件参考</div>
+                                <div class="bar-track"><div class="bar-fill before" data-width="73.5%"></div></div>
+                                <div class="bar-value">73.5%</div>
                             </div>
-
-                            <div class="bars">
-                                <div class="bar-row">
-                                    <div class="bar-label">传统/低适配条件参考</div>
-                                    <div class="bar-track"><div class="bar-fill before" data-width="73.5%"></div></div>
-                                    <div class="bar-value">73.5%</div>
-                                </div>
-                                <div class="bar-row">
-                                    <div class="bar-label">本系统调控目标值</div>
-                                    <div class="bar-track"><div class="bar-fill after" data-width="85%"></div></div>
-                                    <div class="bar-value" style="color: var(--brand)">≥85%</div>
-                                </div>
-                                <div class="bar-row">
-                                    <div class="bar-label">优化基质文献参考上限</div>
-                                    <div class="bar-track"><div class="bar-fill best" data-width="95.9%"></div></div>
-                                    <div class="bar-value">95.9%</div>
-                                </div>
+                            <div class="bar-row">
+                                <div class="bar-label">本系统调控目标值</div>
+                                <div class="bar-track"><div class="bar-fill after" data-width="85%"></div></div>
+                                <div class="bar-value" style="color: var(--brand)">≥85%</div>
                             </div>
-
-                            <div class="evidence-note" style="margin-top: 24px; padding: 14px; background: rgba(0,0,0,0.2);">
-                                数据说明：73.5% 与 95.9% 取自《组培苗移栽基质筛选试验》在不同胁迫条件下的结果极值。≥85% 为本系统的设计下限。当获取实际投产数据后，平台将实时渲染实际存活曲线。
+                            <div class="bar-row">
+                                <div class="bar-label">优化基质文献参考上限</div>
+                                <div class="bar-track"><div class="bar-fill best" data-width="95.9%"></div></div>
+                                <div class="bar-value">95.9%</div>
                             </div>
                         </div>
 
-                        <div class="benefit-grid reveal-item delay-3">
-                            <div class="benefit-card">
-                                <div class="benefit-icon b-icon-1"><i class="fa-solid fa-shield-virus"></i></div>
-                                <div class="benefit-info">
-                                    <h5>有效遏制软腐病等高危病害</h5>
-                                    <p>通过微环境的毫秒级感知与强排风介入，打破病菌滋生的高温高湿“温床”，预期可将疫病发生率降低 <strong>60%</strong> 以上。</p>
-                                </div>
+                        <div class="evidence-note" style="margin-top: 24px; padding: 14px; background: rgba(0,0,0,0.2);">
+                            数据说明：73.5% 与 95.9% 取自《组培苗移栽基质筛选试验》在不同胁迫条件下的结果极值。≥85% 为本系统的设计下限。当获取实际投产数据后，平台将实时渲染实际存活曲线。
+                        </div>
+                    </div>
+
+                    <div class="benefit-grid reveal-item delay-3">
+                        <div class="benefit-card">
+                            <div class="benefit-icon b-icon-1"><i class="fa-solid fa-shield-virus"></i></div>
+                            <div class="benefit-info">
+                                <h5>有效遏制软腐病等高危病害</h5>
+                                <p>通过微环境的毫秒级感知与强排风介入，打破病菌滋生的高温高湿“温床”，预期可将疫病发生率降低 <strong>60%</strong> 以上。</p>
                             </div>
-                            <div class="benefit-card">
-                                <div class="benefit-icon b-icon-2"><i class="fa-solid fa-people-arrows"></i></div>
-                                <div class="benefit-info">
-                                    <h5>释放人力并消除响应滞后</h5>
-                                    <p>由边缘网关全天候托管喷淋与遮阳系统，替代传统巡检。极端异常时系统秒级告警并自动切断危险源。</p>
-                                </div>
+                        </div>
+                        <div class="benefit-card">
+                            <div class="benefit-icon b-icon-2"><i class="fa-solid fa-people-arrows"></i></div>
+                            <div class="benefit-info">
+                                <h5>释放人力并消除响应滞后</h5>
+                                <p>由边缘网关全天候托管喷淋与遮阳系统，替代传统巡检。极端异常时系统秒级告警并自动切断危险源。</p>
                             </div>
-                            <div class="benefit-card">
-                                <div class="benefit-icon b-icon-3"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                                <div class="benefit-info">
-                                    <h5>全周期数据驱动的培育范式</h5>
-                                    <p>所有的环控数据、告警履历及设备启停记录均沉淀于云端，为下一批次幼苗培养提供高价值的参数对比和策略迭代依据。</p>
-                                </div>
+                        </div>
+                        <div class="benefit-card">
+                            <div class="benefit-icon b-icon-3"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                            <div class="benefit-info">
+                                <h5>全周期数据驱动的培育范式</h5>
+                                <p>所有的环控数据、告警履历及设备启停记录均沉淀于云端，为下一批次幼苗培养提供高价值的参数对比和策略迭代依据。</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <footer class="global-footer reveal-item delay-4">
-                <div class="footer-container">
-                    <div class="footer-top">
-                        <div class="footer-brand">
-                            <div class="logo-group">
-                                <span class="logo-icon">IOT</span>
-                                <span class="logo-text">石斛幼苗培育平台</span>
-                            </div>
-                            <p>融合边缘计算与精准环控的现代化育苗解决方案</p>
+        <footer class="global-footer reveal-item delay-4">
+            <div class="footer-container">
+                <div class="footer-top">
+                    <div class="footer-brand">
+                        <div class="logo-group">
+                            <span class="logo-icon">FX</span>
+                            <span class="logo-text">F-PolyImage</span>
                         </div>
-                        <div class="footer-info">
-                            产品: IoT-Dendrobium | 开发者: Aurora Team | 联系: admin@example.com
-                        </div>
+                        <p></p>
                     </div>
-                    
-                    <div class="footer-divider"></div>
-                    
-                    <div class="footer-bottom">
-                        <div class="copyright">© 2026 • 石斛幼苗智能培育管理平台 保留所有权利。</div>
-                        <div class="footer-links">
-                            <a href="#">服务条款</a>
-                            <a href="#">隐私政策</a>
-                            <a href="#"><i class="fa-regular fa-comment"></i> 用户反馈</a>
-                        </div>
+                    <div class="footer-info">
+                        产品:  | 开发者:  | 联系:
                     </div>
                 </div>
-            </footer>
-        </section>
 
-    </div>
+                <div class="footer-divider"></div>
 
-    <script>
-        // ================= 1. 3D 背景跟随逻辑 =================
-        const stage = document.getElementById('stage');
-        const winGroup = document.getElementById('win-group');
-        let isDragging = false;
+                <div class="footer-bottom">
+                    <div class="copyright">© 2026 • F-PolyImage 保留所有权利。</div>
+                    <div class="footer-links">
+                        <a href="#">服务条款</a>
+                        <a href="#">隐私政策</a>
+                        <a href="#"><i class="fa-regular fa-comment"></i> 用户反馈</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </section>
 
-        window.addEventListener('mousemove', (e) => {
-            if(isDragging || !winGroup) return; 
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            
-            const xPos = (e.clientX - width / 2) / (width / 2);
-            const yPos = (e.clientY - height / 2) / (height / 2);
-            
-            const rotateX = yPos * -12; 
-            const rotateY = xPos * 20; 
-            
-            winGroup.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-        });
+</div>
 
-        window.addEventListener('mouseleave', () => {
-            if(!isDragging && winGroup) winGroup.style.transform = `rotateX(0deg) rotateY(0deg)`;
-        });
+<script>
+    // ================= 0. DotGrid 鐐归樀鑳屾櫙 =================
+    (function initDotGrid() {
+        const canvas = document.getElementById('dot-grid-canvas');
+        if (!canvas) return;
 
-        // ================= 2. 首屏 3D 拖拽切换逻辑 =================
-        const windows = [
-            document.getElementById('win-1'),
-            document.getElementById('win-2'),
-            document.getElementById('win-3')
-        ];
-        
-        let classPositions = ['pos-left', 'pos-center', 'pos-right'];
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
 
-        function updatePositions() {
-            windows.forEach((win, index) => {
-                if(win) win.className = `maa-window ${classPositions[index]}`;
-            });
-        }
-
-        function moveCarousel(direction) {
-            if (direction === 'right') classPositions.push(classPositions.shift());
-            else classPositions.unshift(classPositions.pop());
-            updatePositions();
-        }
-
-        let startX = 0;
-        const swipeThreshold = 50; 
-
-        if(stage) {
-            stage.addEventListener('mousedown', (e) => {
-                startX = e.clientX;
-                isDragging = true;
-                winGroup.style.transform = `rotateX(0deg) rotateY(0deg)`;
-            });
-
-            window.addEventListener('mouseup', (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-                const diffX = e.clientX - startX;
-                if (diffX > swipeThreshold) moveCarousel('right');
-                else if (diffX < -swipeThreshold) moveCarousel('left');
-            });
-
-            stage.addEventListener('touchstart', (e) => {
-                startX = e.touches[0].clientX;
-                isDragging = true;
-                winGroup.style.transform = `rotateX(0deg) rotateY(0deg)`;
-            });
-
-            window.addEventListener('touchend', (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-                const diffX = e.changedTouches[0].clientX - startX;
-                if (diffX > swipeThreshold) moveCarousel('right');
-                else if (diffX < -swipeThreshold) moveCarousel('left');
-            });
-        }
-
-        // ================= 3. 双向滚动触发分层动画 (核心修复点) =================
-        const observerOptions = {
-            root: document.getElementById('main-scroller'),
-            threshold: 0.15 // 元素露出 15% 即触发
+        const config = {
+            dotSize: 5,
+            gap: 15,
+            baseColor: { r: 255, g: 255, b: 255 },
+            activeColor: { r: 255, g: 255, b: 255 },
+            proximity: 120,
+            speedTrigger: 100,
+            shockRadius: 250,
+            shockStrength: 0.16,
+            friction: 0.82,
+            spring: 0.08,
+            maxSpeed: 5000
         };
 
-        const revealObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                const targetId = entry.target.id;
-                
-                if (entry.isIntersecting) {
-                    // 触发首屏专属进场动画
-                    if (targetId === 'hero-section') {
-                        entry.target.classList.add('play-anim');
-                    }
+        const dots = [];
+        const pointer = {
+            x: -9999,
+            y: -9999,
+            vx: 0,
+            vy: 0,
+            speed: 0,
+            lastTime: 0,
+            lastX: 0,
+            lastY: 0
+        };
 
-                    // 触发该区域内所有 `.reveal-item` 的浮现动画
-                    const items = entry.target.querySelectorAll('.reveal-item');
-                    items.forEach(el => el.classList.add('visible'));
-                    
-                    // 触发图表的拉长动画
-                    const bars = entry.target.querySelectorAll('.bar-fill');
-                    if (bars.length > 0) {
-                        bars.forEach((bar, index) => {
-                            setTimeout(() => { bar.style.width = bar.dataset.width; }, 400 + index * 150);
-                        });
-                    }
-                } 
-                else {
-                    // 当区域离开视口时移除类，保证上下划动回来时再次播放动画！
-                    if (targetId === 'hero-section') {
-                        entry.target.classList.remove('play-anim');
-                    }
-                    
-                    const items = entry.target.querySelectorAll('.reveal-item');
-                    items.forEach(el => el.classList.remove('visible'));
-                    
-                    const bars = entry.target.querySelectorAll('.bar-fill');
-                    if (bars.length > 0) {
-                        bars.forEach(bar => { bar.style.width = '0'; });
-                    }
+        let circlePath = null;
+        let rafId = 0;
+
+        function resizeCanvas() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const dpr = window.devicePixelRatio || 1;
+
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(dpr, dpr);
+
+            circlePath = new Path2D();
+            circlePath.arc(0, 0, config.dotSize / 2, 0, Math.PI * 2);
+
+            const cell = config.dotSize + config.gap;
+            const cols = Math.floor((width + config.gap) / cell);
+            const rows = Math.floor((height + config.gap) / cell);
+            const gridW = cell * cols - config.gap;
+            const gridH = cell * rows - config.gap;
+            const startX = (width - gridW) / 2 + config.dotSize / 2;
+            const startY = (height - gridH) / 2 + config.dotSize / 2;
+
+            dots.length = 0;
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    dots.push({
+                        cx: startX + x * cell,
+                        cy: startY + y * cell,
+                        xOffset: 0,
+                        yOffset: 0,
+                        vx: 0,
+                        vy: 0
+                    });
                 }
-            });
-        }, observerOptions);
-
-        // 监听所有的滚动整屏 section
-        document.querySelectorAll('.scroll-section').forEach(section => {
-            revealObserver.observe(section);
-        });
-
-        // ================= 4. 按钮平滑滚动跳转 =================
-        function scrollToId(id) {
-            const scroller = document.getElementById('main-scroller');
-            const target = document.getElementById(id);
-            if(scroller && target) {
-                scroller.scrollTo({
-                    top: target.offsetTop,
-                    behavior: 'smooth'
-                });
             }
         }
-    </script>
+
+        function colorForDot(dot) {
+            const dx = dot.cx - pointer.x;
+            const dy = dot.cy - pointer.y;
+            const distSq = dx * dx + dy * dy;
+            const proxSq = config.proximity * config.proximity;
+
+            if (distSq > proxSq) {
+                return 'rgb(' + config.baseColor.r + ',' + config.baseColor.g + ',' + config.baseColor.b + ')';
+            }
+
+            const dist = Math.sqrt(distSq);
+            const t = 1 - dist / config.proximity;
+            const r = Math.round(config.baseColor.r + (config.activeColor.r - config.baseColor.r) * t);
+            const g = Math.round(config.baseColor.g + (config.activeColor.g - config.baseColor.g) * t);
+            const b = Math.round(config.baseColor.b + (config.activeColor.b - config.baseColor.b) * t);
+            return 'rgb(' + r + ',' + g + ',' + b + ')';
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (const dot of dots) {
+                dot.vx += -dot.xOffset * config.spring;
+                dot.vy += -dot.yOffset * config.spring;
+                dot.vx *= config.friction;
+                dot.vy *= config.friction;
+                dot.xOffset += dot.vx;
+                dot.yOffset += dot.vy;
+
+                if (Math.abs(dot.xOffset) < 0.01) dot.xOffset = 0;
+                if (Math.abs(dot.yOffset) < 0.01) dot.yOffset = 0;
+                if (Math.abs(dot.vx) < 0.01) dot.vx = 0;
+                if (Math.abs(dot.vy) < 0.01) dot.vy = 0;
+
+                ctx.save();
+                ctx.translate(dot.cx + dot.xOffset, dot.cy + dot.yOffset);
+                ctx.fillStyle = colorForDot(dot);
+                ctx.fill(circlePath);
+                ctx.restore();
+            }
+
+            rafId = window.requestAnimationFrame(animate);
+        }
+
+        function handlePointerMove(clientX, clientY) {
+            const now = performance.now();
+            const dt = pointer.lastTime ? Math.max(16, now - pointer.lastTime) : 16;
+            const dx = clientX - pointer.lastX;
+            const dy = clientY - pointer.lastY;
+            let vx = (dx / dt) * 1000;
+            let vy = (dy / dt) * 1000;
+            let speed = Math.hypot(vx, vy);
+
+            if (speed > config.maxSpeed) {
+                const scale = config.maxSpeed / speed;
+                vx *= scale;
+                vy *= scale;
+                speed = config.maxSpeed;
+            }
+
+            pointer.x = clientX;
+            pointer.y = clientY;
+            pointer.vx = vx;
+            pointer.vy = vy;
+            pointer.speed = speed;
+            pointer.lastX = clientX;
+            pointer.lastY = clientY;
+            pointer.lastTime = now;
+
+            if (speed <= config.speedTrigger) return;
+
+            for (const dot of dots) {
+                const dist = Math.hypot(dot.cx - clientX, dot.cy - clientY);
+                if (dist >= config.proximity) continue;
+
+                const falloff = 1 - dist / config.proximity;
+                dot.vx += ((dot.cx - clientX) * 0.02 + vx * 0.0025) * falloff;
+                dot.vy += ((dot.cy - clientY) * 0.02 + vy * 0.0025) * falloff;
+            }
+        }
+
+        function handleShock(clientX, clientY) {
+            for (const dot of dots) {
+                const dx = dot.cx - clientX;
+                const dy = dot.cy - clientY;
+                const dist = Math.hypot(dx, dy);
+                if (dist >= config.shockRadius) continue;
+
+                const falloff = 1 - dist / config.shockRadius;
+                dot.vx += dx * config.shockStrength * falloff;
+                dot.vy += dy * config.shockStrength * falloff;
+            }
+        }
+
+        resizeCanvas();
+        animate();
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY), { passive: true });
+        window.addEventListener('click', (e) => handleShock(e.clientX, e.clientY));
+        window.addEventListener('mouseleave', () => {
+            pointer.x = -9999;
+            pointer.y = -9999;
+        });
+        window.addEventListener('beforeunload', () => window.cancelAnimationFrame(rafId));
+    })();
+    // ================= 1. 3D 背景跟随逻辑 =================
+    const stage = document.getElementById('stage');
+    const winGroup = document.getElementById('win-group');
+    let isDragging = false;
+
+    window.addEventListener('mousemove', (e) => {
+        if(isDragging || !winGroup) return;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        const xPos = (e.clientX - width / 2) / (width / 2);
+        const yPos = (e.clientY - height / 2) / (height / 2);
+
+        const rotateX = yPos * -12;
+        const rotateY = xPos * 20;
+
+        winGroup.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    });
+
+    window.addEventListener('mouseleave', () => {
+        if(!isDragging && winGroup) winGroup.style.transform = `rotateX(0deg) rotateY(0deg)`;
+    });
+
+    // ================= 2. 首屏 3D 拖拽切换逻辑 =================
+    const windows = [
+        document.getElementById('win-1'),
+        document.getElementById('win-2'),
+        document.getElementById('win-3')
+    ];
+
+    let classPositions = ['pos-left', 'pos-center', 'pos-right'];
+
+    function updatePositions() {
+        windows.forEach((win, index) => {
+            if(win) win.className = `maa-window ${classPositions[index]}`;
+        });
+    }
+
+    function moveCarousel(direction) {
+        if (direction === 'right') classPositions.push(classPositions.shift());
+        else classPositions.unshift(classPositions.pop());
+        updatePositions();
+    }
+
+    let startX = 0;
+    const swipeThreshold = 50;
+
+    if(stage) {
+        stage.addEventListener('mousedown', (e) => {
+            startX = e.clientX;
+            isDragging = true;
+            winGroup.style.transform = `rotateX(0deg) rotateY(0deg)`;
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            const diffX = e.clientX - startX;
+            if (diffX > swipeThreshold) moveCarousel('right');
+            else if (diffX < -swipeThreshold) moveCarousel('left');
+        });
+
+        stage.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+            winGroup.style.transform = `rotateX(0deg) rotateY(0deg)`;
+        });
+
+        window.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            const diffX = e.changedTouches[0].clientX - startX;
+            if (diffX > swipeThreshold) moveCarousel('right');
+            else if (diffX < -swipeThreshold) moveCarousel('left');
+        });
+    }
+
+    // ================= 3. 双向滚动触发分层动画 (核心修复点) =================
+    const observerOptions = {
+        root: document.getElementById('main-scroller'),
+        threshold: 0.15 // 元素露出 15% 即触发
+    };
+
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const targetId = entry.target.id;
+
+            if (entry.isIntersecting) {
+                // 触发首屏专属进场动画
+                if (targetId === 'hero-section') {
+                    entry.target.classList.add('play-anim');
+                }
+
+                // 触发该区域内所有 `.reveal-item` 的浮现动画
+                const items = entry.target.querySelectorAll('.reveal-item');
+                items.forEach(el => el.classList.add('visible'));
+
+                // 触发图表的拉长动画
+                const bars = entry.target.querySelectorAll('.bar-fill');
+                if (bars.length > 0) {
+                    bars.forEach((bar, index) => {
+                        setTimeout(() => { bar.style.width = bar.dataset.width; }, 400 + index * 150);
+                    });
+                }
+            }
+            else {
+                // 当区域离开视口时移除类，保证上下划动回来时再次播放动画！
+                if (targetId === 'hero-section') {
+                    entry.target.classList.remove('play-anim');
+                }
+
+                const items = entry.target.querySelectorAll('.reveal-item');
+                items.forEach(el => el.classList.remove('visible'));
+
+                const bars = entry.target.querySelectorAll('.bar-fill');
+                if (bars.length > 0) {
+                    bars.forEach(bar => { bar.style.width = '0'; });
+                }
+            }
+        });
+    }, observerOptions);
+
+    // 监听所有的滚动整屏 section
+    document.querySelectorAll('.scroll-section').forEach(section => {
+        revealObserver.observe(section);
+    });
+
+    // ================= 4. 按钮平滑滚动跳转 =================
+    function scrollToId(id) {
+        const scroller = document.getElementById('main-scroller');
+        const target = document.getElementById(id);
+        if(scroller && target) {
+            scroller.scrollTo({
+                top: target.offsetTop,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    // ================= 5. 视频流信息加载 =================
+    (function loadVideoStream() {
+        fetch('/api/video/streams')
+            .then(r => r.json())
+            .then(res => {
+                const okCode = res.code == null || res.code === 0 || res.code === 200;
+                if (!okCode || !res.data || res.data.length === 0) {
+                    document.getElementById('vs-status-title').textContent = '暂无可用视频流';
+                    document.getElementById('vs-status-icon').innerHTML = '<i class="fa-solid fa-video-slash"></i>';
+                    document.getElementById('vs-status-icon').style.background = 'var(--danger)';
+                    return;
+                }
+                const s = res.data[0];
+                const banner = document.getElementById('vs-status-banner');
+                const icon = document.getElementById('vs-status-icon');
+                const title = document.getElementById('vs-status-title');
+                const desc = document.getElementById('vs-status-desc');
+
+                if (s.available) {
+                    banner.style.background = 'rgba(43,213,118,0.1)';
+                    banner.style.borderColor = 'rgba(43,213,118,0.2)';
+                    icon.innerHTML = '<i class="fa-solid fa-circle-play"></i>';
+                    icon.style.background = 'var(--good)';
+                    title.textContent = s.displayName || 'K230 实时视频流';
+                    title.style.color = 'var(--good)';
+                    desc.textContent = '视频流在线 · 可正常播放';
+                } else {
+                    banner.style.background = 'rgba(255,107,107,0.1)';
+                    banner.style.borderColor = 'rgba(255,107,107,0.2)';
+                    icon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                    icon.style.background = 'var(--danger)';
+                    title.textContent = s.displayName || '视频流';
+                    title.style.color = 'var(--danger)';
+                    desc.textContent = '视频流离线';
+                }
+
+                document.getElementById('vs-mode').textContent = s.preferredMode || '--';
+                document.getElementById('vs-host').textContent = s.publicHost || '--';
+                document.getElementById('vs-port').textContent = s.webrtcPort || '--';
+
+                const aiEl = document.getElementById('vs-ai');
+                if (s.aiResultForwarded) {
+                    aiEl.textContent = '已开启';
+                    aiEl.style.color = 'var(--good)';
+                } else {
+                    aiEl.textContent = '未开启';
+                    aiEl.style.color = 'var(--muted)';
+                }
+
+                const btn = document.getElementById('vs-enter-btn');
+                if (s.playerUrl) {
+                    btn.href = s.playerUrl;
+                } else if (s.gatewayPageUrl) {
+                    btn.href = s.gatewayPageUrl;
+                }
+            })
+            .catch(() => {
+                document.getElementById('vs-status-title').textContent = '视频流服务连接失败';
+                document.getElementById('vs-status-icon').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                document.getElementById('vs-status-icon').style.background = 'var(--warn)';
+            });
+    })();
+</script>
 </body>
 </html>
