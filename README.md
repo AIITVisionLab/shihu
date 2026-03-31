@@ -1,10 +1,17 @@
 # 斛生跨平台客户端
 
+> 版权所有：安徽信息工程学院计算机视觉实验室
+
 ## 项目定位
 
 这是一个面向石斛幼苗培育场景的 Flutter 跨平台客户端，当前版本已经收口为可直接值守的工作台软件，而不是继续保留识别、历史记录等未接通模块。
 
 当前代码已按 `CjhAIIt/iot-onenet-refact-main` 后端契约对齐。
+
+补充说明：
+
+- 当前客户端工程已经独立收口在 `husheng-client/`
+- 仓库根目录仅保留模块导航、历史模块目录和仓库级发布工作流
 
 ## 当前交付范围
 
@@ -107,7 +114,7 @@ flutter run --dart-define=BASE_URL=http://127.0.0.1:8085
 视频接口暂未接入业务后端时，可直接指定公网视频网关兜底：
 
 ```bash
-  flutter run \
+flutter run \
   --dart-define=BASE_URL=http://127.0.0.1:8085 \
   --dart-define=VIDEO_GATEWAY_URL=http://101.35.79.76:1984 \
   --dart-define=VIDEO_DEFAULT_STREAM_ID=k230
@@ -139,24 +146,41 @@ flutter run --dart-define=USE_MOCK_AUTH=true
 
 - 推送 `v*` 标签时自动构建并上传到 GitHub Release
 - 也可手动执行 `发布安装包` 工作流，并传入发布标签
+- 若个别平台构建失败，Release 会保留已成功的平台产物，不再因为单个平台失败阻断整体发版
+- GitHub Release 对外资产统一规整为 ASCII 文件名，统一使用 `husheng-*` 前缀，避免经过 GitHub artifact 链路后丢失中文前缀
 
 默认构建并上传的安装包：
 
 - Android 按架构拆分 `APK`
+- Android 通用 `APK`
+- Android 发布 `AAB`
+- Android 拆分包汇总压缩包
 - Linux `deb`
 - Linux `rpm`
 - Linux `pacman`
 - Linux `AppImage`
 - Linux `Flatpak`
 - Linux 便携二进制包 `tar.gz`
+- Linux 便携二进制包 `tar.xz`
+- Linux 便携二进制包 `zip`
+- Linux 原始 bundle 归档包 `tar.gz`
+- Linux 原始 bundle 归档包 `tar.xz`
+- Linux 原始 bundle 归档包 `zip`
+- Linux 原始 runner 可执行文件
+- Web 静态资源 `zip`
+- Web 静态资源 `tar.gz`
+- Web 静态资源 `tar.xz`
 - Windows 安装器 `exe`
+- Windows 便携压缩包 `zip`
 - macOS 安装盘镜像 `dmg`
+- macOS 应用压缩包 `.app.zip`
 - iOS 未签名 `IPA`
+- iOS 未签名应用压缩包 `.app.zip`
 
-当前不再上传：
+当前仍不上传：
 
-- `AAB`
-- Web 静态资源
+- 原始 `build/` 目录
+- 本地开发配置
 - 校验说明附件
 
 OpenHarmony / 鸿蒙说明：
@@ -176,7 +200,7 @@ iOS 说明：
 
 - 当前 Flutter 官方工具链只能直接构建 `linux-x64`、`linux-arm64`
 - `loong64`、`riscv64` 这类冷门架构不能在当前官方 Flutter 发行版上直接交叉构建
-- 仓库已补 `tool/package_linux_all.sh`，如果你有对应架构机器上产出的原生 Linux bundle，可继续一键封装成 `deb`、`rpm`、`pacman`、`portable`
+- 仓库已补 `tool/package_linux_all.sh` 和 `tool/package_linux_extra_archives.sh`，如果你有对应架构机器上产出的原生 Linux bundle，可继续一键封装成 `deb`、`rpm`、`pacman`、`portable` 和额外归档包
 - `AppImage`、`Flatpak` 目前只在仓库脚本里支持 `x86_64`、`aarch64`
 - 仓库内 Linux runner 已固定 `PIE` 编译和链接参数，Fedora / RHEL 这类默认启用硬化策略的宿主机不需要再额外传 `CFLAGS`、`CXXFLAGS`、`LDFLAGS`
 
@@ -196,7 +220,7 @@ iOS 说明：
 - `flutter build appbundle --release`
 - `flutter build apk --release --split-per-abi`
 - `flutter build linux --release`
-- `tool/package_linux_all.sh build/linux/x64/release/bundle release 0.1.7+1 x64`
+- `tool/package_linux_all.sh build/linux/x64/release/bundle release 0.1.0+1 x64`
 
 未在当前环境验证的平台：
 
