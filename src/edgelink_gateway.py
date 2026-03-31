@@ -21,6 +21,7 @@ import signal
 import sys
 import threading
 import time
+import uuid
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -64,6 +65,49 @@ class CloudCommand:
     request_id: str
     params: Dict[str, Any]
     received_at_ms: int
+
+
+@dataclass
+class ControlCommandRecord:
+    command_id: str
+    device_id: str
+    action: str
+    params: Dict[str, Any]
+    seq: int
+    code: int
+    arg1: int
+    arg2: int
+    arg3: int
+    ttl_ms: int
+    status: str
+    issued_at_ms: int
+    updated_at_ms: int
+    offered_at_ms: int = 0
+    result_code: int = 0
+    result_text: str = "NONE"
+
+
+CONTROL_STATUS_QUEUED = "QUEUED"
+CONTROL_STATUS_OFFERED = "OFFERED"
+CONTROL_STATUS_RUNNING = "RUNNING"
+CONTROL_STATUS_SUCCEEDED = "SUCCEEDED"
+CONTROL_STATUS_FAILED = "FAILED"
+CONTROL_STATUS_EXPIRED = "EXPIRED"
+
+CONTROL_ACTION_HOME = "stepper.home"
+CONTROL_ACTION_MOVE_REL = "stepper.move_rel"
+CONTROL_ACTION_STOP = "stepper.stop"
+CONTROL_ACTION_PUMP_ON = "pump.on"
+CONTROL_ACTION_PUMP_OFF = "pump.off"
+
+CONTROL_CODE_HOME = 1
+CONTROL_CODE_MOVE_REL = 2
+CONTROL_CODE_STOP = 3
+CONTROL_CODE_PUMP_ON = 4
+CONTROL_CODE_PUMP_OFF = 5
+
+CONTROL_RESULT_FINAL_OK = {3, 4}
+CONTROL_RESULT_FINAL_FAIL = {40, 41, 42, 43, 44}
 
 
 @dataclass
@@ -136,6 +180,11 @@ class GatewayState:
         self.pending_k230_hit_count = 0
         self.last_go2rtc_switch_ok: Optional[bool] = None
         self.last_go2rtc_switch_ms = 0
+        self.control_commands: Dict[str, ControlCommandRecord] = {}
+        self.active_control_command_id = ""
+        self.next_control_seq = 1
+        self.last_slave4_state: Dict[str, Any] = {}
+        self.last_snapshot_ts_ms = 0
 
 
 class GatewayApp:
@@ -231,6 +280,266 @@ class GatewayApp:
                 "agri_forward", "only_non_empty_vision", fallback=True
             ),
         )
+
+    @staticmethod
+    def _control_result_text(result_code: int) -> str:
+        mapping = {
+            0: "NONE",
+            1: "ACCEPTED",
+            2: "RUNNING",
+            3: "DONE",
+            4: "STOPPED",
+            40: "NOT_HOMED",
+            41: "LIMIT_REJECT",
+            42: "PARAM_INVALID",
+            43: "HOME_TIMEOUT",
+            44: "BUSY_REJECT",
+        }
+        return mapping.get(int(result_code), "UNKNOWN")
+
+    def _get_active_control_locked(self) -> Optional[ControlCommandRecord]:
+        if not self.state.active_control_command_id:
+            return None
+        return self.state.control_commands.get(self.state.active_control_command_id)
+
+    def _expire_active_control_locked(self, now: int) -> None:
+        active = self._get_active_control_locked()
+        if active is None:
+            return
+        if active.status in {CONTROL_STATUS_SUCCEEDED, CONTROL_STATUS_FAILED, CONTROL_STATUS_EXPIRED}:
+            return
+        if now - active.issued_at_ms > active.ttl_ms:
+            active.status = CONTROL_STATUS_EXPIRED
+            active.updated_at_ms = now
+            active.result_text = "EXPIRED"
+            self.state.active_control_command_id = ""
+
+    def _control_record_to_dict(self, record: ControlCommandRecord) -> Dict[str, Any]:
+        return {
+            "code": 0,
+            "commandId": record.command_id,
+            "deviceId": record.device_id,
+            "action": record.action,
+            "params": record.params,
+            "seq": record.seq,
+            "status": record.status,
+            "issuedAtMs": record.issued_at_ms,
+            "updatedAtMs": record.updated_at_ms,
+            "offeredAtMs": record.offered_at_ms,
+            "ttlMs": record.ttl_ms,
+            "result": {
+                "code": record.result_code,
+                "text": record.result_text,
+            },
+        }
+
+    def _build_pending_command_locked(self) -> Optional[Dict[str, int]]:
+        now = now_ms()
+        self._expire_active_control_locked(now)
+        active = self._get_active_control_locked()
+        if active is None:
+            return None
+        if active.status in {CONTROL_STATUS_SUCCEEDED, CONTROL_STATUS_FAILED, CONTROL_STATUS_EXPIRED}:
+            return None
+        if active.status == CONTROL_STATUS_QUEUED:
+            active.status = CONTROL_STATUS_OFFERED
+            active.offered_at_ms = now
+            active.updated_at_ms = now
+        return {
+            "seq": active.seq,
+            "code": active.code,
+            "arg1": active.arg1,
+            "arg2": active.arg2,
+            "arg3": active.arg3,
+        }
+
+    def _normalize_control_request(self, body: Dict[str, Any]) -> ControlCommandRecord:
+        action = str(body.get("action") or "").strip()
+        params = body.get("params")
+        if not action:
+            raise ValueError("action is required")
+        if params is None:
+            params = {}
+        if not isinstance(params, dict):
+            raise ValueError("params must be an object")
+
+        ttl_ms = int(body.get("ttlMs", 15000))
+        if ttl_ms <= 0:
+            raise ValueError("ttlMs must be > 0")
+
+        arg1 = 0
+        arg2 = 0
+        arg3 = 0
+
+        if action == CONTROL_ACTION_HOME:
+            code = CONTROL_CODE_HOME
+        elif action == CONTROL_ACTION_MOVE_REL:
+            code = CONTROL_CODE_MOVE_REL
+            if "pulse" not in params:
+                raise ValueError("params.pulse is required")
+            arg1 = int(params.get("pulse", 0))
+            arg2 = int(params.get("speedHz", 0))
+            if arg1 == 0:
+                raise ValueError("params.pulse must not be 0")
+            if arg2 <= 0:
+                raise ValueError("params.speedHz must be > 0")
+        elif action == CONTROL_ACTION_STOP:
+            code = CONTROL_CODE_STOP
+        elif action == CONTROL_ACTION_PUMP_ON:
+            code = CONTROL_CODE_PUMP_ON
+            arg1 = int(params.get("timeoutMs", 30000))
+            if arg1 <= 0:
+                raise ValueError("params.timeoutMs must be > 0")
+        elif action == CONTROL_ACTION_PUMP_OFF:
+            code = CONTROL_CODE_PUMP_OFF
+        else:
+            raise ValueError(f"unsupported action: {action}")
+
+        device_id = str(body.get("deviceId") or "stm32f4").strip() or "stm32f4"
+        issued_at = now_ms()
+        command_id = str(body.get("commandId") or uuid.uuid4())
+
+        return ControlCommandRecord(
+            command_id=command_id,
+            device_id=device_id,
+            action=action,
+            params=params,
+            seq=0,
+            code=code,
+            arg1=arg1,
+            arg2=arg2,
+            arg3=arg3,
+            ttl_ms=ttl_ms,
+            status=CONTROL_STATUS_QUEUED,
+            issued_at_ms=issued_at,
+            updated_at_ms=issued_at,
+        )
+
+    def handle_control_command(self, body: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
+        try:
+            record = self._normalize_control_request(body)
+        except ValueError as exc:
+            return 400, {"code": 400, "msg": str(exc)}
+
+        with self.state.lock:
+            self._expire_active_control_locked(now_ms())
+            active = self._get_active_control_locked()
+            if active is not None and active.status not in {
+                CONTROL_STATUS_SUCCEEDED,
+                CONTROL_STATUS_FAILED,
+                CONTROL_STATUS_EXPIRED,
+            }:
+                if record.action != CONTROL_ACTION_STOP:
+                    return 409, {
+                        "code": 409,
+                        "msg": "active command exists",
+                        "activeCommandId": active.command_id,
+                        "activeStatus": active.status,
+                    }
+                active.status = CONTROL_STATUS_FAILED
+                active.updated_at_ms = now_ms()
+                active.result_code = 4
+                active.result_text = "INTERRUPTED_BY_STOP"
+
+            record.seq = self.state.next_control_seq
+            self.state.next_control_seq = (self.state.next_control_seq % 65535) + 1
+            self.state.control_commands[record.command_id] = record
+            self.state.active_control_command_id = record.command_id
+
+            if len(self.state.control_commands) > 64:
+                stale_ids = sorted(
+                    self.state.control_commands.keys(),
+                    key=lambda item: self.state.control_commands[item].issued_at_ms,
+                )[:-64]
+                for stale_id in stale_ids:
+                    if stale_id != self.state.active_control_command_id:
+                        self.state.control_commands.pop(stale_id, None)
+
+        logging.info(
+            "control command accepted: id=%s seq=%s action=%s params=%s",
+            record.command_id,
+            record.seq,
+            record.action,
+            json.dumps(record.params, ensure_ascii=False, separators=(",", ":")),
+        )
+        return 202, {
+            "code": 0,
+            "msg": "accepted",
+            "commandId": record.command_id,
+            "seq": record.seq,
+            "status": record.status,
+        }
+
+    def get_control_command(self, command_id: str) -> Tuple[int, Dict[str, Any]]:
+        with self.state.lock:
+            self._expire_active_control_locked(now_ms())
+            record = self.state.control_commands.get(command_id)
+            if record is None:
+                return 404, {"code": 404, "msg": "command not found"}
+            return 200, self._control_record_to_dict(record)
+
+    def get_control_state(self) -> Dict[str, Any]:
+        with self.state.lock:
+            self._expire_active_control_locked(now_ms())
+            active = self._get_active_control_locked()
+            return {
+                "code": 0,
+                "deviceId": "stm32f4",
+                "lastSnapshotTsMs": self.state.last_snapshot_ts_ms,
+                "activeCommand": self._control_record_to_dict(active) if active is not None else None,
+                "plc": self.state.last_slave4_state,
+            }
+
+    def _update_control_from_snapshot_locked(self, payload: Dict[str, Any]) -> None:
+        slave4 = payload.get("slave4")
+        if not isinstance(slave4, dict):
+            return
+
+        online = int(slave4.get("online", 0)) == 1
+        valid = int(slave4.get("valid", 0)) == 1
+        last_seq = int(slave4.get("lastCommandSeq", 0) or 0)
+        result_code = int(slave4.get("lastCommandResultCode", 0) or 0)
+        busy = int(slave4.get("busy", 0)) == 1
+
+        self.state.last_snapshot_ts_ms = now_ms()
+        self.state.last_slave4_state = {
+            "online": int(slave4.get("online", 0) or 0),
+            "valid": int(slave4.get("valid", 0) or 0),
+            "lastError": str(slave4.get("lastError", "NONE")),
+            "lastUpdateMs": int(slave4.get("lastUpdateMs", 0) or 0),
+            "homed": int(slave4.get("homed", 0) or 0),
+            "busy": int(slave4.get("busy", 0) or 0),
+            "pumpOn": int(slave4.get("pumpOn", 0) or 0),
+            "statusWord": int(slave4.get("statusWord", 0) or 0),
+            "faultWord": int(slave4.get("faultWord", 0) or 0),
+            "pumpState": int(slave4.get("pumpState", 0) or 0),
+            "stepperState": str(slave4.get("stepperState", "UNKNOWN")),
+            "positionPulse": int(slave4.get("positionPulse", 0) or 0),
+            "lastCommandSeq": last_seq,
+            "lastCommandResultCode": result_code,
+            "lastCommandResult": str(slave4.get("lastCommandResult", self._control_result_text(result_code))),
+        }
+
+        active = self._get_active_control_locked()
+        if active is None:
+            return
+
+        if last_seq != active.seq:
+            return
+
+        active.result_code = result_code
+        active.result_text = str(slave4.get("lastCommandResult", self._control_result_text(result_code)))
+        active.updated_at_ms = now_ms()
+
+        if online and valid:
+            if result_code in CONTROL_RESULT_FINAL_OK:
+                active.status = CONTROL_STATUS_SUCCEEDED
+                self.state.active_control_command_id = ""
+            elif result_code in CONTROL_RESULT_FINAL_FAIL:
+                active.status = CONTROL_STATUS_FAILED
+                self.state.active_control_command_id = ""
+            elif busy or result_code in {1, 2}:
+                active.status = CONTROL_STATUS_RUNNING
 
     def _build_mqtt_client(self) -> mqtt.Client:
         client = mqtt.Client(client_id=self.config.get("onenet", "device_name", fallback=""), protocol=mqtt.MQTTv311)
@@ -819,6 +1128,8 @@ class GatewayApp:
 
                 if self.path == "/api/uplink":
                     handler = self.server.app.handle_snapshot
+                elif self.path == "/api/control/commands":
+                    handler = self.server.app.handle_control_command
                 elif self.path == "/api/ai":
                     handler = self.server.app.handle_ai_result
                 else:
@@ -842,8 +1153,17 @@ class GatewayApp:
                     self._write_json(400, {"code": 400, "msg": "invalid json"})
                     return
 
+                if self.path == "/api/control/commands":
+                    status, payload = handler(body)
+                    self._write_json(status, payload)
+                    return
+
                 if self.path == "/api/ai":
                     ok, message = handler(body, source_ip=source_ip)
+                elif self.path == "/api/uplink":
+                    ok, payload = handler(body)
+                    self._write_json(200 if ok else 400, payload)
+                    return
                 else:
                     ok, message = handler(body)
                 if ok:
@@ -852,11 +1172,23 @@ class GatewayApp:
                     self._write_json(400, {"code": 400, "msg": message})
 
             def do_GET(self) -> None:
-                if self.path != "/healthz":
+                parsed = urlparse(self.path)
+                path = parsed.path
+
+                if path == "/api/control/state":
+                    self._write_json(200, self.server.app.get_control_state())
+                    return
+                if path.startswith("/api/control/commands/"):
+                    command_id = path.rsplit("/", 1)[-1]
+                    status, payload = self.server.app.get_control_command(command_id)
+                    self._write_json(status, payload)
+                    return
+                if path != "/healthz":
                     self._write_json(404, {"code": 404, "msg": "not found"})
                     return
 
                 with self.server.app.state.lock:
+                    active = self.server.app._get_active_control_locked()
                     response = {
                         "code": 0,
                         "mqttConnected": self.server.app.state.mqtt_connected,
@@ -887,6 +1219,9 @@ class GatewayApp:
                         "pendingK230StreamIp": self.server.app.state.pending_k230_stream_ip,
                         "lastGo2rtcSwitchOk": self.server.app.state.last_go2rtc_switch_ok,
                         "lastGo2rtcSwitchMs": self.server.app.state.last_go2rtc_switch_ms,
+                        "activeControlCommandId": active.command_id if active is not None else "",
+                        "activeControlStatus": active.status if active is not None else "",
+                        "lastSlave4State": self.server.app.state.last_slave4_state,
                     }
                 self._write_json(200, response)
 
@@ -906,12 +1241,12 @@ class GatewayApp:
         self._http_thread.start()
         logging.info("http server listening on %s:%s", self.http_host, self.http_port)
 
-    def handle_snapshot(self, body: Dict[str, Any]) -> Tuple[bool, str]:
+    def handle_snapshot(self, body: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
         if body.get("type") != "MODBUS_SNAPSHOT":
-            return False, "unsupported type"
+            return False, {"code": 400, "msg": "unsupported type"}
         payload = body.get("payload")
         if not isinstance(payload, dict):
-            return False, "payload must be an object"
+            return False, {"code": 400, "msg": "payload must be an object"}
 
         with self.state.lock:
             self.state.latest_snapshot = LatestSnapshot(raw=body, received_at_ms=now_ms())
@@ -919,13 +1254,17 @@ class GatewayApp:
             self.state.pending_publish = True
             if self.agri_forward.enabled_sensor:
                 self.state.pending_agri_sensor = LatestSnapshot(raw=body, received_at_ms=now_ms())
+            response = {"code": 0, "msg": "accepted"}
+            pending = self._build_pending_command_locked()
+            if pending is not None:
+                response["pendingCommand"] = pending
 
         self._publish_pending_if_needed()
         if self.agri_forward.enabled_sensor:
             self._agri_forward_event.set()
         message_id = body.get("messageId", "-")
         logging.info("snapshot accepted: deviceId=%s messageId=%s", body.get("deviceId", "-"), message_id)
-        return True, "accepted"
+        return True, response
 
     def handle_ai_result(self, body: Dict[str, Any], source_ip: str = "") -> Tuple[bool, str]:
         if body.get("type") != "AI_DETECTIONS":
@@ -1014,6 +1353,7 @@ class GatewayApp:
             logging.warning("slave3 invalid or missing mq2Ppm: %s", slave3)
 
         self.state.telemetry.error = 0 if (ok1 and ok2 and ok3) else 1
+        self._update_control_from_snapshot_locked(payload)
         logging.info(
             "telemetry state updated: Temp=%s Hum=%s Light=%s MQ2=%s Error=%s",
             self.state.telemetry.temp,
